@@ -13,6 +13,7 @@ dependencies = [
   "fastapi>=0.115,<1",
   "google-genai>=1.0,<2",
   "openpyxl>=3.1,<4",
+  "osmium>=4,<5",           # surrounding_area: build poi.db from the OSM extract (setup only)
   "pydantic-settings>=2.7,<3",
   "pypdf>=5,<7",
   "python-docx>=1.1,<2",
