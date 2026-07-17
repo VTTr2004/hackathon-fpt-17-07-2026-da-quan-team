@@ -22,8 +22,9 @@ async def chat_with_documents(
         raise HTTPException(status_code=404, detail="Startup không tồn tại")
     docs = list(await db.scalars(select(Document).where(Document.startup_id == startup_id)))
     response = await answer_question(
-        payload.question,
+        str(startup_id),
         [{"id": str(doc.id), "filename": doc.filename, "text": doc.extracted_text} for doc in docs],
+        payload.question,
     )
     db.add_all(
         [

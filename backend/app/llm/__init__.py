@@ -1,3 +1,3 @@
-from app.llm.gemini import GeminiClient, get_llm_client
-
-__all__ = ["GeminiClient", "get_llm_client"]
+"""LLM boundaries. Import the specific client module you need
+(``app.llm.nvidia`` or ``app.llm.gemini``) to avoid pulling unused provider SDKs.
+"""

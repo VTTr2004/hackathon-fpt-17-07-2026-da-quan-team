@@ -24,6 +24,11 @@ services:
       UPLOAD_DIR: /app/uploads
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      LLM_PROVIDER: ${LLM_PROVIDER:-nvidia}
+      NVIDIA_API_KEY: ${NVIDIA_API_KEY:-}
+      NVIDIA_CHAT_MODEL: ${NVIDIA_CHAT_MODEL:-openai/gpt-oss-120b}
+      NVIDIA_EMBED_MODEL: ${NVIDIA_EMBED_MODEL:-nvidia/nv-embedqa-e5-v5}
+      RAG_USE_RERANK: ${RAG_USE_RERANK:-false}
     ports:
       - "8000:8000"
     volumes:

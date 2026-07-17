@@ -12,6 +12,7 @@ class Citation(BaseModel):
     filename: str
     excerpt: str
     page: int | None = None
+    locator: str | None = None  # human-readable source position, e.g. "row 5", "slide 2"
 
 
 class ChatResponse(BaseModel):

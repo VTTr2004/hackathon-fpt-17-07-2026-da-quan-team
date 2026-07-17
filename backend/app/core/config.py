@@ -23,6 +23,19 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-2.5-flash"
     gemini_timeout_seconds: float = 60
 
+    # LLM provider for RAG chat: "nvidia" (GPT-OSS-120B) or "gemini".
+    llm_provider: str = "nvidia"
+    nvidia_api_key: str | None = None
+    nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
+    nvidia_chat_model: str = "openai/gpt-oss-120b"
+    nvidia_embed_model: str = "nvidia/nv-embedqa-e5-v5"
+    nvidia_timeout_seconds: float = 60
+
+    # RAG retrieval knobs (validated by the retrieval eval, see docs/methodology.md).
+    rag_top_k: int = 5
+    rag_candidate_k: int = 10
+    rag_use_rerank: bool = False
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
