@@ -1,4 +1,13 @@
-import type { Analysis, AnalysisModule, ChatResponse, DocumentItem, Startup } from "@/types";
+import type {
+  Analysis,
+  AnalysisModule,
+  ChatResponse,
+  DocumentItem,
+  GeocodeResult,
+  SatelliteContext,
+  Startup,
+  SurroundingMapData,
+} from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
@@ -25,7 +34,18 @@ export const api = {
     industry?: string;
     stage?: string;
     primary_location?: string;
+    facts?: Record<string, unknown>;
   }) => request<Startup>("/startups", { method: "POST", body: JSON.stringify(payload) }),
+  updateStartup: (
+    id: string,
+    payload: Partial<{
+      name: string;
+      industry: string | null;
+      stage: string | null;
+      primary_location: string | null;
+      facts: Record<string, unknown>;
+    }>,
+  ) => request<Startup>(`/startups/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   listDocuments: (id: string) => request<DocumentItem[]>(`/startups/${id}/documents`),
   uploadDocument: (id: string, file: File) => {
     const formData = new FormData();
@@ -33,15 +53,38 @@ export const api = {
     return request<DocumentItem>(`/startups/${id}/documents`, { method: "POST", body: formData });
   },
   listAnalyses: (id: string) => request<Analysis[]>(`/startups/${id}/analyses`),
-  runAnalysis: (id: string, module: AnalysisModule) =>
+  runAnalysis: (id: string, module: AnalysisModule, options: Record<string, unknown> = { use_gemini: true }) =>
     request<Analysis>(`/startups/${id}/analyses/${module}`, {
       method: "POST",
-      body: JSON.stringify({ options: { use_gemini: true } }),
+      body: JSON.stringify({ options }),
     }),
   chat: (id: string, question: string) =>
     request<ChatResponse>(`/startups/${id}/chat`, {
       method: "POST",
       body: JSON.stringify({ question }),
+    }),
+
+  // --- Surrounding-area module ---------------------------------------------
+  geocode: (address: string) =>
+    request<GeocodeResult>("/surrounding/geocode", {
+      method: "POST",
+      body: JSON.stringify({ address }),
+    }),
+  surroundingMap: (lat: number, lon: number, industry?: string, radiusM?: number) => {
+    const params = new URLSearchParams({ lat: String(lat), lon: String(lon) });
+    if (industry) params.set("industry", industry);
+    if (radiusM) params.set("radius_m", String(radiusM));
+    return request<SurroundingMapData>(`/surrounding/map?${params.toString()}`);
+  },
+  satelliteContext: (lat: number, lon: number, radiusM?: number) => {
+    const params = new URLSearchParams({ lat: String(lat), lon: String(lon) });
+    if (radiusM) params.set("radius_m", String(radiusM));
+    return request<SatelliteContext>(`/surrounding/satellite?${params.toString()}`);
+  },
+  analyzeSurrounding: (id: string, options: Record<string, unknown>) =>
+    request<Analysis>(`/startups/${id}/analyses/surrounding_area`, {
+      method: "POST",
+      body: JSON.stringify({ options }),
     }),
 };
 

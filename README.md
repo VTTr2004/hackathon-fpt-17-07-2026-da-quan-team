@@ -86,6 +86,8 @@ POST /api/v1/startups/{id}/analyses/business_model
 POST /api/v1/startups/{id}/analyses/cash_flow
 POST /api/v1/startups/{id}/analyses/surrounding_area
 POST /api/v1/startups/{id}/chat
+POST /api/v1/surrounding/geocode
+GET  /api/v1/surrounding/map
 ```
 
 ## Dữ liệu demo trong `facts`
@@ -102,16 +104,27 @@ POST /api/v1/startups/{id}/chat
 }
 ```
 
-Để tool khu vực chạy:
+Để tool khu vực chạy, tọa độ phải được chuyên viên xác nhận từ bước geocode/map trước khi phân tích:
 
 ```json
 {
-  "location": {"lat": 21.0285, "lon": 105.8542},
-  "location_metrics": {
-    "customer_density": 80,
-    "accessibility": 75,
-    "supporting_amenities": 70,
-    "competition_balance": 60
+  "industry": "chuỗi cà phê",
+  "location": {
+    "lat": 10.7725,
+    "lon": 106.698,
+    "claims": [
+      "Chưa có đối thủ trực tiếp trong bán kính 500m",
+      "Khu dân cư đông đúc"
+    ],
+    "depends_on_surrounding_customers": true
   }
 }
+```
+
+Module `surrounding_area` dùng `backend/data/poi.db` được build từ OpenStreetMap local. Nếu thiếu file này, báo cáo trả
+`insufficient_data` thay vì đoán hoặc chấm 0. Build dữ liệu một lần bằng:
+
+```bash
+cd backend
+python -m app.modules.surrounding_area.scripts.setup_data
 ```
