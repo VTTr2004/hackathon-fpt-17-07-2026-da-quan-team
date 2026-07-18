@@ -83,9 +83,7 @@ class PoiStore:
     def __init__(self, db_path: Path = DEFAULT_DB_PATH) -> None:
         self.db_path = db_path
         if not db_path.exists():
-            raise PoiDatabaseUnavailableError(
-                f"{db_path} not found. Run download_osm.py then extract_poi.py."
-            )
+            raise PoiDatabaseUnavailableError(f"{db_path} not found. Run download_osm.py then extract_poi.py.")
         # One read-only SQLite connection PER THREAD. A single shared connection is
         # not safe when queries run in a thread pool (via asyncio.to_thread) — even
         # read-only concurrent use can raise or corrupt state. Thread-local
@@ -153,7 +151,7 @@ class PoiStore:
             SELECT p.osm_type, p.osm_id, p.lat, p.lon, p.min_lat, p.max_lat, p.min_lon, p.max_lon,
                    p.name, p.brand, p.operator, p.category_key, p.category_value
             FROM poi p JOIN poi_rtree r ON r.id = p.id
-            WHERE {' AND '.join(where)}
+            WHERE {" AND ".join(where)}
         """
         results: list[Poi] = []
         for row in self._con.execute(sql, params):

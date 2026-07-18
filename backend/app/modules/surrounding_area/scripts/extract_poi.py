@@ -52,8 +52,7 @@ SOURCE_LICENSE = "ODbL 1.0 - (c) OpenStreetMap contributors"
 #     the "khu dân cư" demand proxy; without them the module cannot tell a housing
 #     estate from an empty field.
 #   - public_transport: platforms / stations, for the accessibility signal.
-POI_KEYS = ("amenity", "shop", "office", "leisure", "tourism", "craft", "healthcare",
-            "landuse", "public_transport")
+POI_KEYS = ("amenity", "shop", "office", "leisure", "tourism", "craft", "healthcare", "landuse", "public_transport")
 
 # `place` nodes carry settlement names and sometimes a population tag. Kept in a
 # separate table: they are context for coverage assessment, not businesses.
@@ -150,8 +149,22 @@ def _rows_for(
             # inflate counts with unclassifiable objects.
             continue
         rows.append(
-            (next_id + len(rows), osm_type, obj.id, lat, lon, min_lat, max_lat, min_lon, max_lon,
-             name, brand, operator, key, value)
+            (
+                next_id + len(rows),
+                osm_type,
+                obj.id,
+                lat,
+                lon,
+                min_lat,
+                max_lat,
+                min_lon,
+                max_lon,
+                name,
+                brand,
+                operator,
+                key,
+                value,
+            )
         )
     return rows
 

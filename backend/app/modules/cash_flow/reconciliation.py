@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from .schemas import CashFlowDataset, CashFlowTransaction
 
+
 def remove_duplicates(transactions: list[CashFlowTransaction]) -> tuple[list[CashFlowTransaction], list[str]]:
     result, seen, possible_duplicates, warnings = [], set(), set(), []
     for item in transactions:
@@ -35,6 +36,7 @@ def remove_duplicates(transactions: list[CashFlowTransaction]) -> tuple[list[Cas
         result.append(item)
     return result, warnings
 
+
 def reconcile_balance(dataset: CashFlowDataset, tolerance: Decimal = Decimal(1000)) -> dict:
     inflows = sum((x.amount for x in dataset.transactions if x.direction == "inflow"), Decimal(0))
     outflows = sum((x.amount for x in dataset.transactions if x.direction == "outflow"), Decimal(0))
@@ -50,4 +52,13 @@ def reconcile_balance(dataset: CashFlowDataset, tolerance: Decimal = Decimal(100
         severity = "critical_mismatch"
     else:
         severity = "warning"
-    return {"opening_cash": dataset.opening_cash, "total_inflows": inflows, "total_outflows": outflows, "expected_ending_cash": expected, "reported_ending_cash": reported, "difference": difference, "matched": severity == "matched", "status": severity}
+    return {
+        "opening_cash": dataset.opening_cash,
+        "total_inflows": inflows,
+        "total_outflows": outflows,
+        "expected_ending_cash": expected,
+        "reported_ending_cash": reported,
+        "difference": difference,
+        "matched": severity == "matched",
+        "status": severity,
+    }

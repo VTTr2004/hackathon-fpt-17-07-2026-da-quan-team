@@ -25,22 +25,45 @@ def legacy_periods_to_dataset(current_cash: Any, periods: list[dict[str, Any]]) 
     transactions: list[CashFlowTransaction] = []
     for item in periods:
         period = normalize_period(item["period"])
-        transactions.extend([
-            CashFlowTransaction(period=period, direction=CashDirection.INFLOW, activity=CashActivity.OPERATING,
-                                category="legacy_inflow", amount=normalize_amount(item.get("inflow", 0))),
-            CashFlowTransaction(period=period, direction=CashDirection.OUTFLOW, activity=CashActivity.OPERATING,
-                                category="legacy_outflow", amount=normalize_amount(item.get("outflow", 0))),
-        ])
-    return CashFlowDataset(reported_ending_cash=normalize_amount(current_cash), transactions=transactions,
-        source_type="legacy", warnings=["Legacy input does not separate financing and investing cash flow."],
-        assumptions=["Legacy financial_periods are temporarily treated as operating cash flow."])
+        transactions.extend(
+            [
+                CashFlowTransaction(
+                    period=period,
+                    direction=CashDirection.INFLOW,
+                    activity=CashActivity.OPERATING,
+                    category="legacy_inflow",
+                    amount=normalize_amount(item.get("inflow", 0)),
+                ),
+                CashFlowTransaction(
+                    period=period,
+                    direction=CashDirection.OUTFLOW,
+                    activity=CashActivity.OPERATING,
+                    category="legacy_outflow",
+                    amount=normalize_amount(item.get("outflow", 0)),
+                ),
+            ]
+        )
+    return CashFlowDataset(
+        reported_ending_cash=normalize_amount(current_cash),
+        transactions=transactions,
+        source_type="legacy",
+        warnings=["Legacy input does not separate financing and investing cash flow."],
+        assumptions=["Legacy financial_periods are temporarily treated as operating cash flow."],
+    )
 
 
-def normalize_cash_flow_input(startup_facts: dict[str, Any], extracted_dataset: CashFlowDataset | None = None) -> CashFlowDataset | None:
+def normalize_cash_flow_input(
+    startup_facts: dict[str, Any], extracted_dataset: CashFlowDataset | None = None
+) -> CashFlowDataset | None:
     raw = startup_facts.get("cash_flow_dataset")
     if raw:
         dataset = CashFlowDataset.model_validate(raw)
-        dataset.transactions = [transaction.model_copy(update={"period": normalize_period(transaction.period), "amount": normalize_amount(transaction.amount)}) for transaction in dataset.transactions]
+        dataset.transactions = [
+            transaction.model_copy(
+                update={"period": normalize_period(transaction.period), "amount": normalize_amount(transaction.amount)}
+            )
+            for transaction in dataset.transactions
+        ]
         return dataset
     if extracted_dataset and extracted_dataset.transactions:
         # A workbook commonly contains transactions but omits the current balance.
@@ -49,7 +72,8 @@ def normalize_cash_flow_input(startup_facts: dict[str, Any], extracted_dataset: 
         if extracted_dataset.reported_ending_cash is None and startup_facts.get("current_cash") is not None:
             extracted_dataset.reported_ending_cash = normalize_amount(startup_facts["current_cash"])
             extracted_dataset.warnings.append(
-                "Reported ending cash was supplied from current_cash because the workbook did not contain an ending balance."
+                "Reported ending cash was supplied from current_cash because the workbook did not contain "
+                "an ending balance."
             )
         return extracted_dataset
     periods = startup_facts.get("financial_periods") or []

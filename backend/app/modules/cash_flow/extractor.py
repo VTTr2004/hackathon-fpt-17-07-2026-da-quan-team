@@ -7,7 +7,6 @@ from app.schemas.common import Evidence
 
 from .schemas import CashActivity, CashDirection, CashFlowDataset, CashFlowTransaction
 
-
 HEADER_SCAN_ROWS = 50
 
 
@@ -115,68 +114,72 @@ def extract_cash_flow_documents(
             warnings.append(f"Could not read workbook {document.get('filename', path.name)}: {exc}")
             continue
 
-        candidates: list[tuple[Any, dict[str, Any]]] = []
-        for worksheet in workbook.worksheets:
-            sheet_opening, sheet_ending = _read_balances(worksheet, warnings)
-            opening_cash = opening_cash if opening_cash is not None else sheet_opening
-            reported_ending_cash = reported_ending_cash if reported_ending_cash is not None else sheet_ending
-            candidates.extend((worksheet, candidate) for candidate in _find_cashbook_headers(worksheet))
+        try:
+            candidates: list[tuple[Any, dict[str, Any]]] = []
+            for worksheet in workbook.worksheets:
+                sheet_opening, sheet_ending = _read_balances(worksheet, warnings)
+                opening_cash = opening_cash if opening_cash is not None else sheet_opening
+                reported_ending_cash = reported_ending_cash if reported_ending_cash is not None else sheet_ending
+                candidates.extend((worksheet, candidate) for candidate in _find_cashbook_headers(worksheet))
 
-        detailed_candidates = [candidate for candidate in candidates if candidate[1]["is_detailed"]]
-        selected_candidates = detailed_candidates or candidates
-        if candidates and not detailed_candidates:
-            warnings.append(
-                f"Workbook {document.get('filename', path.name)} has no detailed cashbook sheet; using summary rows."
-            )
+            detailed_candidates = [candidate for candidate in candidates if candidate[1]["is_detailed"]]
+            selected_candidates = detailed_candidates or candidates
+            if candidates and not detailed_candidates:
+                warnings.append(
+                    f"Workbook {document.get('filename', path.name)} has no detailed cashbook sheet; "
+                    "using summary rows."
+                )
 
-        for worksheet, header in selected_candidates:
-            for row_number, row in enumerate(
-                worksheet.iter_rows(min_row=header["header_row"] + 1, values_only=True),
-                header["header_row"] + 1,
-            ):
-                raw_date = _cell(row, header["date_index"])
-                period = _period(raw_date)
-                if period is None:
-                    if any(value is not None for value in row):
-                        warnings.append(f"Skipped row without a valid date: {worksheet.title} row {row_number}.")
-                    continue
-                for direction, amount_index in (
-                    (CashDirection.INFLOW, header["inflow_index"]),
-                    (CashDirection.OUTFLOW, header["outflow_index"]),
+            for worksheet, header in selected_candidates:
+                for row_number, row in enumerate(
+                    worksheet.iter_rows(min_row=header["header_row"] + 1, values_only=True),
+                    header["header_row"] + 1,
                 ):
-                    raw_amount = _cell(row, amount_index)
-                    if raw_amount in (None, 0, ""):
+                    raw_date = _cell(row, header["date_index"])
+                    period = _period(raw_date)
+                    if period is None:
+                        if any(value is not None for value in row):
+                            warnings.append(f"Skipped row without a valid date: {worksheet.title} row {row_number}.")
                         continue
-                    try:
-                        amount = _amount(raw_amount)
-                    except ValueError:
-                        warnings.append(f"Skipped invalid amount: {worksheet.title} row {row_number}.")
-                        continue
-                    evidence_id = f"{document['id']}:{worksheet.title}:{row_number}:{direction.value}"
-                    transactions.append(
-                        CashFlowTransaction(
-                            period=period,
-                            date=raw_date,
-                            direction=direction,
-                            activity=CashActivity.UNCLASSIFIED,
-                            category=str(_cell(row, header["category_index"]) or "cashbook"),
-                            description=str(_cell(row, header["description_index"]) or ""),
-                            amount=amount,
-                            document_id=document["id"],
-                            filename=document["filename"],
-                            sheet=worksheet.title,
-                            row_number=row_number,
-                            evidence_id=evidence_id,
+                    for direction, amount_index in (
+                        (CashDirection.INFLOW, header["inflow_index"]),
+                        (CashDirection.OUTFLOW, header["outflow_index"]),
+                    ):
+                        raw_amount = _cell(row, amount_index)
+                        if raw_amount in (None, 0, ""):
+                            continue
+                        try:
+                            amount = _amount(raw_amount)
+                        except ValueError:
+                            warnings.append(f"Skipped invalid amount: {worksheet.title} row {row_number}.")
+                            continue
+                        evidence_id = f"{document['id']}:{worksheet.title}:{row_number}:{direction.value}"
+                        transactions.append(
+                            CashFlowTransaction(
+                                period=period,
+                                date=raw_date,
+                                direction=direction,
+                                activity=CashActivity.UNCLASSIFIED,
+                                category=str(_cell(row, header["category_index"]) or "cashbook"),
+                                description=str(_cell(row, header["description_index"]) or ""),
+                                amount=amount,
+                                document_id=document["id"],
+                                filename=document["filename"],
+                                sheet=worksheet.title,
+                                row_number=row_number,
+                                evidence_id=evidence_id,
+                            )
                         )
-                    )
-                    evidence.append(
-                        Evidence(
-                            evidence_id=evidence_id,
-                            source_type="uploaded_workbook",
-                            title=f"{document['filename']} / {worksheet.title} row {row_number}",
-                            document_id=document["id"],
+                        evidence.append(
+                            Evidence(
+                                evidence_id=evidence_id,
+                                source_type="uploaded_workbook",
+                                title=f"{document['filename']} / {worksheet.title} row {row_number}",
+                                document_id=document["id"],
+                            )
                         )
-                    )
+        finally:
+            workbook.close()
 
     if not transactions:
         return None, evidence, warnings

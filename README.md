@@ -1,5 +1,7 @@
 # Startup Lens
 
+> CI/CD: xem hướng dẫn cấu hình deploy tự động bằng Docker và GitHub Actions tại [DEPLOYMENT.md](DEPLOYMENT.md).
+
 Monorepo cho hệ thống đánh giá startup và chatbot hỏi đáp tài liệu:
 
 - **Backend:** FastAPI, SQLAlchemy async và PostgreSQL.
@@ -71,7 +73,7 @@ npm run dev
 
 Tất cả lệnh gọi LLM đi qua `backend/app/llm/gemini.py`. Không gọi SDK Gemini trực tiếp từ module.
 
-- `GEMINI_API_KEY`: bắt buộc khi cần LLM.
+- `GEMINI_API_KEY`: một key hoặc nhiều key phân tách bằng dấu phẩy (`api1,api2,...`). Khi key hiện tại hết quota/rate-limit hoặc không hợp lệ, request tự thử key kế tiếp.
 - `GEMINI_MODEL`: mặc định `gemini-2.5-flash`.
 - Structured output dùng Pydantic schema.
 - Khi chưa có API key, tool tính toán vẫn hoạt động và chatbot dùng extractive fallback.

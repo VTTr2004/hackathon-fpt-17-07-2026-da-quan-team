@@ -22,6 +22,20 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.5-flash"
     gemini_timeout_seconds: float = 60
+    goong_api_key: str | None = None
+    google_geocoding_api_key: str | None = None
+    google_places_api_key: str | None = None
+
+    @property
+    def gemini_api_keys(self) -> list[str]:
+        """Return configured Gemini keys in failover order.
+
+        GEMINI_API_KEY remains a string so existing single-key deployments keep
+        working. Comma-separated values enable key rotation.
+        """
+        if not self.gemini_api_key:
+            return []
+        return list(dict.fromkeys(key.strip() for key in self.gemini_api_key.split(",") if key.strip()))
 
     @property
     def cors_origin_list(self) -> list[str]:
