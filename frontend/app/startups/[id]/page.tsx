@@ -13,8 +13,9 @@ import {
   textValue,
 } from "@/lib/profileFields";
 import type { ProfileField } from "@/lib/profileFields";
-import type { Analysis, AnalysisModule, ChatResponse, DocumentItem, Startup } from "@/types";
+import type { Analysis, AnalysisModule, DocumentItem, Startup } from "@/types";
 
+import DocumentChat from "./DocumentChat";
 import SurroundingArea from "./SurroundingArea";
 import CashFlowAnalysis from "./CashFlowAnalysis";
 
@@ -47,13 +48,6 @@ const statusCopy: Record<string, string> = {
   failed: "Lỗi",
   idle: "Chưa chạy",
 };
-
-const suggestedQuestions = [
-  "Tổng doanh thu thuần 3 tháng là bao nhiêu?",
-  "Doanh thu thuần tháng 5/2026 là bao nhiêu?",
-  "Số dư cuối kỳ trong sổ thu chi là bao nhiêu?",
-  "Giá bán một ly cà phê sữa là bao nhiêu?",
-];
 
 function scoreText(score: number | null | undefined) {
   return score === null || score === undefined ? "—" : String(Math.round(score));
@@ -201,8 +195,6 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
-  const [question, setQuestion] = useState("");
-  const [chat, setChat] = useState<ChatResponse | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -289,20 +281,6 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
       mergeAnalysis(await api.runAnalysis(id, module));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Phân tích thất bại");
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function ask(event: FormEvent) {
-    event.preventDefault();
-    if (!question.trim()) return;
-    setBusy("chat");
-    setError("");
-    try {
-      setChat(await api.chat(id, question));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Không thể trả lời");
     } finally {
       setBusy(null);
     }
@@ -520,53 +498,19 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
         </div>
 
         <aside className="surface chatPanel" id="document-copilot">
-          <div>
-            <p className="eyebrow">DOCUMENT COPILOT</p>
-            <h2>Hỏi tài liệu</h2>
-            <p className="muted">Câu trả lời chỉ dùng tài liệu của hồ sơ này.</p>
+          <div className="chatPanelHead">
+            <div>
+              <p className="eyebrow">DOCUMENT COPILOT</p>
+              <h2>Hỏi tài liệu</h2>
+              <p className="muted">Câu trả lời chỉ dùng tài liệu của hồ sơ này, kèm trích dẫn nguồn.</p>
+            </div>
+            <Link className="muted" href={`/startups/${id}/chat`}>
+              Mở toàn màn hình →
+            </Link>
           </div>
-          <div className="chatAnswer">
-            {chat ? (
-              <>
-                <p>{chat.answer}</p>
-                {chat.citations.map((citation, index) => (
-                  <details key={`${citation.document_id}-${index}`}>
-                    <summary>
-                      [{index + 1}] {citation.filename}
-                      {citation.locator ? ` · ${citation.locator}` : ""}
-                    </summary>
-                    <blockquote>{citation.excerpt}</blockquote>
-                  </details>
-                ))}
-                {chat.metadata && chat.metadata.retrieval ? (
-                  <p className="muted" style={{ marginTop: "0.5rem", fontSize: "0.8rem" }}>
-                    {chat.grounded ? "Có dẫn nguồn" : "Chưa đủ dữ liệu"} · retrieval:{" "}
-                    {String(chat.metadata.retrieval)}
-                    {chat.metadata.provider ? ` · ${String(chat.metadata.provider)}` : ""}
-                  </p>
-                ) : null}
-              </>
-            ) : (
-              <div className="emptyState">Chưa có câu hỏi nào.</div>
-            )}
+          <div className="chatPanelBody">
+            <DocumentChat startupId={id} />
           </div>
-          <div className="questionChips" aria-label="Câu hỏi nhanh">
-            {suggestedQuestions.map((item) => (
-              <button key={item} type="button" onClick={() => setQuestion(item)}>
-                {item}
-              </button>
-            ))}
-          </div>
-          <form className="chatForm" onSubmit={ask}>
-            <textarea
-              value={question}
-              onChange={(event) => setQuestion(event.target.value)}
-              placeholder="Startup đang có bao nhiêu khách hàng?"
-            />
-            <button className="primaryButton" disabled={busy === "chat"}>
-              {busy === "chat" ? "Đang đọc..." : "Gửi câu hỏi"}
-            </button>
-          </form>
         </aside>
       </section>
     </div>

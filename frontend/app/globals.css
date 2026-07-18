@@ -2533,3 +2533,240 @@ html {
     max-width: none;
   }
 }
+
+/* ---------------- Document chat (conversational) ---------------- */
+.dcRoot {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  gap: 0.75rem;
+}
+
+.dcMessages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.25rem;
+}
+
+.dcHint {
+  text-align: center;
+  margin: 0.5rem 0;
+}
+
+.dcEmpty {
+  margin: auto 0;
+  text-align: center;
+  padding: 1rem;
+}
+
+.dcEmpty h3 {
+  margin: 0.35rem 0 0.5rem;
+}
+
+.dcChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.9rem;
+}
+
+.dcChips button {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.dcChips button:hover {
+  background: var(--subtle);
+  border-color: var(--green);
+}
+
+.dcTurn {
+  display: flex;
+}
+
+.dcTurn-user {
+  justify-content: flex-end;
+}
+
+.dcTurn-assistant {
+  justify-content: flex-start;
+}
+
+.dcBubble {
+  max-width: 85%;
+  padding: 0.7rem 0.9rem;
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.dcTurn-user .dcBubble {
+  background: var(--green);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.dcTurn-assistant .dcBubble {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 4px;
+}
+
+.dcBubble-error {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.dcText {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.dcCitations {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dcCitation {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--subtle);
+  padding: 0.35rem 0.55rem;
+  font-size: 0.85rem;
+}
+
+.dcCitation summary {
+  cursor: pointer;
+  color: var(--green-dark);
+}
+
+.dcCitationIndex {
+  font-weight: 700;
+}
+
+.dcCitationLoc {
+  color: var(--muted);
+}
+
+.dcCitation blockquote {
+  margin: 0.4rem 0 0.1rem;
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--line-strong);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.dcMeta {
+  margin: 0.55rem 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.dcTyping {
+  display: inline-flex;
+  gap: 4px;
+  padding: 0.2rem 0;
+}
+
+.dcTyping i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line-strong);
+  animation: dcBlink 1.2s infinite ease-in-out;
+}
+
+.dcTyping i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dcTyping i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dcBlink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+.dcForm {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+}
+
+.dcForm textarea {
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.dcForm textarea:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.dcForm .primaryButton {
+  white-space: nowrap;
+}
+
+.chatPageHeader {
+  margin-bottom: 1rem;
+}
+
+.chatPageHeader h1 {
+  margin: 0.35rem 0 0.2rem;
+}
+
+.chatPagePanel {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 220px);
+  min-height: 440px;
+}
+
+.chatPanelHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.chatPanelHead a {
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.chatPanelBody {
+  display: flex;
+  height: 540px;
+  max-height: calc(100dvh - 220px);
+}

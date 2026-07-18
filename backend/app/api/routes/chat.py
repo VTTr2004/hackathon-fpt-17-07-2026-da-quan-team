@@ -8,10 +8,23 @@ from app.db.session import get_db
 from app.models.chat_message import ChatMessage
 from app.models.document import Document
 from app.models.startup import Startup
-from app.schemas.chat import ChatRequest, ChatResponse
+from app.schemas.chat import ChatMessageRead, ChatRequest, ChatResponse
 from app.services.chat_service import answer_question
 
 router = APIRouter()
+
+
+@router.get("/{startup_id}/chat/history", response_model=list[ChatMessageRead])
+async def chat_history(startup_id: UUID, db: AsyncSession = Depends(get_db)) -> list[ChatMessage]:
+    if await db.get(Startup, startup_id) is None:
+        raise HTTPException(status_code=404, detail="Startup không tồn tại")
+    return list(
+        await db.scalars(
+            select(ChatMessage)
+            .where(ChatMessage.startup_id == startup_id)
+            .order_by(ChatMessage.created_at)
+        )
+    )
 
 
 @router.post("/{startup_id}/chat", response_model=ChatResponse)
