@@ -3736,21 +3736,31 @@ html {
 }
 
 .appBrandMark {
+  position: relative;
   display: grid;
   place-items: center;
-  flex: 0 0 38px;
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius);
-  background: var(--primary-dark);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 900;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border: 1px solid rgba(144, 10, 26, 0.24);
+  border-radius: 11px;
+  background: #fdf9f4;
+  box-shadow: 0 8px 18px rgba(42, 26, 20, 0.12);
+}
+
+.appBrandMarkImage {
+  display: block;
+  width: 82%;
+  height: 82%;
+  background: url("/brand-mark.png?v=20260718") center / contain no-repeat;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
 }
 
 :root[data-theme="dark"] .appBrandMark {
-  background: #ffb4ad;
-  color: #341012;
+  border-color: rgba(255, 180, 173, 0.5);
+  background: #fdf9f4;
+  box-shadow: 0 0 0 2px rgba(255, 180, 173, 0.16), 0 12px 26px rgba(0, 0, 0, 0.36);
 }
 
 .appBrandText {
@@ -4502,19 +4512,27 @@ html {
 .authLogo {
   display: grid;
   place-items: center;
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
-  background: var(--primary-dark);
-  color: #fff;
-  font-size: 20px;
-  font-weight: 900;
+  width: 76px;
+  height: 76px;
+  overflow: hidden;
+  border: 1px solid rgba(144, 10, 26, 0.26);
+  border-radius: 18px;
+  background: #fdf9f4;
   box-shadow: var(--shadow-soft);
 }
 
+.authLogoImage {
+  display: block;
+  width: 84%;
+  height: 84%;
+  background: url("/brand-mark.png?v=20260718") center / contain no-repeat;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
+}
+
 :root[data-theme="dark"] .authLogo {
-  background: #ffb4ad;
-  color: #341012;
+  border-color: rgba(255, 180, 173, 0.56);
+  background: #fdf9f4;
+  box-shadow: 0 0 0 2px rgba(255, 180, 173, 0.18), 0 18px 38px rgba(0, 0, 0, 0.42);
 }
 
 .authFormHead h1 {
