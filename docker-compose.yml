@@ -35,6 +35,7 @@ services:
     volumes:
       - uploads_data:/app/uploads
       - ./backend/data:/app/data:ro
+      - ./sample-data:/app/sample-data:ro
     depends_on:
       postgres:
         condition: service_healthy
