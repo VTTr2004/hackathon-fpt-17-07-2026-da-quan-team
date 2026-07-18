@@ -18,6 +18,7 @@ export type DocumentItem = {
   filename: string;
   content_type: string | null;
   status: string;
+  extractable: boolean;
   visibility: "private" | "shared" | "restricted";
   created_at: string;
 };

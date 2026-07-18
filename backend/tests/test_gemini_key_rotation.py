@@ -76,6 +76,21 @@ async def test_structured_call_rotates_on_invalid_key(monkeypatch: pytest.Monkey
 
 
 @pytest.mark.asyncio
+async def test_document_transcription_uses_configured_ocr_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = FakeClient([SimpleNamespace(text="[PAGE 1]\nNội dung OCR")])
+    client = build_client(monkeypatch, [fake])
+
+    result = await client.transcribe_document(
+        data=b"fake-pdf",
+        mime_type="application/pdf",
+        filename="scan.pdf",
+    )
+
+    assert client.ocr_model == "gemini-3.1-flash-lite"
+    assert result == "[PAGE 1]\nNội dung OCR"
+
+
+@pytest.mark.asyncio
 async def test_non_key_error_does_not_rotate(monkeypatch: pytest.MonkeyPatch) -> None:
     bad_request = api_error(400, "INVALID_ARGUMENT", "Invalid response schema")
     first = FakeClient([bad_request])

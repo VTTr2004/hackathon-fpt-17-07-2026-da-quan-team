@@ -26,6 +26,7 @@ services:
       AUTH_TOKEN_TTL_HOURS: ${AUTH_TOKEN_TTL_HOURS:-24}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-flash-latest}
+      GEMINI_OCR_MODEL: ${GEMINI_OCR_MODEL:-gemini-3.1-flash-lite}
       GEMINI_EMBED_MODEL: ${GEMINI_EMBED_MODEL:-gemini-embedding-001}
       LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
       NVIDIA_API_KEY: ${NVIDIA_API_KEY:-}

@@ -11,7 +11,8 @@ from app.modules.profile_ingestion.schemas import (
     LLMEvidenceReference,
     LLMExtractionResult,
 )
-from app.services.document_parser import extract_text
+from app.services.document_parser import extract_text, has_extractable_text
+from app.services.ocr_service import normalize_ocr_text
 
 
 def test_profile_value_normalization_is_deterministic() -> None:
@@ -112,6 +113,16 @@ def test_text_chunks_do_not_cross_source_markers() -> None:
 
     assert [chunk["metadata"]["page"] for chunk in chunks] == [1, 2]
     assert "trang hai" not in chunks[0]["text"]
+
+
+def test_source_markers_without_content_are_not_extractable() -> None:
+    assert not has_extractable_text("[PAGE 1]\n\n[PAGE 2]\n")
+    assert has_extractable_text("[PAGE 1]\nNội dung có thể chọn và sao chép")
+
+
+def test_ocr_output_normalizes_page_headings_and_code_fences() -> None:
+    assert normalize_ocr_text("```markdown\n# Page 1\nXin chào\n```") == "[PAGE 1]\nXin chào"
+    assert normalize_ocr_text("Nội dung ảnh") == "[PAGE 1]\nNội dung ảnh"
 
 
 def test_docx_tables_become_locatable_evidence_blocks(tmp_path: Path) -> None:

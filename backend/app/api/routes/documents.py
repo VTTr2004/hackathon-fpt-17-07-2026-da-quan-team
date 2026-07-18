@@ -14,10 +14,23 @@ from app.models.startup_version import StartupVersion
 from app.models.user import User
 from app.schemas.document import DocumentRead, DocumentVisibilityUpdate
 from app.services.chat_service import ensure_startup_index, startup_profile
-from app.services.document_parser import extract_text
+from app.services.document_parser import extract_text, has_extractable_text
+from app.services.ocr_service import OCR_SUFFIXES, ocr_document
 
 router = APIRouter()
-ALLOWED_SUFFIXES = {".pdf", ".docx", ".pptx", ".xlsx", ".txt", ".md", ".csv", ".json"}
+ALLOWED_SUFFIXES = {
+    ".pdf",
+    ".docx",
+    ".pptx",
+    ".xlsx",
+    ".txt",
+    ".md",
+    ".csv",
+    ".json",
+    ".png",
+    ".jpg",
+    ".jpeg",
+}
 
 
 async def _latest_version(startup_id: UUID, db: AsyncSession) -> StartupVersion | None:
@@ -79,11 +92,24 @@ async def upload_document(
     upload_dir.mkdir(parents=True, exist_ok=True)
     path = upload_dir / f"{uuid4()}{suffix}"
     path.write_bytes(content)
-    try:
-        text = extract_text(path)
-    except Exception as exc:
+    text = ""
+    parser_error: Exception | None = None
+    if suffix not in {".png", ".jpg", ".jpeg"}:
+        try:
+            text = extract_text(path)
+        except Exception as exc:
+            parser_error = exc
+    ocr_used = False
+    ocr_error: str | None = None
+    if not has_extractable_text(text) and suffix in OCR_SUFFIXES:
+        try:
+            text = await ocr_document(path, file.content_type)
+            ocr_used = True
+        except Exception as exc:
+            ocr_error = str(exc)[:500]
+    if parser_error is not None and suffix not in OCR_SUFFIXES:
         path.unlink(missing_ok=True)
-        raise HTTPException(status_code=422, detail=f"Không thể đọc tài liệu: {exc}") from exc
+        raise HTTPException(status_code=422, detail=f"Không thể đọc tài liệu: {parser_error}") from parser_error
     document = Document(
         startup_id=startup_id,
         uploaded_by_id=user.id,
@@ -91,7 +117,7 @@ async def upload_document(
         content_type=file.content_type,
         storage_path=str(path),
         extracted_text=text,
-        status="processed",
+        status="processed" if has_extractable_text(text) else "needs_ocr",
         visibility="shared",
     )
     db.add(document)
@@ -102,7 +128,11 @@ async def upload_document(
             action="document.uploaded",
             resource_type="document",
             resource_id=document.id,
-            details={"filename": original_name},
+            details={
+                "filename": original_name,
+                "ocr_model": settings.gemini_ocr_model if ocr_used else None,
+                "ocr_error": ocr_error,
+            },
         )
     )
     await db.commit()

@@ -12,6 +12,7 @@ class DocumentRead(BaseModel):
     filename: str
     content_type: str | None
     status: str
+    extractable: bool
     visibility: str
     created_at: datetime
 

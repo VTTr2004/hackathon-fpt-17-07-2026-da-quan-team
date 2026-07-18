@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     auth_token_ttl_hours: int = 24
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-flash-latest"
+    gemini_ocr_model: str = "gemini-3.1-flash-lite"
     gemini_embed_model: str = "gemini-embedding-001"
     gemini_embed_dim: int = 1024
     gemini_timeout_seconds: float = 60
