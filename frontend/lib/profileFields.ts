@@ -240,6 +240,12 @@ export const quickCreateFields: ProfileSection[] = [
     description: "Chỉ dành cho Cash Flow Analysis; Business Model không sử dụng để tính burn hoặc runway.",
     fields: [
       { key: "current_cash", label: "Tiền mặt hiện có (VND)", type: "number", placeholder: "500000000" },
+      { key: "minimum_cash_buffer", label: "Minimum cash buffer (VND)", type: "number", placeholder: "150000000" },
+      { key: "fixed_monthly_costs", label: "Fixed monthly costs (VND)", type: "number", placeholder: "80000000" },
+      { key: "variable_cost_ratio", label: "Variable-cost ratio", type: "number", placeholder: "0.45" },
+      { key: "accounts_receivable", label: "Accounts receivable (VND)", type: "number", placeholder: "0" },
+      { key: "accounts_payable", label: "Accounts payable (VND)", type: "number", placeholder: "0" },
+      { key: "inventory", label: "Inventory (VND)", type: "number", placeholder: "0" },
       {
         key: "financial_periods",
         label: "Dòng tiền theo kỳ",
