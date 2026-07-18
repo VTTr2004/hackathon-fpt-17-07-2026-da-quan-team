@@ -26,7 +26,7 @@ function FieldInput({ field, value }: { field: ProfileField; value: unknown }) {
       ) : (
         <input
           name={field.key}
-          inputMode={field.type === "number" ? "numeric" : undefined}
+          inputMode={field.key === "variable_cost_ratio" ? "decimal" : field.type === "number" ? "numeric" : undefined}
           type={field.type === "date" ? "date" : "text"}
           placeholder={field.placeholder}
           defaultValue={defaultValue}
