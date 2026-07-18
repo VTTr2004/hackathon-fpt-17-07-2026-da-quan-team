@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:/GitHub/hackathon-fpt-17-07-2026-da-quan-team/scripts/collect-ai-collaboration-history.ps1\" -Hook -Tool claude -ProjectPath \"D:/GitHub/hackathon-fpt-17-07-2026-da-quan-team\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:/GitHub/hackathon-fpt-17-07-2026-da-quan-team/scripts/collect-ai-collaboration-history.ps1\" -Hook -Tool claude -ProjectPath \"D:/GitHub/hackathon-fpt-17-07-2026-da-quan-team\""
+          }
+        ]
+      }
+    ]
+  }
+}

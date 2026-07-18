@@ -5,6 +5,8 @@
 > Phạm vi: code hiện có trong working tree, bao gồm cả thay đổi chưa commit  
 > Kiến trúc: **Next.js 16 + React 19 + TypeScript** ở frontend, **FastAPI + SQLAlchemy async + PostgreSQL** ở backend
 
+> **Cập nhật 19/07/2026:** Đây là ảnh chụp tại thời điểm review 18/07. Vấn đề số 2 (tính bất biến của snapshot tài liệu) đã được khắc phục — xem chi tiết SEC-01 trong [`security_audit_report.md`](security_audit_report.md). Các vấn đề còn lại (1, 3, 4, 5) cần rà soát lại đối chiếu mã nguồn hiện tại trước khi kết luận đã xử lý.
+
 ## 1. Tóm tắt điều hành
 
 Startup Lens hiện đã có một luồng nghiệp vụ tương đối đầy đủ cho hai vai trò:
