@@ -8,7 +8,8 @@ from app.api.router import api_router
 from app.core.config import get_settings
 from app.db.base import Base
 from app.db.migrations import migrate_legacy_schema
-from app.db.session import engine
+from app.db.seed import seed_sample_data
+from app.db.session import SessionLocal, engine
 
 settings = get_settings()
 
@@ -19,6 +20,9 @@ async def lifespan(_: FastAPI):
         async with engine.begin() as connection:
             await connection.run_sync(Base.metadata.create_all)
             await migrate_legacy_schema(connection)
+    if settings.seed_sample_data:
+        async with SessionLocal() as session:
+            await seed_sample_data(session, settings.sample_data_password)
     yield
     await engine.dispose()
 

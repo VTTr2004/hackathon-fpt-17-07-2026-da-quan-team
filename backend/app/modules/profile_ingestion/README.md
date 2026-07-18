@@ -4,10 +4,11 @@ Module tạo đề xuất hồ sơ từ tài liệu có bằng chứng. Module k
 
 ## Phạm vi MVP
 
-- Nguồn: tài liệu `shared` dạng PDF có text, DOCX (paragraph và table), PPTX (text và table), TXT, Markdown.
+- Nguồn: tài liệu `shared` dạng PDF/PNG/JPEG (Gemini OCR khi cần), DOCX (paragraph và table),
+  PPTX (text và table), TXT, Markdown.
 - Field: `name`, `industry`, `stage`, `primary_location`, `business_type`, `problem`, `solution`,
   `target_customers`, `revenue_model`, `traction`.
-- XLSX tài chính tiếp tục đi qua `cash_flow`; PDF scan/OCR chưa thuộc phạm vi này.
+- XLSX tài chính tiếp tục đi qua `cash_flow`.
 
 ## Luồng
 

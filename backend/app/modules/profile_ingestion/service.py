@@ -6,7 +6,7 @@ from app.modules.document_chatbot.ingestion import file_to_chunks, text_to_chunk
 
 from .schemas import EvidenceBlock
 
-SUPPORTED_SUFFIXES = {".pdf", ".docx", ".pptx", ".txt", ".md"}
+SUPPORTED_SUFFIXES = {".pdf", ".docx", ".pptx", ".txt", ".md", ".png", ".jpg", ".jpeg"}
 MAX_BLOCKS_PER_DOCUMENT = 200
 MAX_BLOCKS_PER_EXTRACTION = 1000
 
@@ -16,9 +16,14 @@ def _document_blocks(document: dict[str, Any]) -> list[EvidenceBlock]:
     filename = str(document["filename"])
     path_value = document.get("storage_path")
     chunks: list[dict[str, Any]]
-    if path_value and Path(path_value).exists():
-        chunks = file_to_chunks(Path(path_value), document_id=document_id, filename=filename)
+    if path_value and Path(path_value).exists() and Path(filename).suffix.lower() not in {".png", ".jpg", ".jpeg"}:
+        try:
+            chunks = file_to_chunks(Path(path_value), document_id=document_id, filename=filename)
+        except Exception:
+            chunks = []
     else:
+        chunks = []
+    if not chunks:
         chunks = text_to_chunks(
             str(document.get("text") or ""), document_id=document_id, filename=filename
         )
@@ -35,6 +40,11 @@ async def build_evidence_blocks(documents: list[dict[str, Any]]) -> tuple[list[E
             continue
         try:
             document_blocks = await asyncio.to_thread(_document_blocks, document)
+            if not document_blocks:
+                warnings.append(
+                    f"{document['filename']}: không có text có thể trích xuất; PDF scan hoặc tài liệu toàn ảnh cần OCR."
+                )
+                continue
             if len(document_blocks) > MAX_BLOCKS_PER_DOCUMENT:
                 warnings.append(
                     f"{document['filename']}: chỉ dùng {MAX_BLOCKS_PER_DOCUMENT} evidence block đầu tiên."

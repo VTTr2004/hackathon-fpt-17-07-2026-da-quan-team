@@ -1,9 +1,17 @@
+import re
 from pathlib import Path
 
 from docx import Document as DocxDocument
 from openpyxl import load_workbook
 from pptx import Presentation
 from pypdf import PdfReader
+
+_SOURCE_MARKER = re.compile(r"\[(?:PAGE|SLIDE|SHEET|TABLE)\s+[^\]]+\]", re.IGNORECASE)
+
+
+def has_extractable_text(text: str) -> bool:
+    """Return whether parsed output contains content beyond source-locator markers."""
+    return bool(_SOURCE_MARKER.sub("", text).strip())
 
 
 def extract_text(path: Path) -> str:

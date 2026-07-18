@@ -5,6 +5,7 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from app.services.document_parser import has_extractable_text
 
 
 class Document(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -22,5 +23,9 @@ class Document(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         PGUUID(as_uuid=True), ForeignKey("users.id"), index=True, nullable=True
     )
     extracted_text: Mapped[str] = mapped_column(Text, default="", nullable=False)
+
+    @property
+    def extractable(self) -> bool:
+        return has_extractable_text(self.extracted_text)
 
     startup: Mapped["Startup"] = relationship(back_populates="documents")  # noqa: F821

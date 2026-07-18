@@ -11,7 +11,7 @@ import type {
   Startup,
 } from "@/types";
 
-const SUPPORTED_FILE = /\.(pdf|docx|pptx|txt|md)$/i;
+const SUPPORTED_FILE = /\.(pdf|docx|pptx|txt|md|png|jpe?g)$/i;
 
 function editableValue(candidate: ProfileExtractionCandidate): string {
   if (Array.isArray(candidate.proposed_value)) return candidate.proposed_value.map(String).join("\n");
@@ -40,7 +40,15 @@ export default function ExtractionReview({ startup, documents, onStartupUpdated 
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const supportedDocuments = useMemo(
-    () => documents.filter((document) => document.visibility === "shared" && SUPPORTED_FILE.test(document.filename)),
+    () => documents.filter(
+      (document) => document.visibility === "shared" && SUPPORTED_FILE.test(document.filename),
+    ),
+    [documents],
+  );
+  const needsOcrDocuments = useMemo(
+    () => documents.filter(
+      (document) => document.visibility === "shared" && !document.extractable && SUPPORTED_FILE.test(document.filename),
+    ),
     [documents],
   );
 
@@ -78,8 +86,9 @@ export default function ExtractionReview({ startup, documents, onStartupUpdated 
     try {
       const result = await api.createExtraction(startup.id, supportedDocuments.map((document) => document.id));
       loadJob(result);
-      if (result.status === "failed") setError(result.error || "Không thể trích xuất hồ sơ.");
-      else setMessage("Đã tạo đề xuất. Hãy kiểm tra giá trị và bằng chứng trước khi áp dụng.");
+      if (result.status !== "failed") {
+        setMessage("Đã tạo đề xuất. Hãy kiểm tra giá trị và bằng chứng trước khi áp dụng.");
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Không thể trích xuất hồ sơ.");
     } finally {
@@ -144,7 +153,12 @@ export default function ExtractionReview({ startup, documents, onStartupUpdated 
         </button>
       </div>
 
-      <p className="muted">{supportedDocuments.length} tài liệu được chia sẻ và hỗ trợ · PDF text, DOCX, PPTX, TXT, Markdown</p>
+      <p className="muted">{supportedDocuments.length} tài liệu được chia sẻ và hỗ trợ · PDF, ảnh, DOCX, PPTX, TXT, Markdown</p>
+      {needsOcrDocuments.length > 0 && (
+        <div className="cashFlowAlert warning">
+          {needsOcrDocuments.map((document) => document.filename).join(", ")}: chưa có text; hệ thống sẽ OCR bằng Gemini 3.1 Flash-Lite khi trích xuất.
+        </div>
+      )}
       {error && <div className="cashFlowAlert error" role="alert">{error}</div>}
       {message && <div className="cashFlowAlert info">{message}</div>}
       {job?.warnings.map((warning) => <div className="cashFlowAlert warning" key={warning}>{warning}</div>)}

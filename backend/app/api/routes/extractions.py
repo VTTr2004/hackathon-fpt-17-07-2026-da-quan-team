@@ -26,6 +26,7 @@ from app.schemas.extraction import (
     ExtractionJobRead,
 )
 from app.schemas.startup import StartupRead
+from app.services.ocr_service import OCR_SUFFIXES, ocr_document
 
 router = APIRouter()
 
@@ -130,7 +131,7 @@ async def create_extraction(
     if not any(Path(document.filename).suffix.lower() in SUPPORTED_SUFFIXES for document in documents):
         raise HTTPException(
             status_code=422,
-            detail="MVP profile extraction hỗ trợ PDF có text, DOCX, PPTX, TXT và Markdown",
+            detail="Profile extraction hỗ trợ PDF, PNG, JPEG, DOCX, PPTX, TXT và Markdown",
         )
 
     job = ExtractionJob(
@@ -157,7 +158,27 @@ async def create_extraction(
     await db.refresh(job)
 
     try:
-        blocks, warnings = await build_evidence_blocks(
+        ocr_warnings: list[str] = []
+        for document in documents:
+            suffix = Path(document.filename).suffix.lower()
+            if document.extractable or suffix not in OCR_SUFFIXES:
+                continue
+            try:
+                document.extracted_text = await ocr_document(Path(document.storage_path), document.content_type)
+                document.status = "processed"
+                db.add(
+                    AuditLog(
+                        actor_id=user.id,
+                        action="document.ocr_completed",
+                        resource_type="document",
+                        resource_id=document.id,
+                        details={"model": get_llm_client().ocr_model, "filename": document.filename},
+                    )
+                )
+            except Exception as exc:
+                document.status = "needs_ocr"
+                ocr_warnings.append(f"{document.filename}: Gemini OCR thất bại ({str(exc)[:300]}).")
+        blocks, parser_warnings = await build_evidence_blocks(
             [
                 {
                     "id": document.id,
@@ -168,8 +189,10 @@ async def create_extraction(
                 for document in documents
             ]
         )
+        warnings = [*ocr_warnings, *parser_warnings]
         if not blocks:
-            raise ValueError("Không tạo được evidence block từ các tài liệu đã chọn")
+            detail = " ".join(warnings) or "Không tạo được evidence block từ các tài liệu đã chọn"
+            raise ValueError(detail)
         results = await extract_profile_candidates(get_llm_client(), blocks, field_keys)
         for result in results:
             db.add(

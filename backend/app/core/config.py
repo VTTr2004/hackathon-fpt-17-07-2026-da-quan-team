@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     environment: str = "development"
     database_url: str = "postgresql+asyncpg://app:app@localhost:5432/startup_due_diligence"
     auto_create_tables: bool = True
+    seed_sample_data: bool = False
+    sample_data_password: str = Field(default="Demo1234!", min_length=8, max_length=128)
     cors_origins: str = "http://localhost:3000"
     upload_dir: str = "./uploads"
     max_upload_mb: int = 25
@@ -24,6 +26,7 @@ class Settings(BaseSettings):
     auth_token_ttl_hours: int = 24
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-flash-latest"
+    gemini_ocr_model: str = "gemini-3.1-flash-lite"
     gemini_embed_model: str = "gemini-embedding-001"
     gemini_embed_dim: int = 1024
     gemini_timeout_seconds: float = 60

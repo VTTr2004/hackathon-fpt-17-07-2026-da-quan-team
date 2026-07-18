@@ -176,7 +176,7 @@ Render / FastAPI / SQLAlchemy async
         |
         +-- PostgreSQL: users, startups, versions, documents, analyses, chat, audit
         +-- Upload storage: original files + extracted text + RAG index
-        +-- Gemini: structured analysis narrative, embeddings, chat fallback
+        +-- Gemini: structured analysis narrative, PDF/image OCR, embeddings, chat fallback
         +-- NVIDIA NIM: optional provider for RAG chat
         +-- Google/Goong/Nominatim: geocoding
         +-- Google Places API New: surrounding analysis
