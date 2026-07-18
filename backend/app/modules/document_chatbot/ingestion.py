@@ -1,16 +1,24 @@
 """Turn raw sources into retrieval chunks with citation metadata.
 
-Two entry points:
+Entry points:
 - ``csv_rows_to_chunks``: one VC-dataset row -> one natural-language "record card" chunk.
-- ``text_to_chunks``: long document text -> overlapping chunks that keep page/slide/sheet markers
-  emitted by ``services.document_parser`` so citations can point back to the native location.
+- ``json_to_chunks``: a JSON document (business profile, location) -> one labeled descriptive card.
+- ``xlsx_to_chunks``: a workbook -> structure-aware cards. Summary/dimension rows become one labeled
+  card each; oversized transaction sheets get an overview card instead of thousands of row cards
+  (their ``Tóm tắt`` sheet already carries the aggregates). See docs/methodology.md.
+- ``text_to_chunks``: long document text -> overlapping chunks that keep page/slide/sheet markers.
+- ``file_to_chunks``: dispatch a file path to the right handler by extension.
 """
 from __future__ import annotations
 
 import csv
+import json
 import re
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
+
+from openpyxl import load_workbook
 
 _MARKER = re.compile(r"\[(PAGE|SLIDE|SHEET)\s+([^\]]+)\]", re.IGNORECASE)
 
@@ -98,3 +106,139 @@ def text_to_chunks(
             }
         )
     return chunks
+
+
+# ---------------------------------------------------------------- JSON --------
+def _flatten_json(obj: Any, prefix: str = "") -> list[str]:
+    lines: list[str] = []
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            lines.extend(_flatten_json(value, f"{prefix}{key}."))
+    elif isinstance(obj, list):
+        if all(not isinstance(item, (dict, list)) for item in obj):
+            lines.append(f"{prefix[:-1]}: " + "; ".join(str(item) for item in obj))
+        else:
+            for index, item in enumerate(obj):
+                lines.extend(_flatten_json(item, f"{prefix}{index}."))
+    else:
+        lines.append(f"{prefix[:-1]}: {obj}")
+    return lines
+
+
+def json_to_chunks(path: Path, *, document_id: str, filename: str) -> list[dict[str, Any]]:
+    data = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+    lines = _flatten_json(data)
+    if not lines:
+        return []
+    text = f"[{filename}]\n" + "\n".join(lines)
+    return [
+        {
+            "chunk_id": f"{document_id}:json",
+            "document_id": document_id,
+            "filename": filename,
+            "text": text,
+            "metadata": {"kind": "json"},
+        }
+    ]
+
+
+# ---------------------------------------------------------------- XLSX --------
+def _cell(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, datetime):
+        return value.date().isoformat() if value.time().isoformat() == "00:00:00" else value.isoformat(sep=" ")
+    if isinstance(value, date):
+        return value.isoformat()
+    return str(value).strip()
+
+
+def xlsx_to_chunks(
+    path: Path, *, document_id: str, filename: str, max_data_rows: int = 40
+) -> list[dict[str, Any]]:
+    """Structure-aware workbook ingestion.
+
+    Detects the header of each table within a sheet (a header is the first multi-column row after a
+    blank/title row), then emits one labeled card per data row. Sheets with more than ``max_data_rows``
+    data rows get only an overview card (their ``Tóm tắt`` sheet holds the aggregates), which keeps
+    embedding volume and retrieval noise bounded.
+    """
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    chunks: list[dict[str, Any]] = []
+    for sheet in workbook.worksheets:
+        header: list[str] | None = None
+        expect_header = True
+        data_count = 0
+        columns: list[str] = []
+        row_cards: list[dict[str, Any]] = []
+        for raw in sheet.values:
+            cells = [_cell(value) for value in raw]
+            non_empty = [cell for cell in cells if cell]
+            if not non_empty:
+                expect_header = True
+                continue
+            if len(non_empty) == 1:  # title / disclaimer / section label
+                expect_header = True
+                continue
+            if expect_header:
+                header = cells
+                columns = [cell for cell in cells if cell]
+                expect_header = False
+                continue
+            data_count += 1
+            if data_count > max_data_rows:
+                continue
+            pairs = [
+                f"{header[index]}: {cells[index]}"
+                for index in range(len(cells))
+                if index < len(header) and header[index] and cells[index]
+            ]
+            if not pairs:
+                continue
+            row_cards.append(
+                {
+                    "chunk_id": f"{document_id}:{sheet.title}:{data_count}",
+                    "document_id": document_id,
+                    "filename": filename,
+                    "text": f"[{filename} › {sheet.title}] " + " | ".join(pairs),
+                    "metadata": {"sheet": sheet.title, "row": data_count},
+                }
+            )
+        overview = f"[{filename} › {sheet.title}] Bảng dữ liệu {data_count} dòng."
+        if columns:
+            overview += " Cột: " + ", ".join(columns) + "."
+        if data_count > max_data_rows:
+            overview += (
+                f" (Chỉ lập chỉ mục {max_data_rows} dòng đầu; dùng sheet 'Tóm tắt' cho số liệu tổng hợp.)"
+            )
+        chunks.append(
+            {
+                "chunk_id": f"{document_id}:{sheet.title}:overview",
+                "document_id": document_id,
+                "filename": filename,
+                "text": overview,
+                "metadata": {"sheet": sheet.title, "kind": "overview"},
+            }
+        )
+        chunks.extend(row_cards)
+    return chunks
+
+
+# ------------------------------------------------------------ dispatch --------
+def file_to_chunks(path: Path, *, document_id: str, filename: str) -> list[dict[str, Any]]:
+    """Route a file to the right ingester by extension (PDF/text fall back to document_parser)."""
+    suffix = path.suffix.lower()
+    if suffix == ".json":
+        return json_to_chunks(path, document_id=document_id, filename=filename)
+    if suffix == ".xlsx":
+        return xlsx_to_chunks(path, document_id=document_id, filename=filename)
+    if suffix == ".csv":
+        return csv_rows_to_chunks(path, document_id=document_id, filename=filename)
+    if suffix in {".txt", ".md"}:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    else:
+        # PDF/DOCX/PPTX: import the parser lazily so JSON/XLSX/text ingestion needs no doc-parser libs.
+        from app.services.document_parser import extract_text
+
+        text = extract_text(path)
+    return text_to_chunks(text, document_id=document_id, filename=filename)

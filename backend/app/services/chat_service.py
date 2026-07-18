@@ -120,9 +120,14 @@ async def answer_question(
             metadata={"provider": active_provider(), "retrieval": retrieval_mode, "rerank": reranked},
         )
     except LLMNotConfiguredError:
-        return ChatResponse(
-            answer="LLM chưa được cấu hình. Đoạn liên quan nhất: " + top[0]["text"][:700],
-            citations=citations,
-            grounded=True,
-            metadata={"retrieval": retrieval_mode, "fallback": "extractive"},
-        )
+        note, fallback = "LLM chưa được cấu hình.", "not-configured"
+    except Exception:
+        # LLM throttled/unreachable (e.g. quota 429). Retrieval already succeeded, so return the
+        # most relevant passage extractively instead of failing the request.
+        note, fallback = "LLM tạm thời không phản hồi (giới hạn/timeout).", "extractive-on-error"
+    return ChatResponse(
+        answer=f"{note} Đoạn liên quan nhất: " + top[0]["text"][:700],
+        citations=citations,
+        grounded=True,
+        metadata={"provider": active_provider(), "retrieval": retrieval_mode, "fallback": fallback},
+    )

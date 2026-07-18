@@ -11,7 +11,7 @@ as **data, not instructions** (prompt-injection defense).
 | Provider selection (Gemini default, NVIDIA optional) | `app/llm/rag_client.py` |
 | Gemini boundary (chat, embeddings, rerank) | `app/llm/gemini.py` — `gemini-flash-latest` + `gemini-embedding-001` |
 | NVIDIA boundary (chat, embeddings, rerank) | `app/llm/nvidia.py` — GPT-OSS-120B + nv-embedqa-e5-v5 |
-| Source → chunks (record cards / page-aware) | `ingestion.py` |
+| Source → chunks (CSV / JSON / XLSX / text, page-aware) | `ingestion.py` (`file_to_chunks` dispatch) |
 | Hybrid index (dense + BM25, RRF) + persistence | `retrieval.py` (`HybridIndex`) |
 | Build / load / signature-invalidate index | `index_store.py` |
 | Orchestration (retrieve → rerank → generate → cite) | `services/chat_service.py` |
@@ -67,9 +67,34 @@ Each row becomes one natural-language record card; citations resolve to `dòng <
 If the active provider's key is missing (or the API fails): the index is BM25-only and answers fall
 back to extractive (most-relevant chunk). The endpoint never hard-fails.
 
+## Ingestion by file type (`file_to_chunks`)
+
+| Type | Handler | Chunking |
+|---|---|---|
+| CSV (VC dataset) | `csv_rows_to_chunks` | 1 row → 1 record card |
+| JSON (profile, location) | `json_to_chunks` | flatten to `key: value` lines → 1 descriptive card |
+| XLSX (workbooks) | `xlsx_to_chunks` | structure-aware, see below |
+| TXT / MD | inline read → `text_to_chunks` | overlapping windows |
+| PDF / DOCX / PPTX | `document_parser` → `text_to_chunks` | overlapping windows, page/slide markers |
+
+**Tabular data (XLSX) — three tiers.** Business workbooks are mostly financial/transaction tables,
+so a naive "dump whole sheet → slice by 1000 chars" breaks rows, loses headers, and lets hundreds of
+transaction rows drown retrieval (and burn embedding quota). Instead `xlsx_to_chunks`:
+1. **Summary cards** — each `Tóm tắt` sheet's metric/monthly rows become one labeled card each
+   (precomputed aggregates: total revenue, monthly breakdown, closing balance).
+2. **Dimension cards** — small sheets (Menu, suppliers, staff, utilities) → one labeled card per row.
+3. **Transaction rows** — capped at `max_data_rows` (default 40) per sheet; oversized sheets get an
+   overview card instead of thousands of row cards. Header detection tracks per-table headers (first
+   multi-column row after a blank/title), so multi-table sheets label rows correctly.
+
+Validated on `sample-data/goc-ho-coffee` (Excel + JSON): profile lookups, per-month revenue, closing
+balance, menu prices, and supplier lookups all answered correctly with citations. Seed a folder with
+`scripts/seed_folder_index.py` (skips PDF unless `--include-pdf`).
+
 ## Known limitations
 
-- Vector RAG answers **lookups** well but not **aggregations** (counts/sums over many rows) — top-k
-  only sees a few cards. Route aggregate questions to a structured/pandas tool if needed.
+- Vector RAG answers **lookups** and **precomputed aggregates** (from `Tóm tắt` cards) well, but not
+  **arbitrary aggregations** not already computed (e.g. "revenue of Americano via delivery in May").
+  Those need a structured/pandas/SQL tool over the raw sheets — planned as a future retrieval route.
 - Out-of-corpus questions are refused by the model but `grounded` may still read `true`; a stricter
   "no-evidence" gate is future work.
