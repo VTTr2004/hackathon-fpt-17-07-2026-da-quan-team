@@ -212,4 +212,3 @@ def fetch_satellite_context(
     with _CACHE_LOCK:
         _CACHE[key] = (now.timestamp(), result)
     return result
-

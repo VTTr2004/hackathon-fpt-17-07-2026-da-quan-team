@@ -121,9 +121,7 @@ class TestPartialOnQueryFailure:
             def __getattr__(self, name):
                 return getattr(self._inner, name)
 
-        monkeypatch.setattr(
-            "app.modules.surrounding_area.analyzer.get_poi_store", lambda: FaultyStore(real)
-        )
+        monkeypatch.setattr("app.modules.surrounding_area.analyzer.get_poi_store", lambda: FaultyStore(real))
         facts = {"industry": "cà phê", "location": DISTRICT_1}
         report = await analyzer.analyze(facts, [], NO_GEMINI)
         assert report.status == AnalysisStatus.PARTIAL
@@ -164,8 +162,14 @@ class TestDirectInputs:
         """The startup's own rent is echoed as a known fact, not treated as a market rate."""
         facts = {
             "industry": "cà phê",
-            "location": {**DISTRICT_1, "type": "cửa hàng", "tenure": "thuê",
-                         "rent_cost": 30_000_000, "area_m2": 60, "known_competitors": ["Highlands kế bên"]},
+            "location": {
+                **DISTRICT_1,
+                "type": "cửa hàng",
+                "tenure": "thuê",
+                "rent_cost": 30_000_000,
+                "area_m2": 60,
+                "known_competitors": ["Highlands kế bên"],
+            },
         }
         report = await analyzer.analyze(facts, [], NO_GEMINI)
         profile = report.details["location_profile"]

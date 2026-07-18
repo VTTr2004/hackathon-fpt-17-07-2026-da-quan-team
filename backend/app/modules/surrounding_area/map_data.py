@@ -13,8 +13,13 @@ from typing import Any
 from app.modules.surrounding_area.data_store.poi_store import PoiStore
 from app.modules.surrounding_area.tools.industry_taxonomy import resolve_competitor_filter
 
-EATERY_TAGS = (("amenity", "cafe"), ("amenity", "restaurant"), ("amenity", "fast_food"),
-               ("amenity", "bar"), ("amenity", "food_court"))
+EATERY_TAGS = (
+    ("amenity", "cafe"),
+    ("amenity", "restaurant"),
+    ("amenity", "fast_food"),
+    ("amenity", "bar"),
+    ("amenity", "food_court"),
+)
 
 
 def _poi_dict(p: Any) -> dict[str, Any]:
@@ -55,9 +60,7 @@ def build_map_payload(
         residential = store.query_radius(lat, lon, radius_m, tags=(("landuse", "residential"),), limit=40)
         competitor_tags = resolve_competitor_filter(industry).competitor_tags
         competitors = (
-            store.query_radius(lat, lon, radius_m, tags=competitor_tags, limit=limit)
-            if competitor_tags
-            else []
+            store.query_radius(lat, lon, radius_m, tags=competitor_tags, limit=limit) if competitor_tags else []
         )
     except Exception:  # noqa: BLE001 - a map that cannot load is empty, not a 500
         return {"center": {"lat": lat, "lon": lon}, "eateries": [], "residential": [], "competitors": []}
@@ -65,8 +68,6 @@ def build_map_payload(
     return {
         "center": {"lat": lat, "lon": lon},
         "eateries": [_poi_dict(p) for p in eateries],
-        "residential": [
-            {"name": p.name, "lat": p.lat, "lon": p.lon, "distance_m": p.distance_m} for p in residential
-        ],
+        "residential": [{"name": p.name, "lat": p.lat, "lon": p.lon, "distance_m": p.distance_m} for p in residential],
         "competitors": [_poi_dict(p) for p in competitors],
     }
