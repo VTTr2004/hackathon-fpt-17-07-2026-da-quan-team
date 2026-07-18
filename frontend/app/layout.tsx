@@ -13,6 +13,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Hải Đăng Khởi Nghiệp",
   description: "Đánh giá startup và hỏi đáp tài liệu với Gemini",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 // Đặt data-theme trước khi hydrate để tránh nhấp nháy (FOUC) khi tải trang.

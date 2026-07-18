@@ -17,6 +17,10 @@
   --rose: #be123c;
   --violet: #6d28d9;
   --graphite: #31302d;
+  /* Brand colours sampled from the logo artwork, so the wordmark matches the mark. */
+  --brand-navy: #072c5d;
+  --brand-blue: #256295;
+  --brand-gold: #f5b324;
   --shadow: 0 18px 42px rgba(42, 26, 20, 0.1);
   --shadow-soft: 0 10px 24px rgba(42, 26, 20, 0.08);
   --radius: 8px;
@@ -50,6 +54,10 @@
   --line-strong: #a8737e;
   --primary: #ff9b94;
   --primary-dark: #ffd6d2;
+  /* The logo navy is unreadable on a dark surface; lift both brand tones. */
+  --brand-navy: #d6e6fa;
+  --brand-blue: #8fb9de;
+  --brand-gold: #fade88;
   --blue: #9ecbff;
   --amber: #ffd08a;
   --rose: #ff8fa3;
@@ -3785,7 +3793,7 @@ html {
   display: block;
   width: 82%;
   height: 82%;
-  background: url("/brand-mark.png?v=20260718") center / contain no-repeat;
+  background: url("/brand-mark.png?v=20260719") center / contain no-repeat;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
 }
 
@@ -3806,6 +3814,15 @@ html {
   line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Two-tone wordmark: "Hải Đăng" navy, "Khởi Nghiệp" blue — same split as the artwork. */
+.brandWordA {
+  color: var(--brand-navy);
+}
+
+.brandWordB {
+  color: var(--brand-blue);
 }
 
 .appBrandText span {
@@ -4411,6 +4428,53 @@ html {
   background:
     radial-gradient(900px 420px at 15% 8%, rgba(255, 255, 255, 0.1), transparent 60%),
     linear-gradient(155deg, #b2282e 0%, #900a1a 45%, #4a0510 100%);
+  /* All-blue wordmark on this pane — the logo navy is unreadable on deep red.
+     "Hải Đăng" takes the deeper, more saturated blue; "Khởi Nghiệp" stays lighter. */
+  --brand-navy: #6ea8dc;
+  --brand-blue: #a9cdee;
+}
+
+.authBrandLockup {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 32px;
+}
+
+/* Keep the mark on its own light chip — the navy lighthouse would vanish
+   straight on the deep red pane. */
+.authBrandLockupMark {
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background-color: #fdf9f4;
+  background-image: url("/brand-mark.png?v=20260719");
+  background-size: 76%;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+}
+
+.authBrandLockupText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.authBrandLockupName {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+
+.authBrandLockupTag {
+  color: var(--brand-blue);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 :root[data-theme="dark"] .authBrandPane {
@@ -4557,7 +4621,7 @@ html {
   display: block;
   width: 84%;
   height: 84%;
-  background: url("/brand-mark.png?v=20260718") center / contain no-repeat;
+  background: url("/brand-mark.png?v=20260719") center / contain no-repeat;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
 }
 
@@ -4785,6 +4849,7 @@ html {
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
 
 .hdPageHead h1 {
   margin: 0;

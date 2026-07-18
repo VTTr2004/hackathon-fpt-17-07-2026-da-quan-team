@@ -111,7 +111,6 @@ export default function DashboardPage() {
     <div className="hdShell">
       <section className="hdPageHead">
         <div>
-          <p className="hdEyebrow">Hải Đăng Khởi Nghiệp</p>
           <h1>{isStartup ? "Hồ sơ gọi vốn của tôi" : "Bàn thẩm định startup"}</h1>
           <p className="hdLead">
             {isStartup
