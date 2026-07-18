@@ -1,8 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { SpreadsheetFile, Workbook } from "@oai/artifact-tool";
 
-const ROOT = "K:/ProfileGitHub/hackathon/hackathon-fpt-17-07-2026-da-quan-team";
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const OUT = path.join(ROOT, "sample-data", "ai-cashflow-variants");
 const PREVIEWS = path.join(ROOT, "bins", "tmp", "cashflow_variants", "previews");
 const DISCLAIMER = "DỮ LIỆU MÔ PHỎNG - KHÔNG CÓ GIÁ TRỊ KẾ TOÁN, THUẾ HOẶC PHÁP LÝ";
@@ -85,6 +86,7 @@ async function exportBook(workbook, filePath, previewSpecs = []) {
   }
   const xlsx = await SpreadsheetFile.exportXlsx(workbook);
   await xlsx.save(filePath);
+  await fs.rm(`${filePath}.inspect.ndjson`, { force: true });
 }
 
 function addReadmeSheet(wb, dataset, notes) {
@@ -371,7 +373,7 @@ async function main() {
   const convenience = await buildConvenience();
   const cases = await writeGroundTruth(bakery, restaurant, convenience);
   await writeReadmes(cases);
-  const manifest = { generated_at: "2026-07-18", disclaimer: DISCLAIMER, cases };
+  const manifest = { generated_at: "2026-07-19", disclaimer: DISCLAIMER, cases };
   await fs.writeFile(path.join(OUT, "manifest.json"), JSON.stringify(manifest, null, 2), "utf8");
   console.log(JSON.stringify(cases, null, 2));
 }

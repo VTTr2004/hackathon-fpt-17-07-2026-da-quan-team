@@ -265,7 +265,9 @@ def _monthly_operating_proposals(results: list[ToolExecutionResult]) -> list[Fie
                         confidence="medium",
                         sources=[source],
                         generated_by_tool=IngestionToolName.SUMMARIZE_PURCHASES.value,
-                        warnings=["Derived from remaining purchase and expense categories, averaged by reported month."],
+                        warnings=[
+                            "Derived from remaining purchase and expense categories, averaged by reported month."
+                        ],
                     ),
                 ]
             )

@@ -22,8 +22,18 @@ export type DocumentItem = {
   status: string;
   extractable: boolean;
   visibility: "private" | "shared" | "restricted";
+  category: DocumentCategory;
+  categorized_by: "ai" | "rules" | "pending";
   created_at: string;
 };
+
+export type DocumentCategory =
+  | "legal"
+  | "sales_revenue"
+  | "purchases_expenses"
+  | "accounting_cashflow"
+  | "location_operations"
+  | "unclassified";
 
 export type ProfileExtractionEvidence = {
   document_id: string;

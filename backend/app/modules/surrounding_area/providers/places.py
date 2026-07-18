@@ -23,9 +23,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from app.modules.surrounding_area.tools.geo import haversine_km
-
 from app.core.config import get_settings
+from app.modules.surrounding_area.tools.geo import haversine_km
 
 PLACES_VERSION = "1.0.0"
 TEXT_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/findplacefromtext/json"

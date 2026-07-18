@@ -23,6 +23,8 @@ async def migrate_legacy_schema(connection: AsyncConnection) -> None:
         "ALTER TABLE startup_access ADD COLUMN IF NOT EXISTS request_reason VARCHAR(1000) NULL",
         "ALTER TABLE documents ADD COLUMN IF NOT EXISTS visibility VARCHAR(30) NOT NULL DEFAULT 'shared'",
         "ALTER TABLE documents ADD COLUMN IF NOT EXISTS uploaded_by_id UUID NULL",
+        "ALTER TABLE documents ADD COLUMN IF NOT EXISTS category VARCHAR(40) NOT NULL DEFAULT 'unclassified'",
+        "ALTER TABLE documents ADD COLUMN IF NOT EXISTS categorized_by VARCHAR(20) NOT NULL DEFAULT 'pending'",
         "ALTER TABLE analyses ADD COLUMN IF NOT EXISTS startup_version_id UUID NULL",
         "ALTER TABLE analyses ADD COLUMN IF NOT EXISTS created_by_id UUID NULL",
         "ALTER TABLE analyses ADD COLUMN IF NOT EXISTS rubric_version VARCHAR(30) NOT NULL DEFAULT 'default-v1'",

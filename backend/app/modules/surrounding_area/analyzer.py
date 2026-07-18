@@ -17,7 +17,7 @@ warning — it is never silently treated as zero (plan section 7.2).
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from app.modules.surrounding_area.providers.places import PLACES_NEW_VERSION, is_configured, lookup_place, survey_area
@@ -416,7 +416,7 @@ class SurroundingAreaAnalyzer:
                 title="Google Places API (New) - Nearby Search",
                 publisher="Google Maps Platform",
                 url="https://developers.google.com/maps/documentation/places/web-service/nearby-search",
-                accessed_at=datetime.now(timezone.utc).isoformat(),
+                accessed_at=datetime.now(UTC).isoformat(),
                 reliability="medium",
                 notes="POI quan sát theo bán kính; mỗi nhóm tối đa 20 kết quả và không phải tổng điều tra đầy đủ.",
             )

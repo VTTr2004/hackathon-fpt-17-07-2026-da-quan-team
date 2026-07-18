@@ -1,8 +1,8 @@
+import re
 from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-import re
 from typing import Any
 from unicodedata import normalize as unicode_normalize
 

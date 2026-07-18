@@ -1,8 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool";
 
-const root = "K:/ProfileGitHub/hackathon/hackathon-fpt-17-07-2026-da-quan-team/sample-data/ai-cashflow-variants";
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+const root = path.join(projectRoot, "sample-data", "ai-cashflow-variants");
 
 async function walk(dir) {
   const out = [];

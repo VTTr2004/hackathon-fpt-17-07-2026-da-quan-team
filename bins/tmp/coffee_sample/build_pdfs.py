@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from reportlab.lib import colors
@@ -21,9 +22,9 @@ from reportlab.platypus import (
 )
 
 
-ROOT = Path(r"K:\ProfileGitHub\hackathon\hackathon-fpt-17-07-2026-da-quan-team")
-DATA_DIR = ROOT / "outputs" / "coffee_demo_2026_07_18"
-OUT_DIR = ROOT / "output" / "pdf" / "goc_ho_coffee_demo"
+ROOT = Path(__file__).resolve().parents[3]
+DATA_DIR = Path(os.environ.get("SAMPLE_OUTPUT_DIR", ROOT / "bins" / "outputs" / "sample_data_2026_07_19" / "goc-ho-coffee"))
+OUT_DIR = Path(os.environ.get("SAMPLE_PDF_OUTPUT_DIR", DATA_DIR / "pdf"))
 DISCLAIMER = "DỮ LIỆU MÔ PHỎNG - KHÔNG CÓ GIÁ TRỊ PHÁP LÝ"
 
 GREEN = colors.HexColor("#174D3B")
@@ -268,7 +269,7 @@ def main():
     make_sales_invoices(data)
     make_purchase_invoices(data)
     make_lease_and_utility(data)
-    pdfs = sorted(str(x.relative_to(ROOT)).replace("\\", "/") for x in OUT_DIR.rglob("*.pdf"))
+    pdfs = sorted(str(x.relative_to(DATA_DIR)).replace("\\", "/") for x in OUT_DIR.rglob("*.pdf"))
     manifest = {"business": data["business"]["name"], "disclaimer": DISCLAIMER, "pdf_count": len(pdfs), "files": pdfs}
     (OUT_DIR / "pdf_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(manifest, ensure_ascii=True, indent=2))

@@ -1,0 +1,13 @@
+{
+  "business_id": "GOCHO-DEMO-001",
+  "planning_horizon_months": 12,
+  "development_objectives": "Tăng doanh thu trung bình tháng 20% và duy trì số dư tiền cuối tháng cao hơn mức đệm tối thiểu trong 12 tháng tới.",
+  "product_plan": "Thử nghiệm hai combo cà phê và bánh vào buổi sáng; chỉ giữ sản phẩm có biên đóng góp dương và tỷ lệ mua lại tốt.",
+  "customer_growth_plan": "Triển khai chương trình khách hàng quay lại và gói đặt theo tuần cho các văn phòng trong bán kính 2 km.",
+  "channel_expansion_plan": "Tối ưu kênh giao hàng hiện có trước khi thêm nền tảng mới; theo dõi doanh thu thuần sau phí theo từng kênh.",
+  "outlet_expansion_plan": "Chỉ đánh giá điểm bán thứ hai sau khi điểm hiện tại có sáu tháng dòng tiền hoạt động dương liên tiếp.",
+  "operating_capability_plan": "Chuẩn hóa định lượng nguyên liệu, lịch ca, quy trình chốt quỹ và đối soát hóa đơn theo tuần.",
+  "development_milestones": "Q3/2026: hoàn thiện dashboard chi phí; Q4/2026: tăng tỷ lệ khách quay lại; Q1/2027: đánh giá điều kiện mở rộng.",
+  "development_dependencies": "Phụ thuộc lưu lượng khách khu vực, năng lực giữ nhân sự, phí nền tảng giao hàng và biến động giá nguyên liệu.",
+  "disclaimer": "DỮ LIỆU MÔ PHỎNG - KHÔNG CÓ GIÁ TRỊ PHÁP LÝ"
+}

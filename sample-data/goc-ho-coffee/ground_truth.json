@@ -1,0 +1,127 @@
+{
+  "dataset": "Góc Hồ Coffee - dữ liệu mô phỏng",
+  "generated_on": "2026-07-19",
+  "required_profile_fields": [
+    "name",
+    "industry",
+    "stage",
+    "location",
+    "problem",
+    "solution",
+    "target_customers",
+    "core_products",
+    "revenue_model",
+    "currency",
+    "cash_as_of",
+    "current_cash",
+    "monthly_revenue",
+    "fixed_monthly_costs",
+    "variable_costs"
+  ],
+  "profile": {
+    "schema_version": "startup-profile-v2",
+    "business_id": "GOCHO-DEMO-001",
+    "name": "Góc Hồ Coffee",
+    "industry": "F&B",
+    "stage": "Seed",
+    "primary_location": "Hoàn Kiếm, Hà Nội",
+    "location": "Hoàn Kiếm, Hà Nội",
+    "founded_date": "2026-04-01",
+    "business_type": "Hộ kinh doanh",
+    "employee_count": 8,
+    "operating_scope": "Một điểm bán tại khu vực Hồ Hoàn Kiếm và giao hàng bán kính gần",
+    "problem": "Khách đi bộ quanh Hồ Hoàn Kiếm cần một điểm dừng chân có cà phê Việt, chỗ ngồi ngắn hạn và phục vụ nhanh.",
+    "problem_owner": "Khách du lịch, nhân viên văn phòng và người trẻ di chuyển quanh khu vực Hồ Hoàn Kiếm.",
+    "solution": "Quán cà phê quy mô nhỏ, phục vụ cà phê Việt và đồ uống hiện đại, có mang đi và giao hàng trong bán kính gần.",
+    "differentiation": "Vị trí gần Hồ Hoàn Kiếm, menu cà phê Việt dễ tiếp cận, thời gian phục vụ ngắn và ba hình thức nhận món.",
+    "target_customers": [
+      "Khách du lịch trong nước và quốc tế đi bộ quanh Hồ Hoàn Kiếm",
+      "Nhân viên văn phòng khu vực Hoàn Kiếm",
+      "Người trẻ cần chỗ gặp mặt hoặc làm việc ngắn"
+    ],
+    "customer_purchase_occasions": "Dừng nghỉ khi tham quan, mua đồ uống trước giờ làm, gặp mặt ngắn và đặt giao trong giờ hành chính.",
+    "users_and_payers": "Người mua đồ uống cũng là người sử dụng và thanh toán; đơn giao hàng có thể do nhóm văn phòng chi trả.",
+    "core_products": [
+      "Cà phê Việt",
+      "Đồ uống espresso và cold brew",
+      "Trà, matcha và bánh ngọt"
+    ],
+    "pricing_model": "Giá niêm yết theo món từ 35.000 đến 65.000 VND; khuyến mại theo giao dịch từ 5% đến 10%.",
+    "revenue_model": [
+      "Bán đồ uống và bánh theo món"
+    ],
+    "sales_channels": [
+      "Tại quán",
+      "Mang đi",
+      "Giao hàng"
+    ],
+    "acquisition_channels": [
+      "Khách vãng lai quanh Hồ Hoàn Kiếm",
+      "Mạng xã hội",
+      "Ứng dụng giao hàng"
+    ],
+    "average_order_value": 45193,
+    "competitors": [
+      "Chuỗi cà phê lớn tại khu vực Hoàn Kiếm",
+      "Các quán cà phê nội địa quanh Hồ Hoàn Kiếm"
+    ],
+    "key_suppliers_partners": [
+      "Nhà rang Hương Việt",
+      "Sữa & Nguyên liệu An Bình",
+      "Bao bì Xanh Hà Nội",
+      "Bếp bánh Ban Mai"
+    ],
+    "traction": "Doanh thu thuần quý II/2026 đạt 671.303.450 VND từ 91 ngày bán hàng.",
+    "fundraising_need": "Bổ sung vốn lưu động và thử nghiệm chuẩn hóa mô hình trước khi cân nhắc điểm bán thứ hai.",
+    "disclaimer": "DỮ LIỆU MÔ PHỎNG - KHÔNG CÓ GIÁ TRỊ PHÁP LÝ"
+  },
+  "development_plan": {
+    "business_id": "GOCHO-DEMO-001",
+    "planning_horizon_months": 12,
+    "development_objectives": "Tăng doanh thu trung bình tháng 20% và duy trì số dư tiền cuối tháng cao hơn mức đệm tối thiểu trong 12 tháng tới.",
+    "product_plan": "Thử nghiệm hai combo cà phê và bánh vào buổi sáng; chỉ giữ sản phẩm có biên đóng góp dương và tỷ lệ mua lại tốt.",
+    "customer_growth_plan": "Triển khai chương trình khách hàng quay lại và gói đặt theo tuần cho các văn phòng trong bán kính 2 km.",
+    "channel_expansion_plan": "Tối ưu kênh giao hàng hiện có trước khi thêm nền tảng mới; theo dõi doanh thu thuần sau phí theo từng kênh.",
+    "outlet_expansion_plan": "Chỉ đánh giá điểm bán thứ hai sau khi điểm hiện tại có sáu tháng dòng tiền hoạt động dương liên tiếp.",
+    "operating_capability_plan": "Chuẩn hóa định lượng nguyên liệu, lịch ca, quy trình chốt quỹ và đối soát hóa đơn theo tuần.",
+    "development_milestones": "Q3/2026: hoàn thiện dashboard chi phí; Q4/2026: tăng tỷ lệ khách quay lại; Q1/2027: đánh giá điều kiện mở rộng.",
+    "development_dependencies": "Phụ thuộc lưu lượng khách khu vực, năng lực giữ nhân sự, phí nền tảng giao hàng và biến động giá nguyên liệu.",
+    "disclaimer": "DỮ LIỆU MÔ PHỎNG - KHÔNG CÓ GIÁ TRỊ PHÁP LÝ"
+  },
+  "cash_flow": {
+    "schema_version": "cashflow-ground-truth-v2",
+    "currency": "VND",
+    "cash_as_of": "2026-06-30",
+    "current_cash": 439372410,
+    "monthly_revenue": 223767816.66666666,
+    "fixed_monthly_costs": 133980000,
+    "variable_costs": 119997013.33333333,
+    "computed": {
+      "monthly_expense": 253977013.3333333,
+      "variable_cost_ratio": 0.5362568001102929
+    },
+    "classification": {
+      "fixed_categories": [
+        "Tiền thuê",
+        "Tiền lương",
+        "Phần mềm"
+      ],
+      "variable_categories": [
+        "Cà phê hạt",
+        "Sữa và nguyên liệu",
+        "Bao bì",
+        "Bánh",
+        "Marketing",
+        "Điện nước"
+      ]
+    }
+  },
+  "reconciliation": {
+    "opening_cash": 380000000,
+    "total_sales": 671303450,
+    "total_purchases_and_expenses": 761931040,
+    "total_inflows": 821303450,
+    "total_outflows": 761931040,
+    "ending_cash": 439372410
+  }
+}

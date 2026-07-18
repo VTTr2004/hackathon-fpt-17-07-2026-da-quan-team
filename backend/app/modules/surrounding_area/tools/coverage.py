@@ -174,7 +174,8 @@ def assess_places_coverage(
         raise ValueError("invalid Google Places coverage inputs")
     ratio = round(successful_groups / total_groups, 3)
     warnings = [
-        "Google Places là mẫu POI quan sát được, không phải tổng điều tra; không dùng số đếm để suy ra dân số tuyệt đối."
+        "Google Places là mẫu POI quan sát được, không phải tổng điều tra; "
+        "không dùng số đếm để suy ra dân số tuyệt đối."
     ]
     notes: list[str] = []
     if successful_groups == total_groups and not competitor_capped:

@@ -1,10 +1,16 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { SpreadsheetFile, Workbook } from "@oai/artifact-tool";
 
-const projectRoot = "K:/ProfileGitHub/hackathon/hackathon-fpt-17-07-2026-da-quan-team";
-const outputDir = path.join(projectRoot, "outputs", "coffee_demo_2026_07_18");
-const previewDir = path.join(projectRoot, "tmp", "coffee_sample", "previews");
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const projectRoot = path.resolve(scriptDir, "..", "..", "..");
+const outputDir = path.resolve(
+  process.env.SAMPLE_OUTPUT_DIR ?? path.join(projectRoot, "bins", "outputs", "sample_data_2026_07_19", "goc-ho-coffee"),
+);
+const previewDir = path.resolve(
+  process.env.SAMPLE_PREVIEW_DIR ?? path.join(projectRoot, "bins", "tmp", "coffee_sample", "previews"),
+);
 await fs.mkdir(outputDir, { recursive: true });
 await fs.mkdir(previewDir, { recursive: true });
 
@@ -36,8 +42,15 @@ const business = {
   latitude: 21.03023,
   longitude: 105.85092,
   opened_on: "2026-04-01",
-  business_problem:
+  industry: "F&B",
+  stage: "Seed",
+  primary_location: "Hoàn Kiếm, Hà Nội",
+  business_type: "Hộ kinh doanh",
+  operating_scope: "Một điểm bán tại khu vực Hồ Hoàn Kiếm và giao hàng bán kính gần",
+  problem:
     "Khách đi bộ quanh Hồ Hoàn Kiếm cần một điểm dừng chân có cà phê Việt, chỗ ngồi ngắn hạn và phục vụ nhanh.",
+  problem_owner:
+    "Khách du lịch, nhân viên văn phòng và người trẻ di chuyển quanh khu vực Hồ Hoàn Kiếm.",
   target_customers: [
     "Khách du lịch trong nước và quốc tế đi bộ quanh Hồ Hoàn Kiếm",
     "Nhân viên văn phòng khu vực Hoàn Kiếm",
@@ -45,7 +58,19 @@ const business = {
   ],
   solution:
     "Quán cà phê quy mô nhỏ, phục vụ cà phê Việt và đồ uống hiện đại, có mang đi và giao hàng trong bán kính gần.",
-  revenue_channels: ["Tại quán", "Mang đi", "Giao hàng"],
+  differentiation:
+    "Vị trí gần Hồ Hoàn Kiếm, menu cà phê Việt dễ tiếp cận, thời gian phục vụ ngắn và ba hình thức nhận món.",
+  customer_purchase_occasions:
+    "Dừng nghỉ khi tham quan, mua đồ uống trước giờ làm, gặp mặt ngắn và đặt giao trong giờ hành chính.",
+  users_and_payers: "Người mua đồ uống cũng là người sử dụng và thanh toán; đơn giao hàng có thể do nhóm văn phòng chi trả.",
+  core_products: ["Cà phê Việt", "Đồ uống espresso và cold brew", "Trà, matcha và bánh ngọt"],
+  pricing_model: "Giá niêm yết theo món từ 35.000 đến 65.000 VND; khuyến mại theo giao dịch từ 5% đến 10%.",
+  revenue_model: ["Bán đồ uống và bánh theo món"],
+  sales_channels: ["Tại quán", "Mang đi", "Giao hàng"],
+  acquisition_channels: ["Khách vãng lai quanh Hồ Hoàn Kiếm", "Mạng xã hội", "Ứng dụng giao hàng"],
+  competitors: ["Chuỗi cà phê lớn tại khu vực Hoàn Kiếm", "Các quán cà phê nội địa quanh Hồ Hoàn Kiếm"],
+  key_suppliers_partners: ["Nhà rang Hương Việt", "Sữa & Nguyên liệu An Bình", "Bao bì Xanh Hà Nội", "Bếp bánh Ban Mai"],
+  fundraising_need: "Bổ sung vốn lưu động và thử nghiệm chuẩn hóa mô hình trước khi cân nhắc điểm bán thứ hai.",
   opening_hours: "07:00-22:00",
   area_m2: 85,
   seats: 42,
@@ -55,6 +80,28 @@ const business = {
   currency: "VND",
   data_period: { start: "2026-04-01", end: "2026-06-30" },
   disclaimer: "DỮ LIỆU MÔ PHỎNG - KHÔNG CÓ GIÁ TRỊ PHÁP LÝ",
+};
+
+const developmentPlan = {
+  business_id: business.business_id,
+  planning_horizon_months: 12,
+  development_objectives:
+    "Tăng doanh thu trung bình tháng 20% và duy trì số dư tiền cuối tháng cao hơn mức đệm tối thiểu trong 12 tháng tới.",
+  product_plan:
+    "Thử nghiệm hai combo cà phê và bánh vào buổi sáng; chỉ giữ sản phẩm có biên đóng góp dương và tỷ lệ mua lại tốt.",
+  customer_growth_plan:
+    "Triển khai chương trình khách hàng quay lại và gói đặt theo tuần cho các văn phòng trong bán kính 2 km.",
+  channel_expansion_plan:
+    "Tối ưu kênh giao hàng hiện có trước khi thêm nền tảng mới; theo dõi doanh thu thuần sau phí theo từng kênh.",
+  outlet_expansion_plan:
+    "Chỉ đánh giá điểm bán thứ hai sau khi điểm hiện tại có sáu tháng dòng tiền hoạt động dương liên tiếp.",
+  operating_capability_plan:
+    "Chuẩn hóa định lượng nguyên liệu, lịch ca, quy trình chốt quỹ và đối soát hóa đơn theo tuần.",
+  development_milestones:
+    "Q3/2026: hoàn thiện dashboard chi phí; Q4/2026: tăng tỷ lệ khách quay lại; Q1/2027: đánh giá điều kiện mở rộng.",
+  development_dependencies:
+    "Phụ thuộc lưu lượng khách khu vực, năng lực giữ nhân sự, phí nền tảng giao hàng và biến động giá nguyên liệu.",
+  disclaimer: business.disclaimer,
 };
 
 const menu = [
@@ -350,6 +397,66 @@ const totalPurchases = purchases.reduce((sum, row) => sum + row.total, 0);
 const totalInflows = cashbook.reduce((sum, row) => sum + row.inflow, 0);
 const totalOutflows = cashbook.reduce((sum, row) => sum + row.outflow, 0);
 const endingCash = openingCash + totalInflows - totalOutflows;
+const fixedCostCategories = new Set(["Tiền thuê", "Tiền lương", "Phần mềm"]);
+const fixedMonthlyCosts =
+  purchases.filter((row) => fixedCostCategories.has(row.category)).reduce((sum, row) => sum + row.total, 0) / 3;
+const variableCosts =
+  purchases.filter((row) => !fixedCostCategories.has(row.category)).reduce((sum, row) => sum + row.total, 0) / 3;
+const monthlyRevenue = totalSales / 3;
+const monthlyExpense = fixedMonthlyCosts + variableCosts;
+const variableCostRatio = variableCosts / monthlyRevenue;
+const totalUnits = sales.reduce((sum, row) => sum + row.quantity, 0);
+const averageItemValue = totalUnits ? totalSales / totalUnits : null;
+
+const profileDocument = {
+  schema_version: "startup-profile-v2",
+  business_id: business.business_id,
+  name: business.name,
+  industry: business.industry,
+  stage: business.stage,
+  primary_location: business.primary_location,
+  location: business.primary_location,
+  founded_date: business.opened_on,
+  business_type: business.business_type,
+  employee_count: business.employees,
+  operating_scope: business.operating_scope,
+  problem: business.problem,
+  problem_owner: business.problem_owner,
+  solution: business.solution,
+  differentiation: business.differentiation,
+  target_customers: business.target_customers,
+  customer_purchase_occasions: business.customer_purchase_occasions,
+  users_and_payers: business.users_and_payers,
+  core_products: business.core_products,
+  pricing_model: business.pricing_model,
+  revenue_model: business.revenue_model,
+  sales_channels: business.sales_channels,
+  acquisition_channels: business.acquisition_channels,
+  average_order_value: Math.round(averageItemValue),
+  competitors: business.competitors,
+  key_suppliers_partners: business.key_suppliers_partners,
+  traction: `Doanh thu thuần quý II/2026 đạt ${totalSales.toLocaleString("vi-VN")} VND từ 91 ngày bán hàng.`,
+  fundraising_need: business.fundraising_need,
+  disclaimer: business.disclaimer,
+};
+
+const cashFlowGroundTruth = {
+  schema_version: "cashflow-ground-truth-v2",
+  currency: business.currency,
+  cash_as_of: business.data_period.end,
+  current_cash: endingCash,
+  monthly_revenue: monthlyRevenue,
+  fixed_monthly_costs: fixedMonthlyCosts,
+  variable_costs: variableCosts,
+  computed: {
+    monthly_expense: monthlyExpense,
+    variable_cost_ratio: variableCostRatio,
+  },
+  classification: {
+    fixed_categories: [...fixedCostCategories],
+    variable_categories: [...new Set(purchases.filter((row) => !fixedCostCategories.has(row.category)).map((row) => row.category))],
+  },
+};
 
 const staff = [
   { id: "NV-01", name: "Trần Thu Hà", role: "Quản lý" },
@@ -384,6 +491,9 @@ const utilityRecords = fixedExpenses
 
 const centralData = {
   business,
+  profile: profileDocument,
+  development_plan: developmentPlan,
+  cash_flow_ground_truth: cashFlowGroundTruth,
   menu,
   suppliers,
   sales,
@@ -403,7 +513,8 @@ const centralData = {
   },
 };
 
-await fs.writeFile(path.join(outputDir, "01_ho_so_quan_ca_phe.json"), JSON.stringify(business, null, 2), "utf8");
+await fs.writeFile(path.join(outputDir, "01_ho_so_quan_ca_phe.json"), JSON.stringify(profileDocument, null, 2), "utf8");
+await fs.writeFile(path.join(outputDir, "02_ke_hoach_phat_trien.json"), JSON.stringify(developmentPlan, null, 2), "utf8");
 await fs.writeFile(
   path.join(outputDir, "06_thong_tin_dia_diem.json"),
   JSON.stringify(
@@ -428,6 +539,26 @@ await fs.writeFile(
   "utf8",
 );
 await fs.writeFile(path.join(outputDir, "central_data.json"), JSON.stringify(centralData, null, 2), "utf8");
+await fs.writeFile(
+  path.join(outputDir, "ground_truth.json"),
+  JSON.stringify(
+    {
+      dataset: "Góc Hồ Coffee - dữ liệu mô phỏng",
+      generated_on: "2026-07-19",
+      required_profile_fields: [
+        "name", "industry", "stage", "location", "problem", "solution", "target_customers", "core_products",
+        "revenue_model", "currency", "cash_as_of", "current_cash", "monthly_revenue", "fixed_monthly_costs", "variable_costs",
+      ],
+      profile: profileDocument,
+      development_plan: developmentPlan,
+      cash_flow: cashFlowGroundTruth,
+      reconciliation: centralData.reconciliation,
+    },
+    null,
+    2,
+  ),
+  "utf8",
+);
 
 function setTitle(sheet, lastCol, title, subtitle) {
   sheet.showGridLines = false;
@@ -483,7 +614,9 @@ async function exportAndPreview(workbook, filename, previews) {
     );
   }
   const output = await SpreadsheetFile.exportXlsx(workbook);
-  await output.save(path.join(outputDir, filename));
+  const outputPath = path.join(outputDir, filename);
+  await output.save(outputPath);
+  await fs.rm(`${outputPath}.inspect.ndjson`, { force: true });
 }
 
 function buildSalesWorkbook() {
@@ -885,16 +1018,19 @@ await fs.writeFile(
   JSON.stringify(
     {
       dataset: "Góc Hồ Coffee - dữ liệu mô phỏng",
-      generated_on: "2026-07-18",
+      generated_on: "2026-07-19",
       period: business.data_period,
       currency: "VND",
       files: [
         "01_ho_so_quan_ca_phe.json",
+        "02_ke_hoach_phat_trien.json",
         "03_du_lieu_ban_hang_3_thang.xlsx",
         "04_mua_hang_va_chi_phi_3_thang.xlsx",
         "05_so_thu_chi_3_thang.xlsx",
         "06_thong_tin_dia_diem.json",
         "06_dia_diem_va_van_hanh.xlsx",
+        "ground_truth.json",
+        "central_data.json",
       ],
       reconciliation: centralData.reconciliation,
       disclaimer: business.disclaimer,
@@ -902,6 +1038,26 @@ await fs.writeFile(
     null,
     2,
   ),
+  "utf8",
+);
+
+await fs.writeFile(
+  path.join(outputDir, "README.md"),
+  `# Góc Hồ Coffee — bộ dữ liệu mô phỏng\n\n` +
+    `Bộ dữ liệu bằng chứng cho luồng startup và nhà đầu tư. Toàn bộ tên, mã, giao dịch và chứng từ đều là dữ liệu mô phỏng.\n\n` +
+    `## Cách dùng\n\n` +
+    `1. Tải các tệp JSON, XLSX và PDF trong thư mục này lên tab **Bằng chứng**.\n` +
+    `2. Duyệt đề xuất để điền Hồ sơ, Dòng tiền và Kế hoạch phát triển.\n` +
+    `3. Dùng \`ground_truth.json\` để đối chiếu test; không tải \`central_data.json\` hoặc \`ground_truth.json\` như bằng chứng người dùng.\n\n` +
+    `## Kết quả đối soát kỳ 01/04/2026–30/06/2026\n\n` +
+    `- Doanh thu thuần: ${totalSales.toLocaleString("vi-VN")} VND\n` +
+    `- Tổng tiền vào: ${totalInflows.toLocaleString("vi-VN")} VND\n` +
+    `- Tổng tiền ra: ${totalOutflows.toLocaleString("vi-VN")} VND\n` +
+    `- Tiền cuối kỳ: ${endingCash.toLocaleString("vi-VN")} VND\n` +
+    `- Doanh thu trung bình tháng: ${Math.round(monthlyRevenue).toLocaleString("vi-VN")} VND\n` +
+    `- Chi phí cố định trung bình tháng: ${Math.round(fixedMonthlyCosts).toLocaleString("vi-VN")} VND\n` +
+    `- Chi phí biến đổi trung bình tháng: ${Math.round(variableCosts).toLocaleString("vi-VN")} VND\n\n` +
+    `Các chỉ số \`monthly_expense\` và \`variable_cost_ratio\` là dữ liệu được tính, không phải trường nhập trực tiếp.\n`,
   "utf8",
 );
 

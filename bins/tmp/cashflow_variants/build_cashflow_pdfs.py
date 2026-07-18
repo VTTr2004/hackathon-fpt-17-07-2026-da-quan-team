@@ -11,7 +11,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 
-ROOT = Path(r"K:\ProfileGitHub\hackathon\hackathon-fpt-17-07-2026-da-quan-team")
+ROOT = Path(__file__).resolve().parents[3]
 OUT = ROOT / "sample-data" / "ai-cashflow-variants"
 DISCLAIMER = "DỮ LIỆU MÔ PHỎNG - KHÔNG CÓ GIÁ TRỊ KẾ TOÁN, THUẾ HOẶC PHÁP LÝ"
 
