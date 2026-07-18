@@ -33,6 +33,7 @@ Percent-encode reserved URL characters in the password. The application creates 
 | Variable | Value |
 | --- | --- |
 | `DATABASE_URL` | Supabase Session pooler URI from step 1 |
+| `AUTH_SECRET` | Unique random secret with at least 32 characters; never reuse the development value |
 | `CORS_ORIGINS` | Temporary Vercel URL or final frontend domain, e.g. `https://your-app.vercel.app` |
 | `GEMINI_API_KEY` | Một Gemini key hoặc danh sách key phân tách bằng dấu phẩy; để trống nếu chỉ cần fallback deterministic |
 | `GOONG_API_KEY` | Optional |
