@@ -1,61 +1,74 @@
-# Automatic deployment with GitHub Actions
+# Deploy: Supabase + Render + Vercel
 
-The workflow in `.github/workflows/deploy.yml` runs checks on pull requests. A push to `main` additionally builds the backend and frontend images, pushes them to GHCR, then deploys the exact commit to a Linux VPS.
+Production architecture:
 
-## 1. Prepare the VPS once
+```text
+Vercel (Next.js) -> Render (FastAPI) -> Supabase (PostgreSQL)
+```
 
-Install Docker Engine and the Docker Compose plugin. The deployment user must be allowed to run Docker and write to `/opt/startup-lens`.
+Render and Vercel deploy automatically from `main`. GitHub Actions runs the test suite first; the Render Blueprint uses `autoDeployTrigger: checksPass`.
 
-Create `/opt/startup-lens/.env.production` on the VPS:
+## 1. Supabase database
+
+1. Create a Supabase project in the Singapore or Southeast Asia region.
+2. Open **Connect** in the project dashboard.
+3. Select the **Session pooler** connection (port `5432`), which supports IPv4 and prepared statements.
+4. Convert the URI scheme from `postgresql://` to `postgresql+asyncpg://` for SQLAlchemy.
+5. If required by the connection panel, use `?ssl=require` rather than `?sslmode=require` with the asyncpg driver.
+
+Example shape (do not commit the real value):
+
+```text
+postgresql+asyncpg://postgres.PROJECT_REF:URL_ENCODED_PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres?ssl=require
+```
+
+Percent-encode reserved URL characters in the password. The application creates its tables on first startup because `AUTO_CREATE_TABLES=true`.
+
+## 2. Render backend
+
+1. Open the Render Dashboard and choose **New -> Blueprint**.
+2. Connect this GitHub repository and select `render.yaml`.
+3. During Blueprint creation, enter the secret variables marked `sync: false`:
+
+| Variable | Value |
+| --- | --- |
+| `DATABASE_URL` | Supabase Session pooler URI from step 1 |
+| `CORS_ORIGINS` | Temporary Vercel URL or final frontend domain, e.g. `https://your-app.vercel.app` |
+| `GEMINI_API_KEY` | Một Gemini key hoặc danh sách key phân tách bằng dấu phẩy; để trống nếu chỉ cần fallback deterministic |
+| `GOONG_API_KEY` | Optional |
+| `GOOGLE_PLACES_API_KEY` | Optional |
+
+The backend health endpoint is `/api/v1/health`. Copy the resulting Render URL, for example:
+
+```text
+https://startup-lens-api.onrender.com
+```
+
+The free Render service has an ephemeral filesystem. Uploaded files in `/tmp/uploads` do not survive every restart or redeploy. PostgreSQL records remain in Supabase. Use a paid Render persistent disk or migrate uploaded documents to Supabase Storage before relying on file persistence in production.
+
+## 3. Vercel frontend
+
+1. Import the same GitHub repository into Vercel.
+2. Set **Root Directory** to `frontend`.
+3. Keep the detected framework as **Next.js**.
+4. Add this environment variable for Production and Preview:
 
 ```dotenv
-POSTGRES_DB=startup_due_diligence
-POSTGRES_USER=app
-POSTGRES_PASSWORD=replace-with-a-long-random-password
-DATABASE_URL=postgresql+asyncpg://app:replace-with-a-url-encoded-password@postgres:5432/startup_due_diligence
-CORS_ORIGINS=https://your-domain.example
-GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash
-GOONG_API_KEY=
-GOOGLE_PLACES_API_KEY=
-BACKEND_PORT=8000
-FRONTEND_PORT=3000
+NEXT_PUBLIC_API_URL=https://YOUR-RENDER-SERVICE.onrender.com/api/v1
 ```
 
-If the database password contains reserved URL characters, percent-encode it in `DATABASE_URL`. `POSTGRES_PASSWORD` itself remains the original, unencoded password.
+5. Deploy, then copy the production Vercel domain.
+6. Return to Render and set `CORS_ORIGINS` to that exact origin. Multiple origins can be comma-separated.
 
-Keep this file only on the server; never commit it. If surrounding-area data is required, place `poi.db` in `/opt/startup-lens/data/`.
+Because `NEXT_PUBLIC_API_URL` is embedded during the Next.js build, redeploy Vercel after changing it.
 
-## 2. Configure the repository
+## 4. Automatic deployment
 
-In GitHub, open **Settings → Secrets and variables → Actions** and create these repository or `production` environment secrets:
+After the GitHub integrations are connected:
 
-| Name | Value |
-| --- | --- |
-| `DEPLOY_HOST` | VPS hostname or IP address |
-| `DEPLOY_PORT` | SSH port, usually `22` |
-| `DEPLOY_USER` | Dedicated deployment user |
-| `DEPLOY_SSH_KEY` | Private SSH deploy key |
-| `DEPLOY_KNOWN_HOSTS` | Output of `ssh-keyscan -H your-host` verified against the VPS fingerprint |
-| `GHCR_USERNAME` | GitHub username that can read the package |
-| `GHCR_TOKEN` | Fine-grained/classic token with permission to read packages |
+- Pull requests run CI and receive a Vercel preview.
+- Commits merged or pushed to `main` run CI.
+- Render deploys the backend after the GitHub checks pass.
+- Vercel deploys the frontend from the same commit.
 
-Create the Actions variable `NEXT_PUBLIC_API_URL`, for example `https://api.your-domain.example/api/v1`. Next.js embeds this public value while building, so changing it requires a new workflow run.
-
-For a public GHCR package the VPS may pull anonymously; the supplied workflow still logs in so it works for private repositories too.
-
-## 3. Deploy
-
-Push or merge a commit into `main`, then follow the **CI/CD - Docker deploy** run under the repository's **Actions** tab. You can also run it manually with **Run workflow**.
-
-The deployed containers use the immutable commit SHA tag. The `latest` tag is published for convenience but is not used during deployment.
-
-## Roll back
-
-On the VPS, replace `COMMIT_SHA` with a previously successful commit:
-
-```bash
-cd /opt/startup-lens
-GHCR_REPOSITORY=ghcr.io/owner/repository IMAGE_TAG=COMMIT_SHA \
-  docker compose --env-file .env.production -f docker-compose.prod.yml up -d
-```
+No VPS, SSH key, GHCR token, or production Docker Compose file is required for this architecture.

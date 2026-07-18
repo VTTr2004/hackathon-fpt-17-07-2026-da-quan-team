@@ -2,10 +2,11 @@ import asyncio
 import json
 import re
 from functools import lru_cache
+from threading import Lock
 from typing import TypeVar
 
 from google import genai
-from google.genai import types
+from google.genai import errors, types
 from pydantic import BaseModel
 
 from app.core.config import get_settings
@@ -16,17 +17,9 @@ ResponseT = TypeVar("ResponseT", bound=BaseModel)
 _EMBED_TASK = {"passage": "RETRIEVAL_DOCUMENT", "query": "RETRIEVAL_QUERY"}
 
 
-async def _with_retry(call, *, tries: int = 4):
-    """Retry transient Gemini failures (429 quota / 5xx) with exponential backoff."""
-    for attempt in range(tries):
-        try:
-            return await call()
-        except Exception as error:  # google.genai raises ClientError/APIError subclasses
-            transient = any(code in str(error) for code in ("429", "RESOURCE_EXHAUSTED", "503", "500"))
-            if not transient or attempt == tries - 1:
-                raise
-            await asyncio.sleep(2**attempt)
-    raise RuntimeError("unreachable")
+def _is_transient(exc: errors.APIError) -> bool:
+    """Quota/rate-limit or server errors — worth backing off and retrying the key rotation."""
+    return exc.code in {429, 500, 503} or (exc.status or "").upper() == "RESOURCE_EXHAUSTED"
 
 
 class GeminiNotConfiguredError(RuntimeError):
@@ -34,58 +27,118 @@ class GeminiNotConfiguredError(RuntimeError):
 
 
 class GeminiClient:
-    """Single Gemini boundary used by analyzers and RAG generation."""
+    """Single Gemini boundary used by analyzers and RAG (generation + embeddings + rerank).
+
+    Supports multiple API keys (``GEMINI_API_KEY`` comma-separated) with failover: a 429 or
+    key-specific auth error rotates to the next key; if every key fails with a transient error the
+    whole rotation is retried with exponential backoff. Failover covers both chat and embeddings.
+    """
 
     def __init__(self) -> None:
         settings = get_settings()
         self.model = settings.gemini_model
         self.embed_model = settings.gemini_embed_model
         self._embed_dim = settings.gemini_embed_dim
-        self._api_key = settings.gemini_api_key
-        self._client = (
+        self._clients = [
             genai.Client(
-                api_key=self._api_key,
+                api_key=api_key,
                 http_options=types.HttpOptions(timeout=int(settings.gemini_timeout_seconds * 1000)),
             )
-            if self._api_key
-            else None
+            for api_key in settings.gemini_api_keys
+        ]
+        self._active_client_index = 0
+        self._client_index_lock = Lock()
+
+    def _require_clients(self) -> list[genai.Client]:
+        if not self._clients:
+            raise GeminiNotConfiguredError(
+                "GEMINI_API_KEY chưa được cấu hình; hệ thống sẽ dùng kết quả deterministic."
+            )
+        return self._clients
+
+    def _client_attempts(self) -> list[tuple[int, genai.Client]]:
+        clients = self._require_clients()
+        with self._client_index_lock:
+            start = self._active_client_index
+        indices = ((start + offset) % len(clients) for offset in range(len(clients)))
+        return [(index, clients[index]) for index in indices]
+
+    def _set_active_client(self, index: int) -> None:
+        with self._client_index_lock:
+            self._active_client_index = index
+
+    @staticmethod
+    def _should_try_next_key(exc: errors.APIError) -> bool:
+        """Only rotate for quota/rate-limit or key-specific authentication errors."""
+        status = (exc.status or "").upper()
+        if exc.code == 429 or status == "RESOURCE_EXHAUSTED":
+            return True
+        if exc.code in {401, 403} or status in {"UNAUTHENTICATED", "PERMISSION_DENIED"}:
+            return True
+        error_text = f"{exc.message or ''} {exc.details!s}".lower()
+        return exc.code == 400 and "api key" in error_text and any(
+            marker in error_text for marker in ("invalid", "expired", "revoked", "leaked")
         )
 
-    def _require_client(self) -> genai.Client:
-        if self._client is None:
-            raise GeminiNotConfiguredError("GEMINI_API_KEY chưa được cấu hình; hệ thống sẽ dùng kết quả deterministic.")
-        return self._client
+    async def _invoke(self, make_call, *, retries: int = 3):
+        """Run ``make_call(client)`` with per-key failover and transient backoff.
 
-    async def generate_text(self, *, prompt: str, system_instruction: str, max_tokens: int | None = None) -> str:
-        client = self._require_client()
-        response = await _with_retry(
-            lambda: client.aio.models.generate_content(
+        make_call must build and return a fresh awaitable each time it is called (it may run once
+        per key and once per retry round).
+        """
+        last_error: errors.APIError | None = None
+        for round_index in range(retries):
+            attempts = self._client_attempts()
+            for position, (index, client) in enumerate(attempts):
+                try:
+                    response = await make_call(client)
+                except errors.APIError as exc:
+                    last_error = exc
+                    if not self._should_try_next_key(exc):
+                        raise  # non-retryable (e.g. malformed request) — surface immediately
+                    continue  # rotate to the next key
+                self._set_active_client(index)
+                return response
+            # Every key failed this round with a rotatable error.
+            if round_index == retries - 1 or last_error is None or not _is_transient(last_error):
+                break
+            await asyncio.sleep(2**round_index)
+        assert last_error is not None
+        raise last_error
+
+    async def _generate_content(self, *, prompt: str, config: types.GenerateContentConfig):
+        return await self._invoke(
+            lambda client: client.aio.models.generate_content(
                 model=self.model,
                 contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_instruction,
-                    temperature=0.2,
-                    max_output_tokens=max_tokens,
-                ),
+                config=config,
             )
+        )
+
+    async def generate_text(self, *, prompt: str, system_instruction: str, max_tokens: int | None = None) -> str:
+        response = await self._generate_content(
+            prompt=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=0.2,
+                max_output_tokens=max_tokens,
+            ),
         )
         return response.text or ""
 
     async def embed_texts(self, texts: list[str], *, input_type: str, batch_size: int = 100) -> list[list[float]]:
         """Embed passages ('passage') or a query ('query'). Matches NvidiaClient.embed_texts."""
-        client = self._require_client()
+        self._require_clients()
         task_type = _EMBED_TASK.get(input_type, "RETRIEVAL_DOCUMENT")
+        config = types.EmbedContentConfig(task_type=task_type, output_dimensionality=self._embed_dim)
         vectors: list[list[float]] = []
         for start in range(0, len(texts), batch_size):
             batch = texts[start : start + batch_size]
-            response = await _with_retry(
-                lambda batch=batch: client.aio.models.embed_content(
+            response = await self._invoke(
+                lambda client, payload=batch: client.aio.models.embed_content(
                     model=self.embed_model,
-                    contents=batch,
-                    config=types.EmbedContentConfig(
-                        task_type=task_type,
-                        output_dimensionality=self._embed_dim,
-                    ),
+                    contents=payload,
+                    config=config,
                 )
             )
             vectors.extend(list(embedding.values) for embedding in response.embeddings)
@@ -124,10 +177,8 @@ class GeminiClient:
         system_instruction: str,
         response_model: type[ResponseT],
     ) -> ResponseT:
-        client = self._require_client()
-        response = await client.aio.models.generate_content(
-            model=self.model,
-            contents=prompt,
+        response = await self._generate_content(
+            prompt=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
                 temperature=0.1,
