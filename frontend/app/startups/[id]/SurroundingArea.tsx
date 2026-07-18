@@ -13,6 +13,7 @@ import type {
   MapPoi,
   PlacesEnrichmentItem,
   SatelliteContext,
+  Startup,
   SurroundingMapData,
 } from "@/types";
 
@@ -65,6 +66,7 @@ type Props = {
   initialAnalysis?: Analysis;
   compactHeader?: boolean;
   onAnalysisComplete?: (analysis: Analysis) => void;
+  onStartupUpdated?: (startup: Startup) => void;
 };
 
 type DependencyChoice = "auto" | "primary" | "supporting" | "independent";
@@ -590,6 +592,7 @@ export default function SurroundingArea({
   initialAnalysis,
   compactHeader = false,
   onAnalysisComplete,
+  onStartupUpdated,
 }: Props) {
   const defaultAddress = initialAddress || factString(facts, "exact_location") || factString(facts, "headquarters_address");
   const initialRadius = radiusFromAnalysis(initialAnalysis) ?? radiusFromFacts(facts) ?? 1000;
@@ -1061,6 +1064,25 @@ export default function SurroundingArea({
     setBusy("analyze");
     setError("");
     try {
+      const nextFacts: Record<string, unknown> = {
+        ...(facts ?? {}),
+        exact_location: address.trim(),
+        location_dependency: dependency,
+        area_claims: claimList,
+      };
+      if (targetRadius !== null) nextFacts.target_customer_radius_m = targetRadius;
+      if (knownCompetitors.length) nextFacts.known_nearby_competitors = knownCompetitors;
+      if (locationProfile.type) nextFacts.location_type = locationProfile.type;
+      for (const key of ["tenure", "area_m2", "rent_cost", "operating_hours", "logistics_requirements"]) {
+        if (locationProfile[key] !== undefined) nextFacts[key] = locationProfile[key];
+      }
+      if (onStartupUpdated) {
+        const updated = await api.updateStartup(startupId, {
+          primary_location: address.trim() || null,
+          facts: nextFacts,
+        });
+        onStartupUpdated(updated);
+      }
       const result = await api.analyzeSurrounding(startupId, options);
       setAnalysis(result);
       setMapData(result.report.details?.map ?? null);

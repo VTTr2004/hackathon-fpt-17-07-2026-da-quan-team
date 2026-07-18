@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { api } from "@/lib/api";
 import type {
@@ -54,19 +54,10 @@ function formatValue(value: unknown): string {
   return String(value);
 }
 
-function fileKey(file: File): string {
-  return `${file.webkitRelativePath || file.name}:${file.size}:${file.lastModified}`;
-}
-
-function onlyExcel(files: File[]): File[] {
-  return files.filter((file) => file.name.toLowerCase().endsWith(".xlsx"));
-}
-
 type Props = {
   startup: Startup;
   documents: DocumentItem[];
   analysis?: Analysis;
-  onDocumentsUploaded: (documents: DocumentItem[]) => void;
   onAnalysisComplete: (analysis: Analysis) => void;
   onStartupUpdated: (startup: Startup) => void;
 };
@@ -75,14 +66,11 @@ export default function CashFlowDataWorkspace({
   startup,
   documents,
   analysis,
-  onDocumentsUploaded,
   onAnalysisComplete,
   onStartupUpdated,
 }: Props) {
-  const folderInputRef = useRef<HTMLInputElement | null>(null);
-  const [queuedFiles, setQueuedFiles] = useState<File[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [busy, setBusy] = useState<"upload" | "analyze" | "apply" | null>(null);
+  const [busy, setBusy] = useState<"analyze" | "apply" | null>(null);
   const [progress, setProgress] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -95,45 +83,15 @@ export default function CashFlowDataWorkspace({
   const selectableProposals = proposals.filter((item) => item.status !== "conflict");
   const xlsxDocuments = documents.filter((item) => item.filename.toLowerCase().endsWith(".xlsx"));
 
-  function queue(event: ChangeEvent<HTMLInputElement>) {
-    const incoming = onlyExcel(Array.from(event.target.files ?? []));
-    setError("");
-    setMessage("");
-    setQueuedFiles((current) => {
-      const byKey = new Map(current.map((file) => [fileKey(file), file]));
-      incoming.forEach((file) => byKey.set(fileKey(file), file));
-      return Array.from(byKey.values());
-    });
-    event.target.value = "";
-  }
-
-  function configureFolderInput(element: HTMLInputElement | null) {
-    folderInputRef.current = element;
-    if (element) {
-      element.setAttribute("webkitdirectory", "");
-      element.setAttribute("directory", "");
-    }
-  }
-
-  async function uploadAndAnalyze() {
-    if (!queuedFiles.length && !xlsxDocuments.length) {
-      setError("Hãy chọn ít nhất một file Excel trước khi phân tích.");
+  async function analyzeSavedFiles() {
+    if (!xlsxDocuments.length) {
+      setError("Chưa có file Excel. Hãy tải file tại tab Bằng chứng trước khi phân tích.");
       return;
     }
-    setBusy(queuedFiles.length ? "upload" : "analyze");
+    setBusy("analyze");
     setError("");
     setMessage("");
     try {
-      const uploaded: DocumentItem[] = [];
-      for (let index = 0; index < queuedFiles.length; index += 1) {
-        setProgress(`Đang tải ${index + 1}/${queuedFiles.length}: ${queuedFiles[index].name}`);
-        uploaded.push(await api.uploadDocument(startup.id, queuedFiles[index]));
-      }
-      if (uploaded.length) {
-        onDocumentsUploaded(uploaded);
-        setQueuedFiles([]);
-      }
-      setBusy("analyze");
       setProgress("AI đang nhận diện bảng và gọi tool tính toán...");
       const result = await api.runAnalysis(startup.id, "cash_flow", {
         use_gemini: true,
@@ -200,48 +158,17 @@ export default function CashFlowDataWorkspace({
       <div className="cashFlowIntakeHeader">
         <div>
           <span className="cashFlowStep">BƯỚC 1 · DỮ LIỆU ĐẦU VÀO</span>
-          <h4>Đưa sổ Excel vào Cash Flow</h4>
-          <p>Chọn nhiều file hoặc cả folder. AI chỉ ánh xạ cấu trúc; các con số được tính bằng tool.</p>
+          <h4>Phân tích file Excel đã tải</h4>
+          <p>Dòng tiền sử dụng các file `.xlsx` đã tải tại tab Bằng chứng.</p>
         </div>
         <span className="badgeCF neutral">{xlsxDocuments.length} file đã lưu</span>
       </div>
 
-      <div className="cashFlowDropzone">
-        <input aria-label="Chọn các file Excel" type="file" accept=".xlsx" multiple onChange={queue} />
-        <input ref={configureFolderInput} className="cashFlowHiddenInput" type="file" accept=".xlsx" multiple onChange={queue} />
-        <div>
-          <strong>Chọn file Excel hoặc folder dữ liệu</strong>
-          <span>Hỗ trợ `.xlsx`; có thể gồm sổ quỹ, bán hàng, mua hàng và dữ liệu vận hành.</span>
-        </div>
-        <button className="secondaryButton" type="button" onClick={() => folderInputRef.current?.click()}>
-          Chọn folder
-        </button>
-      </div>
-
-      {queuedFiles.length > 0 && (
-        <div className="cashFlowFileQueue">
-          <div className="cashFlowQueueHeader">
-            <strong>{queuedFiles.length} file đang chờ</strong>
-            <button type="button" onClick={() => setQueuedFiles([])}>Xóa danh sách</button>
-          </div>
-          {queuedFiles.map((file) => (
-            <div className="cashFlowFileItem" key={fileKey(file)}>
-              <span className="fileIcon">XLSX</span>
-              <div>
-                <strong>{file.webkitRelativePath || file.name}</strong>
-                <small>{new Intl.NumberFormat("vi-VN").format(Math.ceil(file.size / 1024))} KB</small>
-              </div>
-              <button type="button" aria-label={`Bỏ ${file.name}`} onClick={() => setQueuedFiles((current) => current.filter((item) => fileKey(item) !== fileKey(file)))}>×</button>
-            </div>
-          ))}
-        </div>
-      )}
-
       <div className="cashFlowIntakeActions">
-        <button className="primaryButton" type="button" disabled={busy !== null} onClick={uploadAndAnalyze}>
-          {busy ? "Đang xử lý..." : queuedFiles.length ? `Tải ${queuedFiles.length} file và phân tích` : "Phân tích lại file đã lưu"}
+        <button className="primaryButton" type="button" disabled={busy !== null} onClick={analyzeSavedFiles}>
+          {busy ? "Đang xử lý..." : "Phân tích file Excel đã tải"}
         </button>
-        <span>{progress || "Không thay đổi dữ liệu hồ sơ cho đến khi bạn xác nhận."}</span>
+        <span>{progress || "Tải hoặc xóa tài liệu tại tab Bằng chứng; tab này không tạo bản sao upload."}</span>
       </div>
 
       {error && <div className="cashFlowAlert error">{error}</div>}

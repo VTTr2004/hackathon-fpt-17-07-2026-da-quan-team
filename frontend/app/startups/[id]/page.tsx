@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { isValidTab, tabsForRole } from "@/lib/deskTabs";
 import {
+  cashFlowProfileSections,
   documentChecklist,
   formatProfileValue,
   profileSections,
@@ -27,10 +28,8 @@ import type {
 } from "@/types";
 
 import CashFlowAnalysis from "./CashFlowAnalysis";
-import CashFlowDataWorkspace from "./CashFlowDataWorkspace";
 import ChatWidget from "./ChatWidget";
 import DocumentChat from "./DocumentChat";
-import ExtractionReview from "./ExtractionReview";
 import SurroundingArea from "./SurroundingArea";
 
 const modules: Array<{ id: AnalysisModule; name: string; icon: string; tone: string; description: string }> = [
@@ -131,6 +130,9 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [tab, setTab] = useState("overview");
+  const coreProfileComplete = Boolean(
+    startup?.name.trim() && startup.industry && startup.stage && startup.primary_location,
+  );
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -168,6 +170,11 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     function applyHash() {
       const raw = window.location.hash.replace("#tab-", "");
       if (raw && isValidTab(raw, user?.role)) {
+        if (startup && !coreProfileComplete && raw !== "overview" && raw !== "profile") {
+          setTab("profile");
+          window.history.replaceState(null, "", "#tab-profile");
+          return;
+        }
         setTab(raw);
         document.querySelector(".deskContext")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
@@ -175,11 +182,17 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     applyHash();
     window.addEventListener("hashchange", applyHash);
     return () => window.removeEventListener("hashchange", applyHash);
-  }, [user?.role]);
+  }, [coreProfileComplete, startup, user?.role]);
 
   const analysisMap = useMemo(() => latestByModule(analyses), [analyses]);
 
   function goTab(next: string) {
+    if (!coreProfileComplete && next !== "overview" && next !== "profile") {
+      setTab("profile");
+      setError("Hãy nhập đủ tên, lĩnh vực, giai đoạn và địa điểm chính trước khi mở các tính năng khác.");
+      if (typeof window !== "undefined") window.history.replaceState(null, "", "#tab-profile");
+      return;
+    }
     setTab(next);
     if (typeof window !== "undefined") window.history.replaceState(null, "", `#tab-${next}`);
   }
@@ -199,12 +212,32 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     }
     setBusy("profile");
     try {
-      setStartup(await api.updateStartup(id, {
+      const updated = await api.updateStartup(id, {
         name: textValue(form, "name"), industry: textValue(form, "industry") || null,
         stage: textValue(form, "stage") || null, primary_location: textValue(form, "location") || null, facts,
-      }));
+      });
+      setStartup(updated);
+      window.dispatchEvent(new Event("startup-workspace-updated"));
       setCompleteness(await api.completeness(id));
     } catch (err) { setError(err instanceof Error ? err.message : "Không thể lưu hồ sơ"); }
+    finally { setBusy(null); }
+  }
+
+  async function saveCashFlowProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!startup || !isStartup || !editable) return;
+    const form = new FormData(event.currentTarget);
+    const facts: Record<string, unknown> = { ...startup.facts };
+    for (const section of cashFlowProfileSections) for (const field of section.fields) {
+      const value = readProfileField(form, field);
+      if (value !== undefined) facts[field.key] = value; else delete facts[field.key];
+    }
+    setBusy("cashflow-profile");
+    try {
+      const updated = await api.updateStartup(id, { facts });
+      setStartup(updated);
+      setCompleteness(await api.completeness(id));
+    } catch (err) { setError(err instanceof Error ? err.message : "Không thể lưu dữ liệu dòng tiền"); }
     finally { setBusy(null); }
   }
 
@@ -486,16 +519,6 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
             {/* ---- Profile (startup) ---- */}
             {isStartup && (
               <div className="deskPanel" hidden={activeTab !== "profile"}>
-                {editable && (
-                  <ExtractionReview
-                    startup={startup}
-                    documents={documents}
-                    onStartupUpdated={(updated) => {
-                      setStartup(updated);
-                      void api.completeness(id).then(setCompleteness);
-                    }}
-                  />
-                )}
                 <section className="hdCard">
                   <div className="hdSectionHead"><h2><MIcon name="description" />Dữ liệu hồ sơ</h2><span className="hdCount">{editable ? "Bản nháp có thể chỉnh sửa" : "Chỉ đọc"}</span></div>
                   <form className="stackForm" onSubmit={saveProfile} key={startup.updated_at}>
@@ -520,34 +543,71 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
             {/* ---- Cash Flow ---- */}
             <div className="deskPanel" hidden={activeTab !== "cashflow"}>
               {isStartup ? (
-                <section className="hdCard" id="cash-flow-workspace">
-                  <div className="hdSectionHead"><h2><MIcon name="monitoring" />Nhập và duyệt dữ liệu dòng tiền</h2><span className="appRoleBadge">BẢN NHÁP</span></div>
-                  <CashFlowDataWorkspace
-                    startup={startup}
-                    documents={documents}
-                    analysis={analysisMap.cash_flow}
-                    onDocumentsUploaded={(items) => { setDocuments((current) => [...items, ...current]); void api.completeness(id).then(setCompleteness); }}
-                    onAnalysisComplete={mergeAnalysis}
-                    onStartupUpdated={(updated) => { setStartup(updated); void api.completeness(id).then(setCompleteness); }}
-                  />
+                <>
+                  <section className="hdCard">
+                    <div className="hdSectionHead">
+                      <h2><MIcon name="edit_note" />Dữ liệu dòng tiền thủ công</h2>
+                      <span className="hdCount">{editable ? "Có thể chỉnh sửa" : "Chỉ đọc"}</span>
+                    </div>
+                    <form className="stackForm" onSubmit={saveCashFlowProfile} key={`cash-${startup.updated_at}`}>
+                      {cashFlowProfileSections.map((section) => (
+                        <div className="factSection" key={section.id}>
+                          <div className="factSectionHeader"><div><p className="eyebrow">{section.eyebrow}</p><h3>{section.title}</h3></div><p>{section.description}</p></div>
+                          <div className="factGrid">{section.fields.map((field) => <ProfileFieldInput facts={facts} field={field} disabled={!editable} key={field.key} />)}</div>
+                        </div>
+                      ))}
+                      {editable && <button className="hdBtn primary" disabled={busy === "cashflow-profile"}><MIcon name="save" />Lưu dữ liệu dòng tiền</button>}
+                    </form>
+                  </section>
                   {analysisMap.cash_flow && <CashFlowAnalysis analysis={analysisMap.cash_flow} />}
-                </section>
+                </>
               ) : (
-                <section className="hdCard">
-                  <div className="hdSectionHead">
-                    <h2><MIcon name="monitoring" />Phân tích dòng tiền</h2>
-                    <button className="hdBtn" disabled={busy === "cash_flow"} onClick={() => analyze("cash_flow")}><MIcon name="play_arrow" />{analysisMap.cash_flow ? "Chạy lại" : "Chạy phân tích"}</button>
-                  </div>
-                  {analysisMap.cash_flow
-                    ? <CashFlowAnalysis analysis={analysisMap.cash_flow} />
-                    : <div className="deskEmpty"><strong>Chưa có phân tích dòng tiền</strong><span>Chạy phân tích để xem burn rate, runway và kịch bản căng thẳng.</span></div>}
-                </section>
+                <>
+                  <section className="hdCard">
+                    <div className="hdSectionHead">
+                      <h2><MIcon name="monitoring" />Phân tích dòng tiền</h2>
+                      <button className="hdBtn" disabled={busy === "cash_flow"} onClick={() => analyze("cash_flow")}><MIcon name="play_arrow" />{analysisMap.cash_flow ? "Chạy lại" : "Chạy phân tích"}</button>
+                    </div>
+                    {analysisMap.cash_flow
+                      ? <CashFlowAnalysis analysis={analysisMap.cash_flow} />
+                      : <div className="deskEmpty"><strong>Chưa có phân tích dòng tiền</strong><span>Chạy phân tích để xem burn rate, runway và kịch bản căng thẳng.</span></div>}
+                  </section>
+                  <section className="hdCard">
+                    <div className="hdSectionHead"><h2><MIcon name="description" />Dữ liệu dòng tiền</h2><span className="hdCount">Chỉ đọc</span></div>
+                    {cashFlowProfileSections.map((section) => (
+                      <div className="factSection" key={section.id}>
+                        <div className="factSectionHeader"><div><p className="eyebrow">{section.eyebrow}</p><h3>{section.title}</h3></div></div>
+                        <div className="factGrid">{section.fields.map((field) => <ProfileFieldInput facts={facts} field={field} disabled key={field.key} />)}</div>
+                      </div>
+                    ))}
+                  </section>
+                </>
               )}
             </div>
 
             {/* ---- Area ---- */}
-            <div className="deskPanel" hidden={activeTab !== "area"}>
-              <SurroundingArea startupId={id} industry={startup.industry} initialAddress={startup.primary_location ?? ""} facts={facts} initialAnalysis={analysisMap.surrounding_area} compactHeader onAnalysisComplete={(result) => setAnalyses((current) => [result, ...current])} />
+            <div className="deskPanel comingSoonMaskHost" hidden={activeTab !== "area"}>
+              <SurroundingArea
+                startupId={id}
+                industry={startup.industry}
+                initialAddress={startup.primary_location ?? ""}
+                facts={facts}
+                initialAnalysis={analysisMap.surrounding_area}
+                compactHeader
+                onAnalysisComplete={(result) => setAnalyses((current) => [result, ...current])}
+                onStartupUpdated={isStartup ? (updated) => {
+                    setStartup(updated);
+                    window.dispatchEvent(new Event("startup-workspace-updated"));
+                    void api.completeness(id).then(setCompleteness);
+                  } : undefined}
+              />
+              <div className="comingSoonMask" role="status" aria-label="Comming Soon">
+                <div className="comingSoonMaskCard">
+                  <MIcon name="construction" />
+                  <strong>Comming Soon</strong>
+                  <span>Tính năng Khu vực đang được hoàn thiện.</span>
+                </div>
+              </div>
             </div>
 
             {/* ---- Evidence / Documents ---- */}

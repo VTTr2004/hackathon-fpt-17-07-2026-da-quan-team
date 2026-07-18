@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { tabsForRole } from "@/lib/deskTabs";
+import { industryOptions, stageOptions } from "@/lib/profileFields";
 
 const THEME_KEY = "startup-lens-theme";
 const SIDEBAR_KEY = "startup-lens-sidebar";
@@ -15,7 +16,14 @@ function MIcon({ name, className }: { name: string; className?: string }) {
   return <span className={`material-symbols-outlined${className ? ` ${className}` : ""}`} aria-hidden="true">{name}</span>;
 }
 
-type NavItem = { kind: "route" | "hash"; href: string; label: string; icon: string; active?: boolean };
+type NavItem = { kind: "route" | "hash"; href: string; label: string; icon: string; active?: boolean; disabled?: boolean };
+type WorkspaceItem = {
+  id: string;
+  name: string;
+  industry: string | null;
+  stage: string | null;
+  primary_location: string | null;
+};
 
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
@@ -27,7 +35,10 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [confirmLogout, setConfirmLogout] = useState(false);
-  const [workspaceItems, setWorkspaceItems] = useState<Array<{ id: string; name: string }>>([]);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createBusy, setCreateBusy] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [workspaceItems, setWorkspaceItems] = useState<WorkspaceItem[]>([]);
 
   // Đồng bộ trạng thái ban đầu từ DOM (đã được inline script đặt) + localStorage.
   // Giữ giá trị mặc định khớp SSR (light/expanded) rồi cập nhật sau khi mount để tránh lệch hydrate.
@@ -54,11 +65,28 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading || !user || publicPage) return;
     let ignore = false;
-    api
-      .listStartups()
-      .then((data) => { if (!ignore) setWorkspaceItems(data.map((s) => ({ id: s.id, name: s.name }))); })
-      .catch(() => { /* im lặng: sidebar chỉ là điều hướng phụ */ });
-    return () => { ignore = true; };
+    const loadWorkspace = () => {
+      api
+        .listStartups()
+        .then((data) => {
+          if (!ignore) {
+            setWorkspaceItems(data.map((s) => ({
+              id: s.id,
+              name: s.name,
+              industry: s.industry,
+              stage: s.stage,
+              primary_location: s.primary_location,
+            })));
+          }
+        })
+        .catch(() => { /* im lặng: sidebar chỉ là điều hướng phụ */ });
+    };
+    loadWorkspace();
+    window.addEventListener("startup-workspace-updated", loadWorkspace);
+    return () => {
+      ignore = true;
+      window.removeEventListener("startup-workspace-updated", loadWorkspace);
+    };
   }, [loading, user, publicPage, pathname]);
 
   // Theo dõi hash để đánh dấu mục section đang mở trên sidebar (trang detail).
@@ -95,6 +123,34 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
     });
   }
 
+  async function createStartup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const name = String(form.get("name") ?? "").trim();
+    const industry = String(form.get("industry") ?? "").trim();
+    const stage = String(form.get("stage") ?? "").trim();
+    const primaryLocation = String(form.get("primary_location") ?? "").trim();
+    if (!name || !industry || !stage || !primaryLocation) {
+      setCreateError("Vui lòng nhập đủ 4 thông tin nền trước khi tiếp tục.");
+      return;
+    }
+    setCreateBusy(true);
+    setCreateError("");
+    try {
+      const startup = await api.createStartup({ name, industry, stage, primary_location: primaryLocation });
+      setWorkspaceItems((current) => [
+        { id: startup.id, name: startup.name, industry: startup.industry, stage: startup.stage, primary_location: startup.primary_location },
+        ...current,
+      ]);
+      setCreateOpen(false);
+      router.push(`/startups/${startup.id}#tab-profile`);
+    } catch (reason) {
+      setCreateError(reason instanceof Error ? reason.message : "Không thể tạo hồ sơ startup.");
+    } finally {
+      setCreateBusy(false);
+    }
+  }
+
   if (loading || (!user && !publicPage)) {
     return (
       <main>
@@ -113,13 +169,24 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   const isInvestor = user.role === "investor";
   const deskMatch = pathname.match(/^\/startups\/([^/]+)$/);
   const onDesk = Boolean(deskMatch && deskMatch[1] !== "new");
+  const currentWorkspace = deskMatch ? workspaceItems.find((item) => item.id === deskMatch[1]) : undefined;
+  const coreProfileIncomplete = Boolean(
+    onDesk && currentWorkspace && (!currentWorkspace.name.trim() || !currentWorkspace.industry || !currentWorkspace.stage || !currentWorkspace.primary_location),
+  );
 
   let nav: NavItem[];
   if (onDesk) {
     // Trên "Bàn thẩm định": sidebar là các phần của hồ sơ (điều hướng bằng hash #tab-...).
     nav = [
       { kind: "route", href: "/", label: isInvestor ? "Deal room" : "Danh sách hồ sơ", icon: "arrow_back" },
-      ...tabsForRole(user.role).map((t) => ({ kind: "hash" as const, href: `#tab-${t.id}`, label: t.label, icon: t.icon, active: activeHash === `#tab-${t.id}` })),
+      ...tabsForRole(user.role).map((t) => ({
+        kind: "hash" as const,
+        href: `#tab-${t.id}`,
+        label: t.label,
+        icon: t.icon,
+        active: activeHash === `#tab-${t.id}`,
+        disabled: coreProfileIncomplete && t.id !== "overview" && t.id !== "profile",
+      })),
     ];
   } else {
     nav = [
@@ -176,6 +243,16 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
                 <span className="appNavIcon"><MIcon name={item.icon} className={item.active ? "fill-icon" : undefined} /></span>
                 <span className="appNavLabel">{item.label}</span>
               </Link>
+            ) : item.disabled ? (
+              <span
+                key={item.href}
+                className="appNavItem is-disabled"
+                title="Hoàn thiện 4 thông tin nền trong tab Hồ sơ để mở tính năng này"
+                aria-disabled="true"
+              >
+                <span className="appNavIcon"><MIcon name={item.icon} /></span>
+                <span className="appNavLabel">{item.label}</span>
+              </span>
             ) : (
               <a
                 key={item.href}
@@ -197,10 +274,19 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
 
         <div className="appSidebarFoot">
           {!isInvestor && (
-            <Link href="/startups/new" className="appNewBtn" title="Tạo hồ sơ mới" onClick={closeMobile}>
+            <button
+              type="button"
+              className="appNewBtn"
+              title="Tạo hồ sơ mới"
+              onClick={() => {
+                closeMobile();
+                setCreateError("");
+                setCreateOpen(true);
+              }}
+            >
               <MIcon name="add" />
               <span className="appNavLabel">Tạo hồ sơ mới</span>
-            </Link>
+            </button>
           )}
           <div className="appReadiness">
             <strong>{isInvestor ? "Vai trò nhà đầu tư" : "Vai trò startup"}</strong>
@@ -258,6 +344,50 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         tabIndex={mobileOpen ? 0 : -1}
         onClick={closeMobile}
       />
+
+      {createOpen && (
+        <div className="appModalOverlay" role="dialog" aria-modal="true" aria-labelledby="createStartupTitle">
+          <button type="button" className="appModalScrim" aria-label="Đóng" onClick={() => !createBusy && setCreateOpen(false)} />
+          <div className="appModalCard appCreateModal">
+            <div className="appModalIcon appCreateModalIcon"><MIcon name="add_business" /></div>
+            <h2 id="createStartupTitle">Tạo hồ sơ startup</h2>
+            <p>Nhập đủ 4 thông tin nền. Các dữ liệu chuyên sâu sẽ được bổ sung trong trang hồ sơ.</p>
+            <form className="appCreateForm" onSubmit={createStartup}>
+              <label>
+                Tên startup
+                <input name="name" required autoFocus placeholder="Ví dụ: Mộc Coffee" />
+              </label>
+              <label>
+                Lĩnh vực
+                <select name="industry" required defaultValue="">
+                  <option value="" disabled>Chọn lĩnh vực</option>
+                  {industryOptions.map((option) => <option key={option}>{option}</option>)}
+                </select>
+              </label>
+              <label>
+                Giai đoạn
+                <select name="stage" required defaultValue="">
+                  <option value="" disabled>Chọn giai đoạn</option>
+                  {stageOptions.map((option) => <option key={option}>{option}</option>)}
+                </select>
+              </label>
+              <label>
+                Địa điểm chính
+                <input name="primary_location" required placeholder="Quận 1, TP.HCM" />
+              </label>
+              {createError && <div className="hdAlert" role="alert"><MIcon name="error" /><span>{createError}</span></div>}
+              <div className="appModalActions">
+                <button type="button" className="secondaryButton" disabled={createBusy} onClick={() => setCreateOpen(false)}>
+                  Hủy
+                </button>
+                <button type="submit" className="primaryButton" disabled={createBusy}>
+                  {createBusy ? "Đang tạo..." : "Tạo và mở hồ sơ"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {confirmLogout && (
         <div className="appModalOverlay" role="dialog" aria-modal="true" aria-labelledby="logoutTitle">

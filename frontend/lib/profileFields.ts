@@ -416,12 +416,25 @@ export const profileSections: ProfileSection[] = [
       { key: "differentiation", label: "Giá trị khác biệt", type: "textarea", rows: 2 },
       { key: "market_size", label: "Quy mô thị trường", type: "textarea", rows: 2 },
       { key: "target_customers", label: "Khách hàng mục tiêu", type: "list" },
+      { key: "customer_purchase_occasions", label: "Dịp và lý do mua hàng", type: "textarea", rows: 2 },
       { key: "users_and_payers", label: "Người sử dụng và người trả tiền", type: "textarea", rows: 2 },
       { key: "core_products", label: "Sản phẩm/dịch vụ chính", type: "list" },
       { key: "pricing_model", label: "Cách định giá", type: "textarea", rows: 2 },
       { key: "revenue_model", label: "Nguồn doanh thu", type: "list" },
       { key: "sales_channels", label: "Kênh bán hàng", type: "list" },
       { key: "acquisition_channels", label: "Kênh tiếp cận khách hàng", type: "list" },
+      {
+        key: "average_order_value",
+        label: "Giá trị đơn trung bình (VND)",
+        type: "number",
+        helper: "Unit economics cấp đơn hàng, không phải doanh thu tháng.",
+      },
+      {
+        key: "variable_cost_per_order",
+        label: "Chi phí biến đổi trung bình/đơn (VND)",
+        type: "number",
+        helper: "Nguyên liệu, bao bì, phí nền tảng và chi phí tăng theo từng đơn.",
+      },
       { key: "competitors", label: "Đối thủ", type: "list" },
       { key: "alternatives", label: "Phương án thay thế", type: "list" },
       { key: "key_suppliers_partners", label: "Nhà cung cấp và đối tác chính", type: "list" },
@@ -431,11 +444,35 @@ export const profileSections: ProfileSection[] = [
     ],
   },
   {
+    id: "development-plan",
+    eyebrow: "DEVELOPMENT PLAN",
+    title: "Kế hoạch phát triển",
+    description: "Mục tiêu, milestone và năng lực thực thi của kế hoạch phát triển.",
+    fields: [
+      { key: "planning_horizon_months", label: "Thời hạn kế hoạch (tháng)", type: "number", placeholder: "12" },
+      { key: "development_objectives", label: "Mục tiêu phát triển", type: "textarea", rows: 3 },
+      { key: "product_plan", label: "Kế hoạch sản phẩm/danh mục", type: "textarea", rows: 3 },
+      { key: "customer_growth_plan", label: "Kế hoạch phát triển khách hàng", type: "textarea", rows: 3 },
+      { key: "channel_expansion_plan", label: "Kế hoạch mở rộng kênh bán", type: "textarea", rows: 3 },
+      { key: "outlet_expansion_plan", label: "Kế hoạch mở rộng điểm bán", type: "textarea", rows: 3 },
+      { key: "operating_capability_plan", label: "Năng lực vận hành cần chuẩn hóa", type: "textarea", rows: 3 },
+      { key: "development_milestones", label: "Milestone và tiêu chí hoàn thành", type: "textarea", rows: 3 },
+      { key: "development_dependencies", label: "Phụ thuộc và rủi ro chính", type: "textarea", rows: 3 },
+    ],
+  },
+];
+
+export const cashFlowProfileSections: ProfileSection[] = [
+  {
     id: "finance",
     eyebrow: "FINANCE",
     title: "Tài chính và dòng tiền",
     description: "Dữ liệu đầu vào cho runway, burn rate, biên lợi nhuận và dự báo 6-12 tháng.",
     fields: [
+      { key: "currency", label: "Đơn vị tiền tệ", type: "select", options: ["VND", "USD"] },
+      { key: "cash_as_of", label: "Ngày chốt số dư", type: "date" },
+      { key: "opening_cash", label: "Số dư tiền đầu kỳ", type: "number" },
+      { key: "reported_ending_cash", label: "Số dư tiền cuối kỳ theo sổ", type: "number" },
       { key: "current_cash", label: "Tiền mặt hiện có", type: "number" },
       { key: "minimum_cash_buffer", label: "Mức đệm tiền mặt tối thiểu", type: "number" },
       { key: "fixed_monthly_costs", label: "Định phí hàng tháng", type: "number" },
@@ -450,9 +487,14 @@ export const profileSections: ProfileSection[] = [
       { key: "monthly_expense", label: "Chi phí trung bình tháng", type: "number" },
       { key: "fixed_costs", label: "Chi phí cố định", type: "number" },
       { key: "variable_costs", label: "Chi phí biến đổi", type: "number" },
+      { key: "monthly_rent", label: "Tiền thuê hàng tháng", type: "number" },
+      { key: "lease_deposit", label: "Tiền đặt cọc mặt bằng", type: "number" },
       { key: "accounts_receivable", label: "Khoản phải thu", type: "number" },
       { key: "accounts_payable", label: "Khoản phải trả", type: "number" },
       { key: "inventory", label: "Tồn kho", type: "number" },
+      { key: "working_capital_period_revenue", label: "Doanh thu trong kỳ vốn lưu động", type: "number" },
+      { key: "working_capital_period_cogs", label: "Giá vốn trong kỳ", type: "number" },
+      { key: "working_capital_period_days", label: "Số ngày của kỳ dữ liệu", type: "number" },
       { key: "debt_obligations", label: "Khoản vay và nghĩa vụ trả nợ", type: "textarea", rows: 2 },
       { key: "average_price", label: "Giá bán trung bình", type: "number" },
       { key: "unit_cost", label: "Chi phí tạo ra một sản phẩm/dịch vụ", type: "number" },
@@ -460,6 +502,13 @@ export const profileSections: ProfileSection[] = [
       { key: "churn_retention", label: "Churn hoặc retention", type: "textarea", rows: 2 },
       { key: "forecast_6_12_months", label: "Dự kiến doanh thu/chi phí 6-12 tháng", type: "textarea", rows: 3 },
       { key: "forecast_assumptions", label: "Giả định dùng để dự báo", type: "textarea", rows: 3 },
+      { key: "scenario_months", label: "Số tháng dự báo", type: "number" },
+      { key: "best_inflow_change", label: "Best case – thay đổi tiền vào", type: "number", placeholder: "0.10" },
+      { key: "best_outflow_change", label: "Best case – thay đổi tiền ra", type: "number", placeholder: "-0.05" },
+      { key: "downside_inflow_change", label: "Downside – thay đổi tiền vào", type: "number", placeholder: "-0.15" },
+      { key: "downside_outflow_change", label: "Downside – thay đổi tiền ra", type: "number", placeholder: "0.05" },
+      { key: "severe_inflow_change", label: "Severe – thay đổi tiền vào", type: "number", placeholder: "-0.30" },
+      { key: "severe_outflow_change", label: "Severe – thay đổi tiền ra", type: "number", placeholder: "0.15" },
       {
         key: "financial_periods",
         label: "Dòng tiền theo tháng",
@@ -469,6 +518,9 @@ export const profileSections: ProfileSection[] = [
       },
     ],
   },
+];
+
+export const locationProfileSections: ProfileSection[] = [
   {
     id: "location",
     eyebrow: "LOCATION",
@@ -607,6 +659,20 @@ export function parseRatioValue(raw: string) {
   return Number.isFinite(value) && value >= 0 && value <= 1 ? value : null;
 }
 
+const scenarioChangeFields = new Set([
+  "best_inflow_change",
+  "best_outflow_change",
+  "downside_inflow_change",
+  "downside_outflow_change",
+  "severe_inflow_change",
+  "severe_outflow_change",
+]);
+
+export function parseDecimalValue(raw: string) {
+  const value = Number(raw.trim().replace(",", "."));
+  return Number.isFinite(value) ? value : null;
+}
+
 export function parsePeriods(raw: string) {
   return raw
     .split("\n")
@@ -637,6 +703,7 @@ export function readProfileField(form: FormData, field: ProfileField) {
 
   if (field.type === "number") {
     if (field.key === "variable_cost_ratio") return parseRatioValue(raw) ?? undefined;
+    if (scenarioChangeFields.has(field.key)) return parseDecimalValue(raw) ?? undefined;
     return parseNumberValue(raw) ?? undefined;
   }
 

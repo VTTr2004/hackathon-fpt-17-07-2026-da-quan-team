@@ -25,6 +25,12 @@ loadRootPublicEnv();
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  async redirects() {
+    return [
+      { source: "/startups/new", destination: "/", permanent: false },
+      { source: "/startups/new/:path*", destination: "/", permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;
