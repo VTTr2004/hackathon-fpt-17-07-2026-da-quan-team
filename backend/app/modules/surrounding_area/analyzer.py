@@ -121,12 +121,18 @@ class SurroundingAreaAnalyzer:
         query_warnings: list[str] = []
         competitor_filter = resolve_competitor_filter(industry)
         competitors = await self._safe_query(
-            store, lat, lon, ANALYSIS_RADIUS_M, competitor_filter.competitor_tags,
-            label="đối thủ", warnings=query_warnings,
+            store,
+            lat,
+            lon,
+            ANALYSIS_RADIUS_M,
+            competitor_filter.competitor_tags,
+            label="đối thủ",
+            warnings=query_warnings,
         )
         demand_counts = await self._demand_counts(store, lat, lon, query_warnings)
-        total_pois = await self._safe_query(store, lat, lon, ANALYSIS_RADIUS_M, None,
-                                            label="tổng POI (độ phủ)", warnings=query_warnings)
+        total_pois = await self._safe_query(
+            store, lat, lon, ANALYSIS_RADIUS_M, None, label="tổng POI (độ phủ)", warnings=query_warnings
+        )
 
         if total_pois is None:
             # Cannot even assess coverage; refuse rather than guess.
@@ -186,11 +192,21 @@ class SurroundingAreaAnalyzer:
 
         # --- Step 6: assemble ModuleReport -------------------------------------
         return self._build_report(
-            lat=lat, lon=lon, industry=industry, classification=classification,
-            coverage=coverage, metrics=metrics, verdict_report=verdict_report,
-            competitors=competitors_list, competitor_measurable=competitor_measurable,
-            demand_counts=demand_counts, query_warnings=query_warnings, store=store,
-            location=location, map_pois=map_pois, places_enrichment=places_enrichment,
+            lat=lat,
+            lon=lon,
+            industry=industry,
+            classification=classification,
+            coverage=coverage,
+            metrics=metrics,
+            verdict_report=verdict_report,
+            competitors=competitors_list,
+            competitor_measurable=competitor_measurable,
+            demand_counts=demand_counts,
+            query_warnings=query_warnings,
+            store=store,
+            location=location,
+            map_pois=map_pois,
+            places_enrichment=places_enrichment,
             satellite_context=satellite_context,
         )
 
@@ -214,8 +230,9 @@ class SurroundingAreaAnalyzer:
     async def _demand_counts(self, store, lat, lon, warnings) -> dict[str, int | None]:
         counts: dict[str, int | None] = {}
         for proxy, tags in DEMAND_TAGS.items():
-            result = await self._safe_query(store, lat, lon, ANALYSIS_RADIUS_M, tags,
-                                            label=f"cầu:{proxy}", warnings=warnings)
+            result = await self._safe_query(
+                store, lat, lon, ANALYSIS_RADIUS_M, tags, label=f"cầu:{proxy}", warnings=warnings
+            )
             counts[proxy] = None if result is None else len(result)
         return counts
 
@@ -319,10 +336,28 @@ class SurroundingAreaAnalyzer:
         explain verdicts, but it is not needed to discover these candidate claims.
         """
         keywords = (
-            "đối thủ", "doi thu", "cạnh tranh", "canh tranh", "bão hòa", "bao hoa",
-            "dân cư", "dan cu", "văn phòng", "van phong", "trường", "truong",
-            "giao thông", "giao thong", "giá thuê", "gia thue", "mặt bằng", "mat bang",
-            "500m", "1km", "khu vực", "khu vuc",
+            "đối thủ",
+            "doi thu",
+            "cạnh tranh",
+            "canh tranh",
+            "bão hòa",
+            "bao hoa",
+            "dân cư",
+            "dan cu",
+            "văn phòng",
+            "van phong",
+            "trường",
+            "truong",
+            "giao thông",
+            "giao thong",
+            "giá thuê",
+            "gia thue",
+            "mặt bằng",
+            "mat bang",
+            "500m",
+            "1km",
+            "khu vực",
+            "khu vuc",
         )
         claims: list[str] = []
         for doc in documents[:5]:
@@ -372,9 +407,24 @@ class SurroundingAreaAnalyzer:
         return {"configured": configured, "items": rows, "warnings": warnings}
 
     def _build_report(
-        self, *, lat, lon, industry, classification, coverage, metrics, verdict_report,
-        competitors, competitor_measurable, demand_counts, query_warnings, store: PoiStore, location,
-        map_pois, places_enrichment, satellite_context,
+        self,
+        *,
+        lat,
+        lon,
+        industry,
+        classification,
+        coverage,
+        metrics,
+        verdict_report,
+        competitors,
+        competitor_measurable,
+        demand_counts,
+        query_warnings,
+        store: PoiStore,
+        location,
+        map_pois,
+        places_enrichment,
+        satellite_context,
     ) -> ModuleReport:
         accessed_at = store.source_accessed_at()
         meta = store.metadata()
@@ -493,7 +543,6 @@ class SurroundingAreaAnalyzer:
                     warnings=satellite_context.get("warnings", []),
                 )
             )
-
 
         return ModuleReport(
             module=AnalysisModule.SURROUNDING_AREA,

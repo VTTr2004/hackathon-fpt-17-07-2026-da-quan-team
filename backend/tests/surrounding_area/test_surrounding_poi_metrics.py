@@ -11,12 +11,18 @@ from app.modules.surrounding_area.tools.poi_metrics import (
 )
 
 
-def make_poi(distance_m: float, *, name: str | None = None, brand: str | None = None,
-             value: str = "cafe") -> Poi:
+def make_poi(distance_m: float, *, name: str | None = None, brand: str | None = None, value: str = "cafe") -> Poi:
     return Poi(
-        osm_type="n", osm_id=int(distance_m), lat=10.0, lon=106.0,
-        name=name, brand=brand, operator=None,
-        category_key="amenity", category_value=value, distance_m=distance_m,
+        osm_type="n",
+        osm_id=int(distance_m),
+        lat=10.0,
+        lon=106.0,
+        name=name,
+        brand=brand,
+        operator=None,
+        category_key="amenity",
+        category_value=value,
+        distance_m=distance_m,
     )
 
 

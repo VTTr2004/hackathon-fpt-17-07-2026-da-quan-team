@@ -16,6 +16,47 @@ import type {
   SurroundingMapData,
 } from "@/types";
 
+type GoogleLatLngLiteral = { lat: number; lng: number };
+type GooglePoint = { x: number; y: number };
+type GoogleLatLng = unknown;
+type GoogleMapInstance = {
+  setCenter: (position: GoogleLatLngLiteral) => void;
+  setZoom: (zoom: number) => void;
+};
+type GoogleOverlay = { setMap: (map: GoogleMapInstance | null) => void };
+type GoogleProjection = { fromLatLngToDivPixel: (latLng: GoogleLatLng) => GooglePoint | null };
+type GooglePanes = { overlayMouseTarget: HTMLElement };
+type GoogleOverlayView = GoogleOverlay & {
+  onAdd: () => void;
+  draw: () => void;
+  onRemove: () => void;
+  getPanes: () => GooglePanes;
+  getProjection: () => GoogleProjection;
+};
+type GoogleInfoWindow = {
+  setContent: (content: string) => void;
+  setPosition: (position: GoogleLatLngLiteral) => void;
+  open: (map: GoogleMapInstance) => void;
+};
+type GoogleMapsNamespace = {
+  Map: new (element: HTMLElement, options: Record<string, unknown>) => GoogleMapInstance;
+  Circle: new (options: Record<string, unknown>) => GoogleOverlay;
+  InfoWindow: new () => GoogleInfoWindow;
+  LatLng: new (lat: number, lng: number) => GoogleLatLng;
+  OverlayView: new () => GoogleOverlayView;
+  MapTypeId: { HYBRID: string; ROADMAP: string };
+};
+
+declare global {
+  interface Window {
+    google?: { maps: GoogleMapsNamespace };
+    __startupLensGoogleMapsPromise?: Promise<GoogleMapsNamespace>;
+    __startupLensGoogleMapsAuthFailed?: boolean;
+    __startupLensGoogleMapsAuthListeners?: Set<() => void>;
+    gm_authFailure?: () => void;
+  }
+}
+
 type Props = {
   startupId: string;
   industry: string | null;
@@ -26,6 +67,8 @@ type Props = {
 };
 
 type DependencyChoice = "auto" | "primary" | "supporting" | "independent";
+type SatelliteTile = { key: string; url: string; col: number; row: number };
+type PoiKind = "competitor" | "eatery" | "residential";
 
 const dependencyOptions: Array<{ value: DependencyChoice; label: string }> = [
   { value: "auto", label: "Tự suy luận" },
@@ -46,6 +89,81 @@ const verdictStyle: Record<string, { className: string; label: string }> = {
   bac_bo: { className: "refuted", label: "Bác bỏ" },
   chua_du_thong_tin: { className: "insufficient", label: "Chưa đủ thông tin" },
 };
+
+const geocodeProviderLabel: Record<string, string> = {
+  google_geocoding: "Google Geocoding",
+  goong: "Goong",
+  nominatim: "OpenStreetMap/Nominatim",
+  manual: "Nhập tọa độ thủ công",
+  previous_analysis: "Kết quả phân tích trước",
+};
+
+const confidenceLabel: Record<string, string> = {
+  high: "độ tin cậy cao",
+  medium: "độ tin cậy vừa",
+  low: "độ tin cậy thấp",
+};
+
+const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+const googleMapsFallbackMessage = "Google Maps key bi tu choi; dang dung ban do ve tinh Esri/OSM.";
+
+function friendlyGeocodeWarning(warning: string) {
+  if (warning.includes("google_geocoding") && warning.includes("REQUEST_DENIED")) {
+    return "Google Geocoding key chua dung duoc; he thong da tu dong dung Goong/OSM fallback.";
+  }
+  return warning;
+}
+
+function ensureGoogleMapsAuthHandler() {
+  if (typeof window === "undefined") return;
+  window.__startupLensGoogleMapsAuthListeners ??= new Set();
+  if (window.gm_authFailure) return;
+  window.gm_authFailure = () => {
+    window.__startupLensGoogleMapsAuthFailed = true;
+    window.__startupLensGoogleMapsAuthListeners?.forEach((listener) => listener());
+  };
+}
+
+function watchGoogleMapsAuthFailure(listener: () => void) {
+  if (typeof window === "undefined") return () => undefined;
+  ensureGoogleMapsAuthHandler();
+  window.__startupLensGoogleMapsAuthListeners?.add(listener);
+  return () => window.__startupLensGoogleMapsAuthListeners?.delete(listener);
+}
+
+function loadGoogleMaps(apiKey: string) {
+  if (typeof window === "undefined") return Promise.reject(new Error("Google Maps only runs in the browser."));
+  ensureGoogleMapsAuthHandler();
+  if (window.__startupLensGoogleMapsAuthFailed) return Promise.reject(new Error(googleMapsFallbackMessage));
+  if (window.google?.maps) return Promise.resolve(window.google.maps);
+  if (window.__startupLensGoogleMapsPromise) return window.__startupLensGoogleMapsPromise;
+
+  window.__startupLensGoogleMapsPromise = new Promise((resolve, reject) => {
+    const existing = document.getElementById("google-maps-js");
+    if (existing) {
+      existing.addEventListener("load", () => {
+        if (window.google?.maps) resolve(window.google.maps);
+        else reject(new Error("Google Maps script đã load nhưng thiếu namespace."));
+      });
+      existing.addEventListener("error", () => reject(new Error("Không tải được Google Maps.")));
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = "google-maps-js";
+    script.async = true;
+    script.defer = true;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places`;
+    script.onload = () => {
+      if (window.google?.maps) resolve(window.google.maps);
+      else reject(new Error("Google Maps script đã load nhưng thiếu namespace."));
+    };
+    script.onerror = () => reject(new Error("Không tải được Google Maps."));
+    document.head.appendChild(script);
+  });
+
+  return window.__startupLensGoogleMapsPromise;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -147,7 +265,68 @@ function sceneDate(value?: string | null) {
   return date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-function PoiPreviewList({ title, items, empty }: { title: string; items: MapPoi[]; empty: string }) {
+function satelliteZoomForRadius(radiusM: number) {
+  if (radiusM <= 350) return 18;
+  if (radiusM <= 900) return 17;
+  if (radiusM <= 1800) return 16;
+  return 15;
+}
+
+function lonLatToTile(center: { lat: number; lon: number }, zoom: number) {
+  const scale = 2 ** zoom;
+  const latRad = (center.lat * Math.PI) / 180;
+  const x = Math.floor(((center.lon + 180) / 360) * scale);
+  const y = Math.floor(((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * scale);
+  return { x, y };
+}
+
+function satelliteTiles(center: { lat: number; lon: number }, radiusM: number) {
+  const zoom = satelliteZoomForRadius(radiusM);
+  const origin = lonLatToTile(center, zoom);
+  const maxTile = 2 ** zoom - 1;
+  const tiles: SatelliteTile[] = [];
+  for (let row = 0; row < 3; row += 1) {
+    for (let col = 0; col < 3; col += 1) {
+      const x = Math.min(maxTile, Math.max(0, origin.x + col - 1));
+      const y = Math.min(maxTile, Math.max(0, origin.y + row - 1));
+      tiles.push({
+        key: `${zoom}-${x}-${y}`,
+        url: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${y}/${x}`,
+        col,
+        row,
+      });
+    }
+  }
+  return { zoom, tiles };
+}
+
+function satelliteRadiusStyle(center: { lat: number; lon: number }, radiusM: number, zoom: number) {
+  const metersPerPixel = (156_543.03392 * Math.cos((center.lat * Math.PI) / 180)) / 2 ** zoom;
+  const tileGridPx = 256 * 3;
+  const framePx = 360;
+  const diameter = Math.min(150, Math.max(34, ((radiusM * 2) / metersPerPixel / tileGridPx) * framePx));
+  return { width: `${diameter}px`, height: `${diameter}px` };
+}
+
+function poiKey(item: Pick<MapPoi, "lat" | "lon" | "name">, kind: string) {
+  return `${kind}:${item.lat.toFixed(6)}:${item.lon.toFixed(6)}:${item.name ?? ""}`;
+}
+
+function PoiPreviewList({
+  title,
+  items,
+  empty,
+  kind,
+  focusedKey,
+  onSelect,
+}: {
+  title: string;
+  items: MapPoi[];
+  empty: string;
+  kind: PoiKind;
+  focusedKey: string | null;
+  onSelect: (item: MapPoi, kind: PoiKind) => void;
+}) {
   return (
     <div className="poiPreview">
       <div className="poiPreviewHeader">
@@ -159,21 +338,22 @@ function PoiPreviewList({ title, items, empty }: { title: string; items: MapPoi[
       ) : (
         <div className="poiPreviewList">
           {items.slice(0, 6).map((item, index) => {
-            const content = (
-              <>
-                <span>{item.name ?? "(không tên)"}</span>
-                <small>
-                  {Math.round(item.distance_m)}m{item.category ? ` · ${item.category}` : ""}
-                </small>
-                <small>{poiSourceLabel(item)}</small>
-              </>
-            );
-            return item.google_maps_url ? (
-              <a href={item.google_maps_url} key={`${title}-${item.lat}-${item.lon}-${index}`} target="_blank" rel="noreferrer">
-                {content}
-              </a>
-            ) : (
-              <div key={`${title}-${item.lat}-${item.lon}-${index}`}>{content}</div>
+            const key = poiKey(item, kind);
+            return (
+              <div className={`poiPreviewItem ${focusedKey === key ? "active" : ""}`} key={`${key}-${index}`}>
+                <button type="button" onClick={() => onSelect(item, kind)}>
+                  <span>{item.name ?? "(không tên)"}</span>
+                  <small>
+                    {Math.round(item.distance_m)}m{item.category ? ` · ${item.category}` : ""}
+                  </small>
+                  <small>{poiSourceLabel(item)}</small>
+                </button>
+                {item.google_maps_url && (
+                  <a aria-label="Mở địa điểm trên Google Maps" href={item.google_maps_url} target="_blank" rel="noreferrer">
+                    Maps
+                  </a>
+                )}
+              </div>
             );
           })}
         </div>
@@ -181,7 +361,6 @@ function PoiPreviewList({ title, items, empty }: { title: string; items: MapPoi[
     </div>
   );
 }
-
 function ScanMetric({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
     <div className="scanMetric">
@@ -201,6 +380,79 @@ function nearestName(items: MapPoi[]) {
 function poiSourceLabel(item: MapPoi) {
   const quality = item.position_quality === "polygon_centroid" ? "OSM centroid" : "OSM point";
   return item.maps_match_status === "verified_google_maps" ? `${quality} · verified Maps` : `${quality} · chưa verify Maps`;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function markerLabel(name: string | null, fallback: string) {
+  const label = name?.trim() || fallback;
+  return label.length > 32 ? `${label.slice(0, 29)}...` : label;
+}
+
+function markerIconHtml(kind: "site" | "competitor" | "eatery" | "residential", label: string, icon: string) {
+  return `
+    <div class="poiMapMarker ${kind}">
+      <span class="poiMapIcon">${escapeHtml(icon)}</span>
+      <span class="poiMapLabel">${escapeHtml(label)}</span>
+    </div>
+  `;
+}
+
+function poiPopupHtml(p: { name: string | null; distance_m: number; google_maps_url?: string; category?: string }) {
+  const name = escapeHtml(p.name ?? "(không tên)");
+  const category = escapeHtml(p.category ?? "");
+  const distance = Math.round(p.distance_m);
+  const link = p.google_maps_url
+    ? `<br/><a href="${escapeHtml(p.google_maps_url)}" target="_blank" rel="noopener">Khảo sát trên Google Maps</a>`
+    : "";
+  return `<b>${name}</b><br/>${category} · ${distance}m${link}`;
+}
+
+function addGoogleHtmlMarker(
+  maps: GoogleMapsNamespace,
+  map: GoogleMapInstance,
+  overlays: GoogleOverlay[],
+  infoWindow: GoogleInfoWindow,
+  position: GoogleLatLngLiteral,
+  kind: "site" | "competitor" | "eatery" | "residential",
+  label: string,
+  icon: string,
+  popupHtml: string,
+) {
+  const overlay = new maps.OverlayView();
+  let div: HTMLDivElement | null = null;
+
+  overlay.onAdd = () => {
+    div = document.createElement("div");
+    div.className = "googlePoiMarkerLayer";
+    div.innerHTML = markerIconHtml(kind, label, icon);
+    div.addEventListener("click", () => {
+      infoWindow.setContent(popupHtml);
+      infoWindow.setPosition(position);
+      infoWindow.open(map);
+    });
+    overlay.getPanes().overlayMouseTarget.appendChild(div);
+  };
+  overlay.draw = () => {
+    if (!div) return;
+    const point = overlay.getProjection().fromLatLngToDivPixel(new maps.LatLng(position.lat, position.lng));
+    if (!point) return;
+    div.style.left = `${point.x}px`;
+    div.style.top = `${point.y}px`;
+  };
+  overlay.onRemove = () => {
+    div?.remove();
+    div = null;
+  };
+  overlay.setMap(map);
+  overlays.push(overlay);
 }
 
 function PlacesSurveyList({ items }: { items: PlacesEnrichmentItem[] }) {
@@ -233,18 +485,49 @@ function PlacesSurveyList({ items }: { items: PlacesEnrichmentItem[] }) {
   );
 }
 
-function SatellitePanel({ context, error }: { context: SatelliteContext | null; error?: string }) {
+function SatellitePanel({
+  context,
+  error,
+  center,
+  radiusM,
+}: {
+  context: SatelliteContext | null;
+  error?: string;
+  center: { lat: number; lon: number } | null;
+  radiusM: number;
+}) {
   const scene = context?.best_scene ?? null;
+  const [failedThumbnailUrl, setFailedThumbnailUrl] = useState<string | null>(null);
+  const thumbnailUrl = scene?.thumbnail_url && failedThumbnailUrl !== scene.thumbnail_url ? scene.thumbnail_url : null;
+  const tilePreview = center ? satelliteTiles(center, radiusM) : null;
 
   return (
     <div className="satellitePanel">
       <div className="satelliteFrame">
-        {scene?.thumbnail_url ? (
-          <span
+        {center && tilePreview ? (
+          <>
+            <div className="satelliteTileGrid" aria-label="High resolution satellite preview" role="img">
+              {tilePreview.tiles.map((tile) => (
+                <img
+                  alt=""
+                  className="satelliteTile"
+                  key={tile.key}
+                  src={tile.url}
+                  style={{ gridColumn: tile.col + 1, gridRow: tile.row + 1 }}
+                />
+              ))}
+            </div>
+            <span className="satelliteScanRing" style={satelliteRadiusStyle(center, radiusM, tilePreview.zoom)} />
+            <span className="satelliteCenterPin" />
+            <span className="satelliteSourceTag">Esri satellite z{tilePreview.zoom}</span>
+          </>
+        ) : thumbnailUrl ? (
+          <img
             aria-label="Sentinel-2 quicklook"
+            alt="Sentinel-2 quicklook"
             className="satelliteImage"
-            role="img"
-            style={{ backgroundImage: `url(${scene.thumbnail_url})` }}
+            src={thumbnailUrl}
+            onError={() => setFailedThumbnailUrl(thumbnailUrl)}
           />
         ) : (
           <div className="satelliteFallback">
@@ -308,6 +591,8 @@ export default function SurroundingArea({
   const [geocodeWarnings, setGeocodeWarnings] = useState<string[]>([]);
   const [center, setCenter] = useState<{ lat: number; lon: number } | null>(initialCenter);
   const [confirmed, setConfirmed] = useState(Boolean(initialCenter));
+  const [selectedGeocodeProvider, setSelectedGeocodeProvider] = useState(initialCenter ? "previous_analysis" : "");
+  const [selectedGeocodeConfidence, setSelectedGeocodeConfidence] = useState("");
   const [claims, setClaims] = useState(claimsFromFacts(facts) || claimTemplates.slice(0, 2).join("\n"));
   const [scanRadiusM, setScanRadiusM] = useState(initialRadius);
   const [scanRadiusText, setScanRadiusText] = useState(String(initialRadius));
@@ -322,11 +607,17 @@ export default function SurroundingArea({
   const [error, setError] = useState("");
   const [scanNonce, setScanNonce] = useState(0);
   const [copyStatus, setCopyStatus] = useState("");
+  const [focusedPoiKey, setFocusedPoiKey] = useState<string | null>(null);
+  const [googleMapsBlocked, setGoogleMapsBlocked] = useState(false);
 
   const profileFormRef = useRef<HTMLFormElement | null>(null);
   const mapEl = useRef<HTMLDivElement | null>(null);
+  const mapProviderRef = useRef<"google" | "leaflet" | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const layerRef = useRef<LayerGroup | null>(null);
+  const googleMapRef = useRef<GoogleMapInstance | null>(null);
+  const googleOverlaysRef = useRef<GoogleOverlay[]>([]);
+  const googleInfoWindowRef = useRef<GoogleInfoWindow | null>(null);
 
   const verdicts: ClaimVerdict[] = (analysis?.report.details?.verdicts?.claims as ClaimVerdict[]) ?? [];
   const coverage = analysis?.report.details?.coverage;
@@ -367,6 +658,8 @@ export default function SurroundingArea({
         setCenter({ lat: first.lat, lon: first.lon });
         setManualLat(String(first.lat));
         setManualLon(String(first.lon));
+        setSelectedGeocodeProvider(first.provider || result.provider);
+        setSelectedGeocodeConfidence(first.confidence);
       } else {
         setError(result.warnings.join(" ") || "Không tìm thấy vị trí.");
       }
@@ -387,6 +680,8 @@ export default function SurroundingArea({
     setCenter({ lat, lon });
     setCandidates([]);
     setConfirmed(true);
+    setSelectedGeocodeProvider("manual");
+    setSelectedGeocodeConfidence("high");
     setError("");
   }
 
@@ -411,6 +706,22 @@ export default function SurroundingArea({
   function openCurrentLocation() {
     if (!center) return;
     window.open(`https://www.google.com/maps/search/?api=1&query=${center.lat},${center.lon}`, "_blank", "noopener");
+  }
+
+  function focusPoi(item: MapPoi, kind: PoiKind) {
+    const position = { lat: item.lat, lng: item.lon };
+    setFocusedPoiKey(poiKey(item, kind));
+    googleMapRef.current?.setCenter(position);
+    googleMapRef.current?.setZoom(18);
+    if (googleMapRef.current && googleInfoWindowRef.current) {
+      const title = kind === "residential" ? "Khu dân cư" : item.name ?? "Địa điểm";
+      googleInfoWindowRef.current.setContent(kind === "residential" ? `<b>${escapeHtml(title)}</b>` : poiPopupHtml(item));
+      googleInfoWindowRef.current.setPosition(position);
+      googleInfoWindowRef.current.open(googleMapRef.current);
+    }
+    mapRef.current?.setView([item.lat, item.lon], 17, { animate: true });
+    mapEl.current?.classList.add("mapCanvasPulse");
+    window.setTimeout(() => mapEl.current?.classList.remove("mapCanvasPulse"), 520);
   }
 
   function appendClaim(template: string) {
@@ -477,12 +788,137 @@ export default function SurroundingArea({
   useEffect(() => {
     if (!center || !mapEl.current) return;
     let disposed = false;
+    let stopWatchingGoogleAuth: (() => void) | null = null;
 
     (async () => {
-      const L = (await import("leaflet")).default;
       if (disposed) return;
       const element = mapEl.current;
       if (!element) return;
+
+      stopWatchingGoogleAuth = watchGoogleMapsAuthFailure(() => {
+        if (disposed) return;
+        setGoogleMapsBlocked(true);
+        setMapError(googleMapsFallbackMessage);
+      });
+
+      if (googleMapsApiKey && !googleMapsBlocked && !window.__startupLensGoogleMapsAuthFailed) {
+        try {
+          const maps = await loadGoogleMaps(googleMapsApiKey);
+          if (disposed) return;
+          if (window.__startupLensGoogleMapsAuthFailed) throw new Error(googleMapsFallbackMessage);
+
+          if (mapProviderRef.current !== "google") {
+            mapRef.current?.remove();
+            mapRef.current = null;
+            layerRef.current = null;
+            element.innerHTML = "";
+            googleMapRef.current = new maps.Map(element, {
+              center: { lat: center.lat, lng: center.lon },
+              zoom: 16,
+              mapTypeId: maps.MapTypeId.HYBRID,
+              mapTypeControl: true,
+              streetViewControl: false,
+              fullscreenControl: true,
+              clickableIcons: true,
+              gestureHandling: "greedy",
+            });
+            googleInfoWindowRef.current = new maps.InfoWindow();
+            mapProviderRef.current = "google";
+          } else {
+            googleMapRef.current?.setCenter({ lat: center.lat, lng: center.lon });
+            googleMapRef.current?.setZoom(16);
+          }
+
+          const map = googleMapRef.current;
+          const infoWindow = googleInfoWindowRef.current;
+          if (!map || !infoWindow) return;
+          googleOverlaysRef.current.forEach((overlay) => overlay.setMap(null));
+          googleOverlaysRef.current = [];
+
+          googleOverlaysRef.current.push(
+            new maps.Circle({
+              center: { lat: center.lat, lng: center.lon },
+              radius: scanRadiusM,
+              strokeColor: "#1f6b4f",
+              strokeOpacity: 0.82,
+              strokeWeight: 2,
+              fillColor: "#8fd0d1",
+              fillOpacity: 0.13,
+              map,
+            }),
+          );
+
+          addGoogleHtmlMarker(
+            maps,
+            map,
+            googleOverlaysRef.current,
+            infoWindow,
+            { lat: center.lat, lng: center.lon },
+            "site",
+            "Vị trí kinh doanh",
+            "●",
+            "<b>Địa điểm kinh doanh</b>",
+          );
+
+          mapData?.residential.forEach((zone) =>
+            addGoogleHtmlMarker(
+              maps,
+              map,
+              googleOverlaysRef.current,
+              infoWindow,
+              { lat: zone.lat, lng: zone.lon },
+              "residential",
+              markerLabel(zone.name, "Khu dân cư"),
+              "H",
+              `<b>Khu dân cư</b><br/>${escapeHtml(zone.name ?? "")}`,
+            ),
+          );
+          mapData?.competitors.forEach((competitor) =>
+            addGoogleHtmlMarker(
+              maps,
+              map,
+              googleOverlaysRef.current,
+              infoWindow,
+              { lat: competitor.lat, lng: competitor.lon },
+              "competitor",
+              markerLabel(competitor.name, "Đối thủ"),
+              "!",
+              poiPopupHtml(competitor),
+            ),
+          );
+          mapData?.eateries.forEach((eatery) =>
+            addGoogleHtmlMarker(
+              maps,
+              map,
+              googleOverlaysRef.current,
+              infoWindow,
+              { lat: eatery.lat, lng: eatery.lon },
+              "eatery",
+              markerLabel(eatery.name, "Ăn uống"),
+              "F",
+              poiPopupHtml(eatery),
+            ),
+          );
+          return;
+        } catch (err) {
+          if (!disposed) {
+            setGoogleMapsBlocked(true);
+            setMapError(err instanceof Error ? `${err.message}; đang dùng bản đồ fallback.` : "Không tải được Google Maps; đang dùng bản đồ fallback.");
+          }
+        }
+      }
+
+      const L = (await import("leaflet")).default;
+      if (disposed) return;
+
+      if (mapProviderRef.current === "google") {
+        googleOverlaysRef.current.forEach((overlay) => overlay.setMap(null));
+        googleOverlaysRef.current = [];
+        googleMapRef.current = null;
+        googleInfoWindowRef.current = null;
+        element.innerHTML = "";
+      }
+      mapProviderRef.current = "leaflet";
 
       if (!mapRef.current) {
         const map = L.map(element).setView([center.lat, center.lon], 15);
@@ -494,8 +930,24 @@ export default function SurroundingArea({
           "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
           { attribution: "Tiles © Esri", maxZoom: 19 },
         );
+        const labels = L.tileLayer(
+          "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+          { attribution: "Labels © Esri", maxZoom: 19, pane: "tilePane" },
+        );
+        const roadLabels = L.tileLayer(
+          "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",
+          { attribution: "Road labels © Esri", maxZoom: 19, pane: "tilePane" },
+        );
         satellite.addTo(map);
-        L.control.layers({ "Vệ tinh": satellite, "Đường phố": street }, {}, { collapsed: true }).addTo(map);
+        roadLabels.addTo(map);
+        labels.addTo(map);
+        L.control
+          .layers(
+            { "Vệ tinh có nhãn": satellite, "Đường phố": street },
+            { "Tên đường": roadLabels, "Địa danh": labels },
+            { collapsed: true },
+          )
+          .addTo(map);
         layerRef.current = L.layerGroup().addTo(map);
         mapRef.current = map;
       } else {
@@ -528,56 +980,67 @@ export default function SurroundingArea({
         .bindPopup("<b>Địa điểm kinh doanh</b>")
         .addTo(group);
 
-      const popup = (p: { name: string | null; distance_m: number; google_maps_url?: string; category?: string }) =>
-        `<b>${p.name ?? "(không tên)"}</b><br/>${p.category ?? ""} · ${Math.round(p.distance_m)}m` +
-        (p.google_maps_url
-          ? `<br/><a href="${p.google_maps_url}" target="_blank" rel="noopener">Khảo sát trên Google Maps</a>`
-          : "");
+      L.marker([center.lat, center.lon], {
+        icon: L.divIcon({
+          className: "poiMarkerShell",
+          html: markerIconHtml("site", "Vị trí kinh doanh", "●"),
+          iconAnchor: [18, 18],
+        }),
+        zIndexOffset: 900,
+      })
+        .bindPopup("<b>Địa điểm kinh doanh</b>")
+        .addTo(group);
 
       mapData?.residential.forEach((zone) =>
-        L.circleMarker([zone.lat, zone.lon], {
-          radius: 5,
-          color: "#2f6f73",
-          fillColor: "#8fd0d1",
-          fillOpacity: 0.6,
-          weight: 1,
+        L.marker([zone.lat, zone.lon], {
+          icon: L.divIcon({
+            className: "poiMarkerShell",
+            html: markerIconHtml("residential", markerLabel(zone.name, "Khu dân cư"), "⌂"),
+            iconAnchor: [16, 16],
+          }),
         })
           .bindPopup(`<b>Khu dân cư</b><br/>${zone.name ?? ""}`)
           .addTo(group),
       );
       mapData?.competitors.forEach((competitor) =>
-        L.circleMarker([competitor.lat, competitor.lon], {
-          radius: 6,
-          color: "#8a3217",
-          fillColor: "#ce6a3a",
-          fillOpacity: 0.9,
-          weight: 1,
+        L.marker([competitor.lat, competitor.lon], {
+          icon: L.divIcon({
+            className: "poiMarkerShell",
+            html: markerIconHtml("competitor", markerLabel(competitor.name, "Đối thủ"), "!"),
+            iconAnchor: [16, 16],
+          }),
         })
-          .bindPopup(popup(competitor))
+          .bindPopup(poiPopupHtml(competitor))
           .addTo(group),
       );
       mapData?.eateries.forEach((eatery) =>
-        L.circleMarker([eatery.lat, eatery.lon], {
-          radius: 5,
-          color: "#836319",
-          fillColor: "#e7c45b",
-          fillOpacity: 0.85,
-          weight: 1,
+        L.marker([eatery.lat, eatery.lon], {
+          icon: L.divIcon({
+            className: "poiMarkerShell",
+            html: markerIconHtml("eatery", markerLabel(eatery.name, "Ăn uống"), "F"),
+            iconAnchor: [16, 16],
+          }),
         })
-          .bindPopup(popup(eatery))
+          .bindPopup(poiPopupHtml(eatery))
           .addTo(group),
       );
     })();
 
     return () => {
       disposed = true;
+      stopWatchingGoogleAuth?.();
     };
-  }, [center, mapData, scanRadiusM]);
+  }, [center, mapData, scanRadiusM, googleMapsBlocked]);
 
   useEffect(() => {
     return () => {
       mapRef.current?.remove();
       mapRef.current = null;
+      googleOverlaysRef.current.forEach((overlay) => overlay.setMap(null));
+      googleOverlaysRef.current = [];
+      googleMapRef.current = null;
+      googleInfoWindowRef.current = null;
+      mapProviderRef.current = null;
     };
   }, []);
 
@@ -639,6 +1102,12 @@ export default function SurroundingArea({
     }
   }
 
+  const mapModeLabel = googleMapsApiKey
+    ? googleMapsBlocked
+      ? "Esri/OSM fallback · Google Maps key bị từ chối"
+      : "Google Maps hybrid · fallback Esri/OSM"
+    : "Esri/OSM fallback · thêm Google Maps key để bật Google";
+
   return (
     <section className="surface surroundingSurface" id="surrounding-area">
       <div className="sectionHeader">
@@ -646,7 +1115,7 @@ export default function SurroundingArea({
           <p className="eyebrow">SURROUNDING AREA</p>
           <h2>Khu vực xung quanh</h2>
         </div>
-        <span className="muted">OpenStreetMap local · geocode có xác nhận</span>
+        <span className="muted">{mapModeLabel}</span>
       </div>
 
       <div className="stepGrid">
@@ -703,7 +1172,7 @@ export default function SurroundingArea({
       {geocodeWarnings.length > 0 && (
         <div className="notice warning">
           {geocodeWarnings.map((warning) => (
-            <p key={warning}>{warning}</p>
+            <p key={warning}>{friendlyGeocodeWarning(warning)}</p>
           ))}
         </div>
       )}
@@ -720,12 +1189,18 @@ export default function SurroundingArea({
                 setCenter({ lat: candidate.lat, lon: candidate.lon });
                 setManualLat(String(candidate.lat));
                 setManualLon(String(candidate.lon));
+                setSelectedGeocodeProvider(candidate.provider);
+                setSelectedGeocodeConfidence(candidate.confidence);
               }}
               type="button"
             >
-              <span>{candidate.display_name}</span>
+              <span>
+                {candidate.display_name}
+                <em className={`providerPill ${candidate.provider}`}>{geocodeProviderLabel[candidate.provider] ?? candidate.provider}</em>
+              </span>
               <small>
-                {candidate.lat.toFixed(5)}, {candidate.lon.toFixed(5)} · {candidate.confidence}
+                {candidate.lat.toFixed(5)}, {candidate.lon.toFixed(5)} ·{" "}
+                {confidenceLabel[candidate.confidence] ?? candidate.confidence}
               </small>
             </button>
           ))}
@@ -740,7 +1215,12 @@ export default function SurroundingArea({
           <div className="mapActionBar">
             <div>
               <strong>Điều khiển quét</strong>
-              <span>{copyStatus || `${center.lat.toFixed(5)}, ${center.lon.toFixed(5)} · ${scanRadiusM}m`}</span>
+              <span>
+                {copyStatus ||
+                  `${center.lat.toFixed(5)}, ${center.lon.toFixed(5)} · ${scanRadiusM}m · ${
+                    geocodeProviderLabel[selectedGeocodeProvider] ?? "tọa độ chưa rõ nguồn"
+                  }`}
+              </span>
             </div>
             <div className="mapActionButtons">
               <button className="secondaryButton compactButton" type="button" onClick={refreshScan}>
@@ -762,7 +1242,9 @@ export default function SurroundingArea({
               <ScanMetric
                 label="Tọa độ"
                 value={confirmed ? "Đã xác nhận" : "Chưa xác nhận"}
-                hint={`${center.lat.toFixed(5)}, ${center.lon.toFixed(5)}`}
+                hint={`${geocodeProviderLabel[selectedGeocodeProvider] ?? "Chưa rõ nguồn"} · ${
+                  confidenceLabel[selectedGeocodeConfidence] ?? "cần kiểm tra"
+                }`}
               />
               <ScanMetric label="Bán kính quét" value={`${scanRadiusM}m`} hint="Vòng tròn trên bản đồ" />
               <ScanMetric
@@ -775,7 +1257,7 @@ export default function SurroundingArea({
           <div className="mapLayout">
             <div className="mapCanvas" ref={mapEl} />
             <div className="mapSide">
-              <SatellitePanel context={satelliteContext} error={satelliteError} />
+              <SatellitePanel context={satelliteContext} error={satelliteError} center={center} radiusM={scanRadiusM} />
               <div className="mapLegend">
                 <span>
                   <i className="legendDot site" /> Địa điểm
@@ -791,7 +1273,9 @@ export default function SurroundingArea({
                 </span>
               </div>
               <div className="sourceNote">
-                POI lấy từ OpenStreetMap local. Tên và vị trí đối thủ được gắn link khảo sát để kiểm chứng lại trên Google Maps khi cần ra quyết định.
+                {googleMapsApiKey && !googleMapsBlocked
+                  ? "Bản đồ nền dùng Google Maps hybrid. POI phân tích vẫn lấy từ dữ liệu module và được gắn link khảo sát Google Maps để kiểm chứng."
+                  : "Bản đồ đang dùng fallback Esri/OSM vì chưa có Google Maps key. POI lấy từ OpenStreetMap local và có link khảo sát Google Maps khi cần kiểm chứng."}
               </div>
               <div className={confirmed ? "confirmState confirmed" : "confirmState"}>
                 <strong>{confirmed ? "Đã xác nhận tọa độ" : "Chưa xác nhận tọa độ"}</strong>
@@ -802,9 +1286,30 @@ export default function SurroundingArea({
               {mapError && <div className="notice warning">{mapError}</div>}
               {mapData && (
                 <div className="poiPreviewGrid">
-                  <PoiPreviewList title="Quán ăn gần nhất" items={mapData.eateries} empty="Chưa thấy quán ăn trong bán kính." />
-                  <PoiPreviewList title="Đối thủ gần nhất" items={mapData.competitors} empty="Chưa thấy đối thủ theo ngành." />
-                  <PoiPreviewList title="Khu dân cư" items={mapData.residential} empty="Chưa thấy zone dân cư." />
+                  <PoiPreviewList
+                    title="Quán ăn gần nhất"
+                    items={mapData.eateries}
+                    empty="Chưa thấy quán ăn trong bán kính."
+                    kind="eatery"
+                    focusedKey={focusedPoiKey}
+                    onSelect={focusPoi}
+                  />
+                  <PoiPreviewList
+                    title="Đối thủ gần nhất"
+                    items={mapData.competitors}
+                    empty="Chưa thấy đối thủ theo ngành."
+                    kind="competitor"
+                    focusedKey={focusedPoiKey}
+                    onSelect={focusPoi}
+                  />
+                  <PoiPreviewList
+                    title="Khu dân cư"
+                    items={mapData.residential}
+                    empty="Chưa thấy zone dân cư."
+                    kind="residential"
+                    focusedKey={focusedPoiKey}
+                    onSelect={focusPoi}
+                  />
                 </div>
               )}
             </div>
