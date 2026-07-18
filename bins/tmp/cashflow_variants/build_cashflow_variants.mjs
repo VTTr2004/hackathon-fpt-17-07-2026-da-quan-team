@@ -174,7 +174,7 @@ async function buildBakery() {
   const expWb = Workbook.create(); addReadmeSheet(expWb, "TIỆM BÁNH MÂY SỚM - CÔNG NỢ", "Ngày hóa đơn khác ngày thanh toán. Chỉ cột Đã trả mới là dòng tiền ra trong kỳ.");
   const e = expWb.worksheets.add("HoaDonNCC"); title(e, "HÓA ĐƠN NHÀ CUNG CẤP & CÔNG NỢ", DISCLAIMER, "K");
   e.getRange("A4:K4").values = [["Mã HĐ", "Ngày HĐ", "Nhà cung cấp", "Nhóm chi phí", "Tổng HĐ", "Ngày trả", "Đã trả", "Còn nợ", "Trạng thái", "Phương thức", "Ghi chú"]]; header(e.getRange("A4:K4"));
-  e.getRange(`A5:G${4 + d.invoices.length}`).values = d.invoices.map((x, i) => [x.id, x.invDate, x.supplier, x.cat, x.total, x.paidDate, x.paid]);
+  e.getRange(`A5:G${4 + d.invoices.length}`).values = d.invoices.map((x) => [x.id, x.invDate, x.supplier, x.cat, x.total, x.paidDate ? iso(x.paidDate) : "", x.paid]);
   e.getRange(`I5:K${4 + d.invoices.length}`).values = d.invoices.map(x => [x.status, x.paid ? "Chuyển khoản" : "", x.paid ? "Đã khớp sổ quỹ" : "Thanh toán tháng 07/2026"]);
   e.getRange("H5").formulas = [["=E5-G5"]]; e.getRange(`H5:H${4 + d.invoices.length}`).fillDown();
   body(e.getRange(`A5:K${4 + d.invoices.length}`)); e.getRange(`B5:B${4 + d.invoices.length}`).format.numberFormat = "yyyy-mm-dd"; e.getRange(`F5:F${4 + d.invoices.length}`).format.numberFormat = "yyyy-mm-dd";
