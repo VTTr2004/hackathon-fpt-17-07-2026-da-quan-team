@@ -15,7 +15,7 @@ import {
 import type { ProfileField } from "@/lib/profileFields";
 import type { Analysis, AnalysisModule, DocumentItem, Startup } from "@/types";
 
-import DocumentChat from "./DocumentChat";
+import ChatWidget from "./ChatWidget";
 import SurroundingArea from "./SurroundingArea";
 import CashFlowAnalysis from "./CashFlowAnalysis";
 
@@ -497,22 +497,8 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        <aside className="surface chatPanel" id="document-copilot">
-          <div className="chatPanelHead">
-            <div>
-              <p className="eyebrow">DOCUMENT COPILOT</p>
-              <h2>Hỏi tài liệu</h2>
-              <p className="muted">Câu trả lời chỉ dùng tài liệu của hồ sơ này, kèm trích dẫn nguồn.</p>
-            </div>
-            <Link className="muted" href={`/startups/${id}/chat`}>
-              Mở toàn màn hình →
-            </Link>
-          </div>
-          <div className="chatPanelBody">
-            <DocumentChat startupId={id} />
-          </div>
-        </aside>
       </section>
+      <ChatWidget startupId={id} />
     </div>
   );
 }

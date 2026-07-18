@@ -34,10 +34,20 @@ async def chat_with_documents(
     if await db.get(Startup, startup_id) is None:
         raise HTTPException(status_code=404, detail="Startup không tồn tại")
     docs = list(await db.scalars(select(Document).where(Document.startup_id == startup_id)))
+    prior = list(
+        await db.scalars(
+            select(ChatMessage)
+            .where(ChatMessage.startup_id == startup_id)
+            .order_by(ChatMessage.created_at.desc())
+            .limit(8)
+        )
+    )
+    history = [{"role": message.role, "content": message.content} for message in reversed(prior)]
     response = await answer_question(
         str(startup_id),
         [{"id": str(doc.id), "filename": doc.filename, "text": doc.extracted_text} for doc in docs],
         payload.question,
+        history,
     )
     db.add_all(
         [
