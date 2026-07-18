@@ -49,10 +49,10 @@ const statusCopy: Record<string, string> = {
 };
 
 const suggestedQuestions = [
-  "Tóm tắt rủi ro chính",
-  "Startup còn thiếu dữ liệu gì?",
-  "Dòng tiền có điểm yếu nào?",
-  "Vị trí này có phù hợp không?",
+  "Tổng doanh thu thuần 3 tháng là bao nhiêu?",
+  "Doanh thu thuần tháng 5/2026 là bao nhiêu?",
+  "Số dư cuối kỳ trong sổ thu chi là bao nhiêu?",
+  "Giá bán một ly cà phê sữa là bao nhiêu?",
 ];
 
 function scoreText(score: number | null | undefined) {
@@ -533,10 +533,18 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
                   <details key={`${citation.document_id}-${index}`}>
                     <summary>
                       [{index + 1}] {citation.filename}
+                      {citation.locator ? ` · ${citation.locator}` : ""}
                     </summary>
                     <blockquote>{citation.excerpt}</blockquote>
                   </details>
                 ))}
+                {chat.metadata && chat.metadata.retrieval ? (
+                  <p className="muted" style={{ marginTop: "0.5rem", fontSize: "0.8rem" }}>
+                    {chat.grounded ? "Có dẫn nguồn" : "Chưa đủ dữ liệu"} · retrieval:{" "}
+                    {String(chat.metadata.retrieval)}
+                    {chat.metadata.provider ? ` · ${String(chat.metadata.provider)}` : ""}
+                  </p>
+                ) : null}
               </>
             ) : (
               <div className="emptyState">Chưa có câu hỏi nào.</div>

@@ -184,11 +184,13 @@ export type ChatResponse = {
   answer: string;
   grounded: boolean;
   model: string | null;
+  metadata?: Record<string, unknown>;
   citations: Array<{
     document_id: string;
     filename: string;
     excerpt: string;
     page: number | null;
+    locator?: string | null;
   }>;
 };
 
