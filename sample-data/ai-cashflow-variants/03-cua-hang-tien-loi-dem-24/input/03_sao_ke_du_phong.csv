@@ -1,0 +1,27 @@
+transaction_id,posting_date,account,narrative,credit_vnd,debit_vnd,type,reference
+TX-0001,2026-04-28,Tiền mặt,"Doanh thu tiền mặt T4",258097000,0,Bán hàng,CA-T4
+TX-0002,2026-04-29,Ngân hàng,"Doanh thu QR T4",298841000,0,Bán hàng,QR-T4
+TX-0003,2026-04-30,Ví điện tử,"Ví thanh toán net T4",119188000,0,Bán hàng,EW-T4
+TX-0004,2026-04-07,Ngân hàng,"Thanh toán hàng hóa T4",0,373982000,Mua hàng,INV-T4
+TX-0005,2026-04-12,Ngân hàng,"Lương T4",0,82000000,Nhân sự,SAL-T4
+TX-0006,2026-04-18,Ngân hàng,"Thuê và điện nước T4",0,42000000,Vận hành,OPS-T4
+TX-0007,2026-04-21,Tiền mặt,"Nộp tiền mặt T4",0,60000000,Điều chuyển nội bộ,MOVE-T4
+TX-0008,2026-04-21,Ngân hàng,"Nhận tiền nộp quỹ T4",60000000,0,Điều chuyển nội bộ,MOVE-T4
+TX-0009,2026-05-28,Tiền mặt,"Doanh thu tiền mặt T5",264799000,0,Bán hàng,CA-T5
+TX-0010,2026-05-29,Ngân hàng,"Doanh thu QR T5",306610000,0,Bán hàng,QR-T5
+TX-0011,2026-05-30,Ví điện tử,"Ví thanh toán net T5",122289000,0,Bán hàng,EW-T5
+TX-0012,2026-05-07,Ngân hàng,"Thanh toán hàng hóa T5",0,401539000,Mua hàng,INV-T5
+TX-0013,2026-05-12,Ngân hàng,"Lương T5",0,82000000,Nhân sự,SAL-T5
+TX-0014,2026-05-18,Ngân hàng,"Thuê và điện nước T5",0,42000000,Vận hành,OPS-T5
+TX-0015,2026-05-21,Tiền mặt,"Nộp tiền mặt T5",0,60000000,Điều chuyển nội bộ,MOVE-T5
+TX-0016,2026-05-21,Ngân hàng,"Nhận tiền nộp quỹ T5",60000000,0,Điều chuyển nội bộ,MOVE-T5
+TX-0017,2026-06-28,Tiền mặt,"Doanh thu tiền mặt T6",260108000,0,Bán hàng,CA-T6
+TX-0018,2026-06-29,Ngân hàng,"Doanh thu QR T6",301179000,0,Bán hàng,QR-T6
+TX-0019,2026-06-30,Ví điện tử,"Ví thanh toán net T6",120120000,0,Bán hàng,EW-T6
+TX-0020,2026-06-07,Ngân hàng,"Thanh toán hàng hóa T6",0,401257000,Mua hàng,INV-T6
+TX-0021,2026-06-12,Ngân hàng,"Lương T6",0,82000000,Nhân sự,SAL-T6
+TX-0022,2026-06-18,Ngân hàng,"Thuê và điện nước T6",0,42000000,Vận hành,OPS-T6
+TX-0023,2026-06-21,Tiền mặt,"Nộp tiền mặt T6",0,60000000,Điều chuyển nội bộ,MOVE-T6
+TX-0024,2026-06-21,Ngân hàng,"Nhận tiền nộp quỹ T6",60000000,0,Điều chuyển nội bộ,MOVE-T6
+TX-0025,2026-05-10,Ngân hàng,"Phí nhượng quyền tháng 04",0,27167000,Phí nhượng quyền,FR-04
+TX-0026,2026-06-10,Ngân hàng,"Phí nhượng quyền tháng 05",0,27873000,Phí nhượng quyền,FR-05

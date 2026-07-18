@@ -36,6 +36,7 @@ from threading import Lock
 from typing import Any
 
 from app.core.config import get_settings
+from app.modules.surrounding_area.providers.places import PostFetcher, search_text_locations
 
 GEOCODING_VERSION = "1.0.0"
 
@@ -294,6 +295,41 @@ class GoogleGeocodingProvider:
         return candidates
 
 
+class GooglePlacesProvider:
+    """Address/name lookup through Places Text Search (New).
+
+    This is the only provider used by the production facade.  Candidates still
+    require manual pin confirmation because a text query can resolve a branch,
+    landmark, or administrative area rather than the intended storefront.
+    """
+
+    name = "google_places"
+
+    def __init__(self, api_key: str, fetch: PostFetcher | None = None) -> None:
+        if not api_key:
+            raise GeocodingError("GooglePlacesProvider requires an API key")
+        self._api_key = api_key
+        self._fetch = fetch
+
+    def geocode_sync(self, address: str, *, limit: int = 5) -> list[GeocodeCandidate]:
+        places = search_text_locations(address, api_key=self._api_key, fetch=self._fetch, limit=limit)
+        candidates: list[GeocodeCandidate] = []
+        low_confidence_types = {"country", "administrative_area_level_1", "administrative_area_level_2", "locality"}
+        for place in places:
+            confidence = "low" if set(place.types) & low_confidence_types else "high"
+            candidates.append(
+                GeocodeCandidate(
+                    lat=place.lat,
+                    lon=place.lon,
+                    display_name=place.formatted_address or place.name or address,
+                    provider=self.name,
+                    confidence=confidence,
+                    raw={"place_id": place.place_id, "types": list(place.types)},
+                )
+            )
+        return candidates
+
+
 def _build_providers(
     nominatim_fetch: Fetcher | None = None,
     goong_fetch: Fetcher | None = None,
@@ -329,6 +365,8 @@ async def geocode(
     google_fetch: Fetcher | None = None,
     goong_api_key: str | None = None,
     google_geocoding_api_key: str | None = None,
+    places_fetch: PostFetcher | None = None,
+    places_api_key: str | None = None,
 ) -> GeocodeResult:
     """Geocode an address, returning ranked candidates for human confirmation.
 
@@ -343,20 +381,33 @@ async def geocode(
 
     # Serve a repeat address from cache — no upstream call, no rate-limit pressure.
     # Tests that inject a fetch bypass the cache so they always exercise parsing.
-    cacheable = nominatim_fetch is None and goong_fetch is None and google_fetch is None
+    cacheable = nominatim_fetch is None and goong_fetch is None and google_fetch is None and places_fetch is None
     cache_key = address.strip().lower()
     if cacheable:
         cached = _cache_get(cache_key)
         if cached is not None:
             return cached
 
-    providers = _build_providers(
-        nominatim_fetch,
-        goong_fetch,
-        google_fetch,
-        goong_api_key,
-        google_geocoding_api_key,
+    # Injected legacy fetchers are retained for deterministic compatibility
+    # tests. Normal runtime is deliberately Places-only as requested: it never
+    # falls through to Google Geocoding, Goong, or Nominatim.
+    legacy_injected = any(
+        value is not None
+        for value in (nominatim_fetch, goong_fetch, google_fetch, goong_api_key, google_geocoding_api_key)
     )
+    if legacy_injected:
+        providers = _build_providers(
+            nominatim_fetch,
+            goong_fetch,
+            google_fetch,
+            goong_api_key,
+            google_geocoding_api_key,
+        )
+    else:
+        key = places_api_key if places_api_key is not None else (
+            get_settings().google_places_api_key or os.environ.get("GOOGLE_PLACES_API_KEY", "")
+        )
+        providers = [GooglePlacesProvider(key, fetch=places_fetch)] if key else []
     warnings: list[str] = []
     for provider in providers:
         try:
@@ -375,8 +426,12 @@ async def geocode(
                 _cache_put(cache_key, result)
             return result
 
-    warnings.append(
-        f"Không geocode được '{address}'. Nominatim thường không nhận địa chỉ số nhà chi tiết; "
-        f"hãy thử tên tòa nhà/địa danh, hoặc nhập tọa độ trực tiếp."
-    )
+    if not providers:
+        warnings.append(
+            "Chưa cấu hình GOOGLE_PLACES_API_KEY. Hãy bật Places API (New), gắn billing và đặt key ở backend."
+        )
+    else:
+        warnings.append(
+            f"Google Places không tìm được '{address}'. Hãy thử tên cửa hàng/tòa nhà kèm quận, tỉnh hoặc nhập tọa độ."
+        )
     return GeocodeResult(query=address, candidates=[], provider="none", warnings=warnings)

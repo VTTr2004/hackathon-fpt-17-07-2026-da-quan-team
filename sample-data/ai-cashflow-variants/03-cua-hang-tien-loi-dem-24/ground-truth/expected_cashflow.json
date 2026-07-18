@@ -1,0 +1,21 @@
+{
+  "id": "03-cua-hang-tien-loi-dem-24",
+  "name": "Cửa hàng tiện lợi Đêm 24",
+  "expected": {
+    "opening_balance": 310000000,
+    "cash_inflow": 2051231000,
+    "cash_outflow": 1603818000,
+    "net_cashflow": 447413000,
+    "closing_balance": 757413000
+  },
+  "exclusions": [
+    "chuyển nội bộ",
+    "phí nhượng quyền tháng 06 chưa trả trong kỳ",
+    "không cộng trùng CSV dự phòng"
+  ],
+  "key_tool_challenges": [
+    "3 ca mỗi ngày",
+    "ví gross so với net settlement",
+    "Excel và CSV chứa cùng sao kê"
+  ]
+}

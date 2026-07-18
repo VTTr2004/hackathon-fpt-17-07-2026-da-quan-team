@@ -1,4 +1,4 @@
-"""Surrounding-area analyzer: classify -> locate -> query OSM -> assess coverage
+"""Surrounding-area analyzer: classify -> locate -> query Google Places -> assess coverage
 -> compute metrics -> adjudicate claims -> ModuleReport.
 
 The pipeline follows plan section 5. Two status semantics are fixed here relative
@@ -17,21 +17,14 @@ warning — it is never silently treated as zero (plan section 7.2).
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
 from typing import Any
 
-from app.modules.surrounding_area.data_store.poi_store import (
-    PoiDatabaseUnavailableError,
-    PoiStore,
-    get_poi_store,
-)
-from app.modules.surrounding_area.map_data import build_map_payload
-from app.modules.surrounding_area.providers.places import is_configured as places_is_configured
-from app.modules.surrounding_area.providers.places import lookup_place
+from app.modules.surrounding_area.providers.places import PLACES_NEW_VERSION, is_configured, lookup_place, survey_area
 from app.modules.surrounding_area.providers.satellite import SATELLITE_CONTEXT_VERSION, fetch_satellite_context
-from app.modules.surrounding_area.tools.coverage import assess_coverage
+from app.modules.surrounding_area.tools.coverage import PLACES_COVERAGE_VERSION, assess_places_coverage
 from app.modules.surrounding_area.tools.geo import score_location
 from app.modules.surrounding_area.tools.industry_taxonomy import (
-    DEMAND_TAGS,
     LocationDependency,
     classify_location_dependency,
     resolve_competitor_filter,
@@ -51,7 +44,11 @@ from app.schemas.common import (
 )
 
 ANALYSIS_RADIUS_M = 1000
-MODULE_VERSION = "1.0.0"
+MODULE_VERSION = "2.0.0"
+# Backward-compatible injection names for the old focused provider test. The
+# production path below uses Nearby Search data directly and performs no N+1
+# enrichment calls.
+places_is_configured = is_configured
 
 
 class SurroundingAreaAnalyzer:
@@ -104,60 +101,73 @@ class SurroundingAreaAnalyzer:
             )
         lat, lon = float(lat), float(lon)
 
-        # --- Step 2: query the map ---------------------------------------------
-        try:
-            store = get_poi_store()
-        except PoiDatabaseUnavailableError as exc:
+        # --- Step 2: query Google Places (New) ---------------------------------
+        if not is_configured():
             return ModuleReport(
                 module=AnalysisModule.SURROUNDING_AREA,
                 version=MODULE_VERSION,
                 status=AnalysisStatus.INSUFFICIENT_DATA,
                 score=None,
-                summary="Chưa có cơ sở dữ liệu POI (poi.db). Cần chạy download_osm.py và extract_poi.py.",
-                missing_data=["poi.db"],
-                details={"error": str(exc)},
+                summary="Chưa cấu hình Google Places API (New) cho backend.",
+                missing_data=["GOOGLE_PLACES_API_KEY"],
+                recommended_questions=[
+                    "Đã bật Places API (New), billing và giới hạn API key cho backend chưa?"
+                ],
+                details={"classification": classification.__dict__},
             )
 
-        query_warnings: list[str] = []
+        if classification.matched_profile not in {"food_beverage", "retail"}:
+            return ModuleReport(
+                module=AnalysisModule.SURROUNDING_AREA,
+                version=MODULE_VERSION,
+                status=AnalysisStatus.NOT_APPLICABLE,
+                score=None,
+                summary=(
+                    "Surrounding Area hiện chỉ triển khai Google Places cho F&B và bán lẻ nhỏ. "
+                    f"Ngành '{industry}' nằm ngoài phạm vi phiên bản này."
+                ),
+                details={"classification": classification.__dict__, "supported_profiles": ["food_beverage", "retail"]},
+            )
         competitor_filter = resolve_competitor_filter(industry)
-        competitors = await self._safe_query(
-            store,
-            lat,
-            lon,
-            ANALYSIS_RADIUS_M,
-            competitor_filter.competitor_tags,
-            label="đối thủ",
-            warnings=query_warnings,
-        )
-        demand_counts = await self._demand_counts(store, lat, lon, query_warnings)
-        total_pois = await self._safe_query(
-            store, lat, lon, ANALYSIS_RADIUS_M, None, label="tổng POI (độ phủ)", warnings=query_warnings
-        )
-
-        if total_pois is None:
-            # Cannot even assess coverage; refuse rather than guess.
+        target_radius_m = self._target_radius(location)
+        try:
+            survey = await asyncio.to_thread(
+                survey_area,
+                lat,
+                lon,
+                radius_m=target_radius_m,
+                industry_profile=competitor_filter.profile_key,
+            )
+        except Exception as exc:  # noqa: BLE001 - provider failures become explicit missing data
             return ModuleReport(
                 module=AnalysisModule.SURROUNDING_AREA,
                 version=MODULE_VERSION,
                 status=AnalysisStatus.INSUFFICIENT_DATA,
                 score=None,
-                summary="Không truy vấn được dữ liệu POI để đánh giá độ phủ bản đồ.",
-                missing_data=["poi_density"],
-                details={"warnings": query_warnings},
+                summary="Không truy vấn được Google Places API (New).",
+                missing_data=["google_places_nearby_search"],
+                risks=[str(exc)],
+                details={"classification": classification.__dict__, "error": str(exc)},
             )
 
-        # --- Step 3: coverage (thin-map guard) ---------------------------------
-        coverage = assess_coverage(lat, lon, len(total_pois))
+        query_warnings = list(survey.warnings)
+        demand_counts = {
+            proxy: None if rows is None else len(rows)
+            for proxy, rows in survey.demand_places.items()
+        }
+        competitors_list = survey.competitors
+        competitor_group = next(group for group in survey.groups if group.name == "competitors")
+        competitor_measurable = competitor_group.warning is None
+
+        # --- Step 3: bounded-provider coverage guard ---------------------------
+        coverage = assess_places_coverage(
+            observed_place_count=len(survey.all_places),
+            successful_groups=survey.successful_groups,
+            total_groups=len(survey.groups),
+            competitor_capped=survey.competitor_capped,
+        )
 
         # --- Step 4: metrics (deterministic) -----------------------------------
-        if competitors is None:
-            competitors_list = []
-            query_warnings.append("Không đo được đối thủ; số đếm cạnh tranh bị bỏ, KHÔNG coi là 0.")
-            competitor_measurable = False
-        else:
-            competitors_list = competitors
-            competitor_measurable = True
-
         metrics = build_area_metrics(
             industry_profile=competitor_filter.profile_key,
             competitors=competitors_list,
@@ -170,17 +180,8 @@ class SurroundingAreaAnalyzer:
         use_gemini = options.get("use_gemini", True)
         verdict_report = await evaluate_claims(claims, metrics, coverage, use_gemini=use_gemini)
 
-        # Bounded POI list for the frontend map, also off the event loop.
-        target_radius_m = self._target_radius(location)
-        map_pois = await asyncio.to_thread(
-            build_map_payload,
-            store,
-            lat,
-            lon,
-            industry=industry,
-            radius_m=target_radius_m,
-        )
-        places_enrichment = await asyncio.to_thread(self._places_enrichment, competitors_list[:20])
+        map_pois = self._places_map_payload(lat, lon, survey)
+        places_enrichment = self._places_enrichment(competitors_list)
         satellite_context = None
         if options.get("include_satellite") is True:
             satellite_context = await asyncio.to_thread(
@@ -203,7 +204,7 @@ class SurroundingAreaAnalyzer:
             competitor_measurable=competitor_measurable,
             demand_counts=demand_counts,
             query_warnings=query_warnings,
-            store=store,
+            survey=survey,
             location=location,
             map_pois=map_pois,
             places_enrichment=places_enrichment,
@@ -211,30 +212,6 @@ class SurroundingAreaAnalyzer:
         )
 
     # ---- helpers ----------------------------------------------------------- #
-
-    @staticmethod
-    async def _safe_query(store, lat, lon, radius, tags, *, label, warnings):
-        """Run one POI query OFF the event loop; on failure append a warning and
-        return None (missing), never an empty list masquerading as a real zero.
-
-        Queries run in a worker thread (asyncio.to_thread) so a burst of analyses
-        does not block the event loop for other requests. PoiStore hands each
-        thread its own SQLite connection, so this is concurrency-safe.
-        """
-        try:
-            return await asyncio.to_thread(store.query_radius, lat, lon, radius, tags=tags)
-        except Exception as exc:  # noqa: BLE001
-            warnings.append(f"Truy vấn {label} thất bại: {exc}. Đánh dấu THIẾU, không tính là 0.")
-            return None
-
-    async def _demand_counts(self, store, lat, lon, warnings) -> dict[str, int | None]:
-        counts: dict[str, int | None] = {}
-        for proxy, tags in DEMAND_TAGS.items():
-            result = await self._safe_query(
-                store, lat, lon, ANALYSIS_RADIUS_M, tags, label=f"cầu:{proxy}", warnings=warnings
-            )
-            counts[proxy] = None if result is None else len(result)
-        return counts
 
     @staticmethod
     def _resolve_location(startup_facts: dict[str, Any], options: dict[str, Any]) -> dict[str, Any]:
@@ -375,27 +352,21 @@ class SurroundingAreaAnalyzer:
 
     @staticmethod
     def _places_enrichment(competitors) -> dict[str, Any]:
-        """Top-nearest competitor enrichment.
-
-        With GOOGLE_PLACES_API_KEY this adds official rating/price fields. Without
-        a key it still returns a free, legal workflow: exact Google Maps survey
-        links for the analyst, with rating/price left null rather than inferred.
-        """
-        configured = places_is_configured()
-        rows: list[dict[str, Any]] = []
-        warnings = []
-        for poi in competitors:
-            lookup = lookup_place(poi.name or "", poi.lat, poi.lon) if configured and poi.name else None
-            if lookup and lookup.warning:
-                warnings.append(lookup.warning)
-            google_data = lookup.enrichment if lookup else None
-            rows.append(
-                {
+        """Expose fields already returned by Nearby Search; no N+1 lookups."""
+        rows = []
+        for poi in competitors[:20]:
+            if hasattr(poi, "to_dict"):
+                item = poi.to_dict()
+                item["reviews"] = []
+            else:  # compatibility for legacy POI-like objects in unit tests
+                lookup = lookup_place(poi.name or "", poi.lat, poi.lon) if places_is_configured() else None
+                google_data = lookup.enrichment if lookup else None
+                item = {
+                    "place_id": google_data.place_id if google_data else None,
                     "name": poi.name,
                     "category": poi.category_value,
                     "distance_m": poi.distance_m,
                     "is_chain": poi.is_chain,
-                    "place_id": google_data.place_id if google_data else None,
                     "google_maps_url": poi.google_maps_url(),
                     "rating": google_data.rating if google_data else None,
                     "user_ratings_total": google_data.user_ratings_total if google_data else None,
@@ -404,17 +375,19 @@ class SurroundingAreaAnalyzer:
                     "reviews": google_data.reviews if google_data else [],
                     "source": "google_places" if google_data else "manual_survey_link",
                 }
-            )
-        if not configured:
-            warnings.append(
-                "Không có GOOGLE_PLACES_API_KEY; rating/price không được bịa, chỉ cung cấp link khảo sát thủ công."
-            )
-        elif rows and not any(row["source"] == "google_places" for row in rows):
-            warnings.append(
-                "GOOGLE_PLACES_API_KEY đã cấu hình nhưng chưa match được đối thủ nào; "
-                "kiểm tra Places API, hạn chế key hoặc tên/vị trí POI."
-            )
-        return {"configured": configured, "items": rows, "warnings": list(dict.fromkeys(warnings))}
+            rows.append(item)
+        return {"configured": True, "items": rows, "warnings": []}
+
+    @staticmethod
+    def _places_map_payload(lat: float, lon: float, survey) -> dict[str, Any]:
+        """Frontend map payload built only from Google Places observations."""
+        return {
+            "center": {"lat": lat, "lon": lon},
+            "eateries": [place.to_dict() for place in survey.eateries],
+            # Google Places does not provide residential polygons/zones.
+            "residential": [],
+            "competitors": [place.to_dict() for place in survey.competitors],
+        }
 
     def _build_report(
         self,
@@ -430,25 +403,22 @@ class SurroundingAreaAnalyzer:
         competitor_measurable,
         demand_counts,
         query_warnings,
-        store: PoiStore,
+        survey,
         location,
         map_pois,
         places_enrichment,
         satellite_context,
     ) -> ModuleReport:
-        accessed_at = store.source_accessed_at()
-        meta = store.metadata()
-
         evidence = [
             Evidence(
-                evidence_id="osm-extract",
+                evidence_id="google-places-api-new",
                 source_type="external_research",
-                title=meta.get("source_name", "OpenStreetMap"),
-                publisher="OpenStreetMap contributors",
-                url=meta.get("source_url"),
-                accessed_at=accessed_at,
+                title="Google Places API (New) - Nearby Search",
+                publisher="Google Maps Platform",
+                url="https://developers.google.com/maps/documentation/places/web-service/nearby-search",
+                accessed_at=datetime.now(timezone.utc).isoformat(),
                 reliability="medium",
-                notes=f"Bản trích {meta.get('pbf_file')}, license {meta.get('source_license')}.",
+                notes="POI quan sát theo bán kính; mỗi nhóm tối đa 20 kết quả và không phải tổng điều tra đầy đủ.",
             )
         ]
         if satellite_context:
@@ -469,7 +439,7 @@ class SurroundingAreaAnalyzer:
             Finding(
                 title=f"[{v.verdict.vi}] {v.claim}",
                 detail=v.explanation or v.reason,
-                evidence_ids=["osm-extract"],
+                evidence_ids=["google-places-api-new"],
                 confidence=v.confidence,
             )
             for v in verdict_report.claims
@@ -477,10 +447,10 @@ class SurroundingAreaAnalyzer:
         # Always include a coverage finding so a thin map is visible even with no claims.
         findings.append(
             Finding(
-                title=f"Độ phủ bản đồ: {coverage.tier.value}",
-                detail=f"{coverage.density_1km} POI/km² (~{coverage.coverage_ratio:.0%} baseline). "
-                + (" ".join(coverage.warnings) if coverage.warnings else "Đủ dày để đánh giá cạnh tranh."),
-                evidence_ids=["osm-extract"],
+                title=f"Độ đầy đủ truy vấn Places: {coverage.tier.value}",
+                detail=f"Quan sát {coverage.density_1km} POI; {coverage.coverage_ratio:.0%} nhóm truy vấn thành công. "
+                + (" ".join(coverage.warnings) if coverage.warnings else "Các nhóm truy vấn đã hoàn tất."),
+                evidence_ids=["google-places-api-new"],
                 confidence="high" if coverage.can_assess_saturation else "low",
             )
         )
@@ -518,9 +488,13 @@ class SurroundingAreaAnalyzer:
                 warnings=metrics.warnings,
             ),
             ToolCall(
-                name="coverage_assessment",
-                version="1.0.0",
-                input={"lat": lat, "lon": lon, "density_1km": coverage.density_1km},
+                name="google_places_request_coverage",
+                version=PLACES_COVERAGE_VERSION,
+                input={
+                    "successful_groups": survey.successful_groups,
+                    "total_groups": len(survey.groups),
+                    "competitor_capped": survey.competitor_capped,
+                },
                 output=coverage.to_dict(),
                 warnings=coverage.warnings,
             ),
@@ -531,9 +505,9 @@ class SurroundingAreaAnalyzer:
                 output=verdict_report.to_dict(),
             ),
             ToolCall(
-                name="competitor_places_enrichment",
-                version="1.0.0",
-                input={"top_nearest": min(len(competitors), 20), "provider": "google_places_optional"},
+                name="google_places_nearby_search",
+                version=PLACES_NEW_VERSION,
+                input={"radius_m": self._target_radius(location), "provider": "google_places_new"},
                 output=places_enrichment,
                 warnings=places_enrichment["warnings"],
             ),
@@ -565,14 +539,15 @@ class SurroundingAreaAnalyzer:
             missing_data=missing_data,
             assumptions=[
                 "Khoảng cách là đường chim bay (haversine), không phải quãng đường thực tế.",
-                "Số chuỗi là giới hạn dưới do tag brand của OSM thiếu nhiều.",
+                "Nearby Search tối đa 20 kết quả mỗi nhóm; số đếm có thể là giới hạn dưới.",
+                "Places không cung cấp mật độ dân cư; residential luôn là dữ liệu thiếu.",
             ],
             recommended_questions=self._questions(verdict_report),
             evidence=evidence,
             methodology=[
                 f"Location-dependency classification v1.0 ({classification.label_vi})",
-                "OSM POI density + haversine ring counts",
-                "Relative-density coverage assessment v1.0",
+                "Google Places API (New) Nearby Search + loại trùng bằng place_id",
+                "Haversine ring counts + bounded-provider coverage assessment v2.0",
                 f"Deterministic claim verdicts v{VERDICT_VERSION}"
                 + (" + Gemini narrative" if verdict_report.llm_used else " (no LLM)"),
             ],

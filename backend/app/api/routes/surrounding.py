@@ -17,9 +17,11 @@ import time
 from collections import defaultdict, deque
 from threading import Lock
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
+from app.core.auth import get_current_user, require_role
+from app.models.user import User
 from app.modules.surrounding_area.data_store.poi_store import (
     PoiDatabaseUnavailableError,
     get_poi_store,
@@ -29,6 +31,7 @@ from app.modules.surrounding_area.providers.geocoding import geocode
 from app.modules.surrounding_area.providers.satellite import fetch_satellite_context
 
 router = APIRouter(prefix="/surrounding", tags=["surrounding_area"])
+investor_only = require_role("investor")
 
 
 class _RateLimiter:
@@ -75,7 +78,9 @@ class GeocodeRequest(BaseModel):
 
 
 @router.post("/geocode")
-async def geocode_address(payload: GeocodeRequest, request: Request) -> dict:
+async def geocode_address(
+    payload: GeocodeRequest, request: Request, _: User = Depends(get_current_user)
+) -> dict:
     """Địa chỉ -> danh sách tọa độ ứng viên để chuyên viên xác nhận trên bản đồ.
 
     Luôn kèm needs_confirmation=true (mục 4.2). Không tìm thấy -> candidates rỗng
@@ -89,6 +94,7 @@ async def geocode_address(payload: GeocodeRequest, request: Request) -> dict:
 @router.get("/map")
 def surrounding_map(
     request: Request,
+    _: User = Depends(investor_only),
     lat: float = Query(ge=-90, le=90),
     lon: float = Query(ge=-180, le=180),
     industry: str | None = Query(default=None),
@@ -112,6 +118,7 @@ def surrounding_map(
 @router.get("/satellite")
 def surrounding_satellite(
     request: Request,
+    _: User = Depends(investor_only),
     lat: float = Query(ge=-90, le=90),
     lon: float = Query(ge=-180, le=180),
     radius_m: int = Query(default=1000, ge=100, le=3000),

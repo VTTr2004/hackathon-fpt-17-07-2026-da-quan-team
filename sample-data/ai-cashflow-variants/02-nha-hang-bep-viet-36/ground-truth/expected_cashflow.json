@@ -1,0 +1,21 @@
+{
+  "id": "02-nha-hang-bep-viet-36",
+  "name": "Nhà hàng Bếp Việt 36",
+  "expected": {
+    "opening_balance": 420000000,
+    "cash_inflow": 2996159000,
+    "cash_outflow": 1665819000,
+    "net_cashflow": 1330340000,
+    "closing_balance": 1750340000
+  },
+  "exclusions": [
+    "chuyển nội bộ",
+    "công nợ chưa thu",
+    "tip thu hộ và chi hộ triệt tiêu"
+  ],
+  "key_tool_challenges": [
+    "POS + payout + nhật ký",
+    "tiền thuê trả trước theo quý",
+    "loan financing khác operating cash flow"
+  ]
+}

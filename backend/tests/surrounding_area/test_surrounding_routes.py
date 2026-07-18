@@ -3,6 +3,8 @@ app with an injected geocode fetch — no network, no database."""
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import httpx
 import pytest
 
@@ -15,9 +17,13 @@ def _make_client():
     # Build the ASGI app but skip DB table creation by hitting only surrounding routes.
     from fastapi import FastAPI
 
-    from app.api.routes.surrounding import router
+    from app.api.routes.surrounding import investor_only, router
+    from app.core.auth import get_current_user
 
     app = FastAPI()
+    fake_investor = SimpleNamespace(id="test-investor", role="investor", status="active")
+    app.dependency_overrides[get_current_user] = lambda: fake_investor
+    app.dependency_overrides[investor_only] = lambda: fake_investor
     app.include_router(router)
     return httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test")
 

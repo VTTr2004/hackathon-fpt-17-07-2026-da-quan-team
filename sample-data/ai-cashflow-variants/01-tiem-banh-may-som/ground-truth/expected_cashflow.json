@@ -1,0 +1,21 @@
+{
+  "id": "01-tiem-banh-may-som",
+  "name": "Tiệm bánh Mây Sớm",
+  "expected": {
+    "opening_balance": 185000000,
+    "cash_inflow": 1052418000,
+    "cash_outflow": 268305000,
+    "net_cashflow": 784113000,
+    "closing_balance": 969113000
+  },
+  "exclusions": [
+    "chuyển nội bộ",
+    "hóa đơn chưa thanh toán",
+    "doanh thu gross của app"
+  ],
+  "key_tool_challenges": [
+    "nhiều sheet tháng",
+    "phân biệt doanh thu và tiền thực nhận",
+    "lọc theo trạng thái thanh toán"
+  ]
+}

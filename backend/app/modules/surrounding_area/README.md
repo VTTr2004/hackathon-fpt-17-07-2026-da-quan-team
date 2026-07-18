@@ -1,5 +1,10 @@
 # Surrounding Area Analysis
 
+> Runtime v2 chỉ dùng Google Places API (New): Text Search để tìm vị trí và
+> Nearby Search để lấy POI. Analyzer/UI không còn gọi `poi.db`. Cấu hình
+> `GOOGLE_PLACES_API_KEY` ở backend; mỗi nhóm Nearby Search tối đa 20 kết quả nên
+> số đếm là mẫu quan sát, không phải tổng điều tra đầy đủ.
+
 Kiểm chứng **tuyên bố của startup về khu vực** bằng dữ liệu bản đồ thật (OpenStreetMap),
 trả về verdict có bằng chứng thay vì bảng điểm chủ quan.
 

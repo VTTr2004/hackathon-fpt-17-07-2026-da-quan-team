@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-07-18",
+  "disclaimer": "DỮ LIỆU MÔ PHỎNG - KHÔNG CÓ GIÁ TRỊ KẾ TOÁN, THUẾ HOẶC PHÁP LÝ",
+  "cases": [
+    {
+      "id": "01-tiem-banh-may-som",
+      "name": "Tiệm bánh Mây Sớm",
+      "expected": {
+        "opening_balance": 185000000,
+        "cash_inflow": 1052418000,
+        "cash_outflow": 268305000,
+        "net_cashflow": 784113000,
+        "closing_balance": 969113000
+      },
+      "exclusions": [
+        "chuyển nội bộ",
+        "hóa đơn chưa thanh toán",
+        "doanh thu gross của app"
+      ],
+      "key_tool_challenges": [
+        "nhiều sheet tháng",
+        "phân biệt doanh thu và tiền thực nhận",
+        "lọc theo trạng thái thanh toán"
+      ]
+    },
+    {
+      "id": "02-nha-hang-bep-viet-36",
+      "name": "Nhà hàng Bếp Việt 36",
+      "expected": {
+        "opening_balance": 420000000,
+        "cash_inflow": 2996159000,
+        "cash_outflow": 1665819000,
+        "net_cashflow": 1330340000,
+        "closing_balance": 1750340000
+      },
+      "exclusions": [
+        "chuyển nội bộ",
+        "công nợ chưa thu",
+        "tip thu hộ và chi hộ triệt tiêu"
+      ],
+      "key_tool_challenges": [
+        "POS + payout + nhật ký",
+        "tiền thuê trả trước theo quý",
+        "loan financing khác operating cash flow"
+      ]
+    },
+    {
+      "id": "03-cua-hang-tien-loi-dem-24",
+      "name": "Cửa hàng tiện lợi Đêm 24",
+      "expected": {
+        "opening_balance": 310000000,
+        "cash_inflow": 2051231000,
+        "cash_outflow": 1603818000,
+        "net_cashflow": 447413000,
+        "closing_balance": 757413000
+      },
+      "exclusions": [
+        "chuyển nội bộ",
+        "phí nhượng quyền tháng 06 chưa trả trong kỳ",
+        "không cộng trùng CSV dự phòng"
+      ],
+      "key_tool_challenges": [
+        "3 ca mỗi ngày",
+        "ví gross so với net settlement",
+        "Excel và CSV chứa cùng sao kê"
+      ]
+    }
+  ]
+}

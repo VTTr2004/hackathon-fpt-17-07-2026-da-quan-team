@@ -91,6 +91,7 @@ const verdictStyle: Record<string, { className: string; label: string }> = {
 };
 
 const geocodeProviderLabel: Record<string, string> = {
+  google_places: "Google Places",
   google_geocoding: "Google Geocoding",
   goong: "Goong",
   nominatim: "OpenStreetMap/Nominatim",
@@ -108,6 +109,9 @@ const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const googleMapsFallbackMessage = "Google Maps key bi tu choi; dang dung ban do ve tinh Esri/OSM.";
 
 function friendlyGeocodeWarning(warning: string) {
+  if (warning.includes("GOOGLE_PLACES_API_KEY")) {
+    return "Backend chưa nhận GOOGLE_PLACES_API_KEY hoặc Places API (New) chưa được bật.";
+  }
   if (warning.includes("google_geocoding") && warning.includes("REQUEST_DENIED")) {
     return "Google Geocoding key chua dung duoc; he thong da tu dong dung Goong/OSM fallback.";
   }
@@ -378,6 +382,7 @@ function nearestName(items: MapPoi[]) {
 }
 
 function poiSourceLabel(item: MapPoi) {
+  if (item.source === "google_places") return "Google Places · verified Maps";
   const quality = item.position_quality === "polygon_centroid" ? "OSM centroid" : "OSM point";
   return item.maps_match_status === "verified_google_maps" ? `${quality} · verified Maps` : `${quality} · chưa verify Maps`;
 }
@@ -462,12 +467,12 @@ function PlacesSurveyList({ items }: { items: PlacesEnrichmentItem[] }) {
     <div className="placesSurvey">
       <div className="sectionHeader compact">
         <div>
-          <p className="eyebrow">PRICE/RATING SURVEY</p>
-          <h4>Top đối thủ cần khảo sát</h4>
+          <p className="eyebrow">GOOGLE PLACES</p>
+          <h4>Đối thủ quan sát được</h4>
         </div>
       </div>
       <div className="placesSurveyList">
-        {items.slice(0, 8).map((item, index) => (
+        {items.map((item, index) => (
           <a href={item.google_maps_url} key={`${item.name}-${item.distance_m}-${index}`} target="_blank" rel="noreferrer">
             <span>
               <strong>{item.name ?? "Không tên"}</strong>
@@ -609,7 +614,6 @@ export default function SurroundingArea({
   const [analysis, setAnalysis] = useState<Analysis | null>(initialAnalysis ?? null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [scanNonce, setScanNonce] = useState(0);
   const [copyStatus, setCopyStatus] = useState("");
   const [focusedPoiKey, setFocusedPoiKey] = useState<string | null>(null);
   const [googleMapsBlocked, setGoogleMapsBlocked] = useState(false);
@@ -634,6 +638,8 @@ export default function SurroundingArea({
   const nearest = isRecord(metrics) && isRecord(metrics.nearest_competitor) ? metrics.nearest_competitor : null;
   const chainRatio = isRecord(metrics) && isRecord(metrics.chain_ratio) ? metrics.chain_ratio : null;
   const supplyDemand = isRecord(metrics) && isRecord(metrics.supply_demand) ? metrics.supply_demand : null;
+  const categoryMix =
+    isRecord(metrics) && isRecord(metrics.competitor_category_mix) ? metrics.competitor_category_mix : null;
   const placesEnrichment = analysis?.report.details?.places_enrichment;
   const locationDefaults = {
     type: factString(facts, "location_type") || factString(facts, "type"),
@@ -660,6 +666,7 @@ export default function SurroundingArea({
       if (result.candidates[0]) {
         const first = result.candidates[0];
         setCenter({ lat: first.lat, lon: first.lon });
+        setMapData({ center: { lat: first.lat, lon: first.lon }, eateries: [], residential: [], competitors: [] });
         setManualLat(String(first.lat));
         setManualLon(String(first.lon));
         setSelectedGeocodeProvider(first.provider || result.provider);
@@ -682,6 +689,7 @@ export default function SurroundingArea({
       return;
     }
     setCenter({ lat, lon });
+    setMapData({ center: { lat, lon }, eateries: [], residential: [], competitors: [] });
     setCandidates([]);
     setConfirmed(true);
     setSelectedGeocodeProvider("manual");
@@ -692,7 +700,7 @@ export default function SurroundingArea({
   function refreshScan() {
     setMapError("");
     setSatelliteError("");
-    setScanNonce((current) => current + 1);
+    void analyze();
   }
 
   async function copyCoordinates() {
@@ -744,50 +752,6 @@ export default function SurroundingArea({
     const radius = parseRadius(value);
     if (radius !== null) setScanRadiusM(radius);
   }
-
-  useEffect(() => {
-    if (!center) return;
-    let ignore = false;
-    api
-      .surroundingMap(center.lat, center.lon, industry ?? undefined, scanRadiusM)
-      .then((data) => {
-        if (!ignore) {
-          setMapData(data);
-          setMapError("");
-        }
-      })
-      .catch((err: unknown) => {
-        if (!ignore) {
-          setMapData(null);
-          setMapError(err instanceof Error ? err.message : "Không thể tải dữ liệu POI.");
-        }
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [center, industry, scanRadiusM, scanNonce]);
-
-  useEffect(() => {
-    if (!center) return;
-    let ignore = false;
-    api
-      .satelliteContext(center.lat, center.lon, scanRadiusM)
-      .then((data) => {
-        if (!ignore) {
-          setSatelliteContext(data);
-          setSatelliteError("");
-        }
-      })
-      .catch((err: unknown) => {
-        if (!ignore) {
-          setSatelliteContext(null);
-          setSatelliteError(err instanceof Error ? err.message : "Không thể tải dữ liệu vệ tinh.");
-        }
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [center, scanRadiusM, scanNonce]);
 
   useEffect(() => {
     if (!center || !mapEl.current) return;
@@ -1080,7 +1044,7 @@ export default function SurroundingArea({
     if (knownCompetitors.length) locationProfile.known_competitors = knownCompetitors;
     if (logisticsRequirements) locationProfile.logistics_requirements = logisticsRequirements;
 
-    const options: Record<string, unknown> = { use_gemini: true, include_satellite: true };
+    const options: Record<string, unknown> = { use_gemini: true };
     if (dependency !== "auto") options.location_dependency = dependency;
     if (dependency !== "independent" && center) {
       options.location = {
@@ -1097,7 +1061,7 @@ export default function SurroundingArea({
     try {
       const result = await api.analyzeSurrounding(startupId, options);
       setAnalysis(result);
-      setSatelliteContext(result.report.details?.satellite_context ?? satelliteContext);
+      setMapData(result.report.details?.map ?? null);
       onAnalysisComplete?.(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Phân tích thất bại");
@@ -1191,6 +1155,12 @@ export default function SurroundingArea({
               key={`${candidate.provider}-${candidate.lat}-${candidate.lon}`}
               onClick={() => {
                 setCenter({ lat: candidate.lat, lon: candidate.lon });
+                setMapData({
+                  center: { lat: candidate.lat, lon: candidate.lon },
+                  eateries: [],
+                  residential: [],
+                  competitors: [],
+                });
                 setManualLat(String(candidate.lat));
                 setManualLon(String(candidate.lon));
                 setSelectedGeocodeProvider(candidate.provider);
@@ -1242,7 +1212,7 @@ export default function SurroundingArea({
             <div className="scanMetricGrid">
               <ScanMetric label="Quán ăn" value={mapData.eateries.length} hint={nearestName(mapData.eateries)} />
               <ScanMetric label="Đối thủ" value={mapData.competitors.length} hint={nearestName(mapData.competitors)} />
-              <ScanMetric label="Khu dân cư" value={mapData.residential.length} hint={nearestName(mapData.residential)} />
+               <ScanMetric label="Dân cư" value="Không có dữ liệu" hint="Places không cung cấp mật độ dân cư" />
               <ScanMetric
                 label="Tọa độ"
                 value={confirmed ? "Đã xác nhận" : "Chưa xác nhận"}
@@ -1273,13 +1243,13 @@ export default function SurroundingArea({
                   <i className="legendDot eatery" /> Ăn uống ({mapData?.eateries.length ?? 0})
                 </span>
                 <span>
-                  <i className="legendDot residential" /> Dân cư ({mapData?.residential.length ?? 0})
+                  <i className="legendDot residential" /> Dân cư (không đo bằng Places)
                 </span>
               </div>
               <div className="sourceNote">
                 {googleMapsApiKey && !googleMapsBlocked
-                  ? "Bản đồ nền dùng Google Maps hybrid. POI phân tích vẫn lấy từ dữ liệu module và được gắn link khảo sát Google Maps để kiểm chứng."
-                  : "Bản đồ đang dùng fallback Esri/OSM vì chưa có Google Maps key. POI lấy từ OpenStreetMap local và có link khảo sát Google Maps khi cần kiểm chứng."}
+                  ? "Bản đồ nền dùng Google Maps hybrid. Toàn bộ POI phân tích lấy từ Google Places API (New), loại trùng bằng place_id."
+                  : "Bản đồ nền đang dùng fallback vì chưa có key Maps JavaScript. POI phân tích vẫn chỉ lấy từ Google Places API (New) ở backend."}
               </div>
               <div className={confirmed ? "confirmState confirmed" : "confirmState"}>
                 <strong>{confirmed ? "Đã xác nhận tọa độ" : "Chưa xác nhận tọa độ"}</strong>
@@ -1423,12 +1393,24 @@ export default function SurroundingArea({
 
           <div className="metricStrip">
             <div>
-              <span>Coverage</span>
+              <span>Trạng thái</span>
+              <strong>{analysis.status}</strong>
+            </div>
+            <div>
+              <span>Độ đầy đủ truy vấn</span>
               <strong>{coverage?.tier ?? "—"}</strong>
             </div>
             <div>
-              <span>POI/km2</span>
+              <span>POI quan sát</span>
               <strong>{coverage?.density_1km ?? "—"}</strong>
+            </div>
+            <div>
+              <span>Nhóm truy vấn thành công</span>
+              <strong>
+                {toNumber(coverage?.coverage_ratio) !== null
+                  ? `${Math.round((toNumber(coverage?.coverage_ratio) ?? 0) * 100)}%`
+                  : "—"}
+              </strong>
             </div>
             <div>
               <span>Đối thủ 250m</span>
@@ -1445,6 +1427,7 @@ export default function SurroundingArea({
             <div>
               <span>Gần nhất</span>
               <strong>{toNumber(nearest?.distance_m) !== null ? `${Math.round(toNumber(nearest?.distance_m) ?? 0)}m` : "—"}</strong>
+              {typeof nearest?.name === "string" && <small>{nearest.name}</small>}
             </div>
             <div>
               <span>Tỷ lệ chuỗi</span>
@@ -1460,11 +1443,26 @@ export default function SurroundingArea({
 
           {demand && (
             <div className="demandGrid">
-              {["residential", "office", "school", "transport"].map((key) => (
+              {[
+                ["residential", "Dân cư"],
+                ["office", "Văn phòng"],
+                ["school", "Trường học"],
+                ["transport", "Giao thông"],
+              ].map(([key, label]) => (
                 <div key={key}>
-                  <span>{key}</span>
-                  <strong>{toNumber(demand[key]) ?? "—"}</strong>
+                  <span>{label}</span>
+                  <strong>{toNumber(demand[key]) ?? "Thiếu dữ liệu"}</strong>
                 </div>
+              ))}
+            </div>
+          )}
+
+          {categoryMix && Object.keys(categoryMix).length > 0 && (
+            <div className="tagWrap resultTags">
+              {Object.entries(categoryMix).map(([category, count]) => (
+                <span className="tag" key={category}>
+                  {category}: {typeof count === "number" ? count : String(count)}
+                </span>
               ))}
             </div>
           )}
@@ -1503,6 +1501,51 @@ export default function SurroundingArea({
               })}
             </div>
           )}
+
+          <div className="topicGroupList">
+            {analysis.report.evidence?.length ? (
+              <section className="topicGroup">
+                <div className="topicGroupHeader">
+                  <strong>Nguồn dữ liệu</strong>
+                  {analysis.report.evidence.map((item) => (
+                    <p key={item.evidence_id}>
+                      {item.url ? (
+                        <a href={item.url} target="_blank" rel="noreferrer">
+                          {item.title}
+                        </a>
+                      ) : (
+                        item.title
+                      )}
+                      {item.notes ? ` — ${item.notes}` : ""}
+                    </p>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+            {analysis.report.methodology?.length ? (
+              <section className="topicGroup">
+                <div className="topicGroupHeader">
+                  <strong>Phương pháp phân tích</strong>
+                  {analysis.report.methodology.map((item) => (
+                    <p key={item}>{item}</p>
+                  ))}
+                  {analysis.report.assumptions?.map((item) => (
+                    <p key={item}>Giả định: {item}</p>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+            {analysis.report.recommended_questions?.length ? (
+              <section className="topicGroup">
+                <div className="topicGroupHeader">
+                  <strong>Câu hỏi cần bổ sung</strong>
+                  {analysis.report.recommended_questions.map((item) => (
+                    <p key={item}>{item}</p>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
 
           {(analysis.report.risks?.length || analysis.report.missing_data?.length) && (
             <div className="tagWrap resultTags">

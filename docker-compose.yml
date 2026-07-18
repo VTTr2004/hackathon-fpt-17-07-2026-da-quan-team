@@ -22,6 +22,8 @@ services:
       AUTO_CREATE_TABLES: "true"
       CORS_ORIGINS: http://localhost:3000
       UPLOAD_DIR: /app/uploads
+      AUTH_SECRET: ${AUTH_SECRET:-development-only-change-me}
+      AUTH_TOKEN_TTL_HOURS: ${AUTH_TOKEN_TTL_HOURS:-24}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-flash-latest}
       GEMINI_EMBED_MODEL: ${GEMINI_EMBED_MODEL:-gemini-embedding-001}

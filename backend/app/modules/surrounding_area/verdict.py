@@ -169,7 +169,7 @@ def evaluate_claim_deterministic(
             claim=claim,
             claim_type=claim_type,
             verdict=VerdictLabel.INSUFFICIENT,
-            reason="Không có nguồn dữ liệu giá thuê mặt bằng đáng tin (OSM không chứa giá; "
+            reason="Không có nguồn dữ liệu giá thuê mặt bằng đáng tin (Places price level là mức giá dịch vụ, không phải tiền thuê; "
             "các trang rao vặt chặn thu thập). Không thể kết luận về giá.",
             evidence=[],
             confidence="high",  # high confidence that we CANNOT decide
@@ -227,17 +227,17 @@ def _verdict_competitor_absence(claim, metrics, coverage) -> ClaimVerdict:
             claim=claim,
             claim_type=ClaimType.COMPETITOR_ABSENCE,
             verdict=VerdictLabel.INSUFFICIENT,
-            reason="Không thấy đối thủ trong bán kính, NHƯNG mật độ bản đồ ở khu vực này mỏng "
+            reason="Không thấy đối thủ trong bán kính, NHƯNG truy vấn Places bị giới hạn hoặc thiếu "
             f"({coverage.tier.value}) nên không thể phân biệt 'thị trường trống' với 'lỗ hổng dữ liệu'.",
-            evidence=[f"Mật độ POI chỉ {coverage.density_1km}/km² (~{coverage.coverage_ratio:.0%} baseline)."],
+            evidence=[f"Quan sát {coverage.density_1km} POI; {coverage.coverage_ratio:.0%} nhóm truy vấn thành công."],
             confidence="low",
         )
     return ClaimVerdict(
         claim=claim,
         claim_type=ClaimType.COMPETITOR_ABSENCE,
         verdict=VerdictLabel.CONFIRMED,
-        reason=f"Khu vực có dữ liệu bản đồ tốt và không ghi nhận đối thủ trực tiếp trong {radius}m.",
-        evidence=[f"0 đối thủ trong {radius}m; mật độ bản đồ đủ dày ({coverage.density_1km}/km²) để tin cậy."],
+        reason=f"Nhóm Places đối thủ hoàn tất, chưa chạm trần và không ghi nhận đối thủ trực tiếp trong {radius}m.",
+        evidence=[f"0 đối thủ trong {radius}m trong mẫu Nearby Search đã trả về."],
         confidence=_confidence_from_coverage(coverage),
     )
 
@@ -248,8 +248,8 @@ def _verdict_saturation(claim, metrics, coverage) -> ClaimVerdict:
             claim=claim,
             claim_type=ClaimType.SATURATION,
             verdict=VerdictLabel.INSUFFICIENT,
-            reason=f"Mật độ bản đồ mỏng ({coverage.tier.value}); không đủ căn cứ kết luận về mức độ bão hòa.",
-            evidence=[f"Mật độ POI {coverage.density_1km}/km² (~{coverage.coverage_ratio:.0%} baseline)."],
+            reason=f"Truy vấn Places bị giới hạn hoặc thiếu ({coverage.tier.value}); không đủ căn cứ kết luận về mức độ bão hòa.",
+            evidence=[f"Quan sát {coverage.density_1km} POI; {coverage.coverage_ratio:.0%} nhóm truy vấn thành công."],
             confidence="low",
         )
     count_1km = next((r.count for r in metrics.competitor_density if r.radius_m == 1000), 0)
@@ -366,7 +366,7 @@ def _verdict_accessibility(claim, metrics, coverage) -> ClaimVerdict:
         claim=claim,
         claim_type=ClaimType.ACCESSIBILITY,
         verdict=VerdictLabel.INSUFFICIENT,
-        reason="Không ghi nhận điểm giao thông công cộng; OSM có thể thiếu dữ liệu này, chưa đủ để kết luận.",
+            reason="Không ghi nhận điểm giao thông công cộng; Places không bảo đảm trả đầy đủ mọi điểm, chưa đủ để kết luận.",
         confidence="low",
     )
 
@@ -415,10 +415,10 @@ class AreaVerdictReport:
 def _build_prompt(claims: list[ClaimVerdict], metrics: AreaMetrics, coverage: CoverageAssessment) -> str:
     lines = [
         "GIỚI HẠN DỮ LIỆU (bắt buộc tôn trọng):",
-        "- Nguồn POI là OpenStreetMap; KHÔNG có giá thuê mặt bằng, KHÔNG có 'popular times'.",
-        "- Tag thương hiệu (brand) thiếu nhiều ngoài các thành phố lớn nên tỷ lệ chuỗi là GIỚI HẠN DƯỚI.",
-        f"- Đánh giá độ phủ bản đồ tại đây: {coverage.tier.value} "
-        f"(mật độ {coverage.density_1km}/km², ~{coverage.coverage_ratio:.0%} baseline).",
+        "- Nguồn POI là Google Places API (New); KHÔNG có giá thuê mặt bằng, KHÔNG dùng 'popular times'.",
+        "- Nearby Search tối đa 20 kết quả mỗi nhóm; số đếm có thể là GIỚI HẠN DƯỚI.",
+        f"- Đánh giá độ đầy đủ truy vấn: {coverage.tier.value} "
+        f"({coverage.density_1km} POI quan sát, {coverage.coverage_ratio:.0%} nhóm truy vấn thành công).",
     ]
     if coverage.warnings:
         lines.append("- Cảnh báo độ phủ: " + " ".join(coverage.warnings))
@@ -499,13 +499,13 @@ async def evaluate_claims(
 def _deterministic_summary(verdicts: list[ClaimVerdict], coverage: CoverageAssessment) -> str:
     if not verdicts:
         return (
-            f"Khu vực có độ phủ bản đồ mức '{coverage.tier.value}' "
-            f"({coverage.density_1km} POI/km²). Chưa có tuyên bố nào để kiểm chứng."
+            f"Khu vực có độ đầy đủ truy vấn mức '{coverage.tier.value}' "
+            f"({coverage.density_1km} POI quan sát). Chưa có tuyên bố nào để kiểm chứng."
         )
     counts = {label: sum(1 for v in verdicts if v.verdict == label) for label in VerdictLabel}
     return (
         f"Đã kiểm chứng {len(verdicts)} tuyên bố: "
         f"{counts[VerdictLabel.CONFIRMED]} xác nhận, {counts[VerdictLabel.REFUTED]} bác bỏ, "
         f"{counts[VerdictLabel.INSUFFICIENT]} chưa đủ thông tin. "
-        f"Độ phủ bản đồ khu vực: {coverage.tier.value}."
+        f"Độ đầy đủ truy vấn Places: {coverage.tier.value}."
     )

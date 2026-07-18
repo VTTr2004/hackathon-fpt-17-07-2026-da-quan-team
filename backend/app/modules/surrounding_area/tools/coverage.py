@@ -30,6 +30,7 @@ from app.modules.surrounding_area.data.population import (
 )
 
 COVERAGE_VERSION = "1.0.0"
+PLACES_COVERAGE_VERSION = "2.0.0"
 
 
 class CoverageTier(StrEnum):
@@ -151,6 +152,62 @@ def assess_coverage(
         can_assess_saturation=can_assess,
         nearest_reference=area.name,
         reference_distance_km=distance_km,
+        warnings=warnings,
+        notes=notes,
+    )
+
+
+def assess_places_coverage(
+    *,
+    observed_place_count: int,
+    successful_groups: int,
+    total_groups: int,
+    competitor_capped: bool,
+) -> CoverageAssessment:
+    """Assess request completeness for bounded Google Places observations.
+
+    Unlike OSM, Places does not expose an extract whose absolute completeness
+    can be measured.  We therefore judge only whether the planned API groups
+    succeeded and whether the competitor request hit the 20-result cap.
+    """
+    if observed_place_count < 0 or total_groups <= 0:
+        raise ValueError("invalid Google Places coverage inputs")
+    ratio = round(successful_groups / total_groups, 3)
+    warnings = [
+        "Google Places là mẫu POI quan sát được, không phải tổng điều tra; không dùng số đếm để suy ra dân số tuyệt đối."
+    ]
+    notes: list[str] = []
+    if successful_groups == total_groups and not competitor_capped:
+        tier = CoverageTier.GOOD
+        confidence = 0.8
+        can_assess = True
+        notes.append("Tất cả nhóm truy vấn thành công và nhóm đối thủ chưa chạm trần 20 kết quả.")
+    elif successful_groups == total_groups:
+        tier = CoverageTier.THIN
+        confidence = 0.6
+        can_assess = False
+        warnings.append(
+            "Nhóm đối thủ chạm trần 20 kết quả; chỉ được kết luận 'có ít nhất 20', không kết luận mức bão hòa đầy đủ."
+        )
+    elif successful_groups > 0:
+        tier = CoverageTier.VERY_THIN
+        confidence = 0.4
+        can_assess = False
+        warnings.append("Một hoặc nhiều nhóm Places thất bại; dữ liệu thiếu không được coi là 0.")
+    else:
+        tier = CoverageTier.RURAL
+        confidence = 0.0
+        can_assess = False
+        warnings.append("Không có nhóm Places nào truy vấn thành công.")
+    return CoverageAssessment(
+        tier=tier,
+        density_1km=observed_place_count,
+        baseline_density=total_groups,
+        coverage_ratio=ratio,
+        confidence_factor=confidence,
+        can_assess_saturation=can_assess,
+        nearest_reference="Google Places request groups",
+        reference_distance_km=0.0,
         warnings=warnings,
         notes=notes,
     )

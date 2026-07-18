@@ -42,9 +42,9 @@ plans/                       # Product/technical plan
 docker compose up --build
 ```
 
-- Frontend: <http://localhost:3000>
-- Swagger: <http://localhost:8000/docs>
-- Health check: <http://localhost:8000/api/v1/health>
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Swagger: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Health check: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
 - PostgreSQL trên host: `localhost:5433` (có thể đổi bằng `POSTGRES_PORT`).
 
 ## Chạy local
@@ -82,7 +82,14 @@ Tất cả lệnh gọi LLM đi qua `backend/app/llm/gemini.py`. Không gọi SD
 ## API chính
 
 ```text
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+GET  /api/v1/auth/me
 POST /api/v1/startups
+GET  /api/v1/startups/{id}/completeness
+POST /api/v1/startups/{id}/submit
+POST /api/v1/startups/{id}/draft
+GET  /api/v1/startups/{id}/versions
 POST /api/v1/startups/{id}/documents
 POST /api/v1/startups/{id}/analyses/business_model
 POST /api/v1/startups/{id}/analyses/cash_flow
@@ -91,6 +98,15 @@ POST /api/v1/startups/{id}/chat
 POST /api/v1/surrounding/geocode
 GET  /api/v1/surrounding/map
 ```
+
+## Phân quyền và phiên bản hồ sơ
+
+- `startup`: tạo và chỉnh sửa bản nháp, kiểm tra độ đầy đủ, tải tài liệu và nộp hồ sơ.
+- `investor`: chỉ xem hồ sơ được cấp quyền; là vai trò duy nhất được chạy và xem ba module phân tích.
+- Khi nộp, hệ thống tạo snapshot bất biến. Mọi cập nhật tiếp theo phải bắt đầu bằng một bản nháp mới.
+- Mỗi kết quả phân tích và phiên Copilot của Nhà đầu tư được giới hạn theo người dùng và phiên bản hồ sơ.
+
+Đặt `AUTH_SECRET` thành chuỗi ngẫu nhiên dài trong môi trường deploy; không dùng giá trị development mặc định ở production.
 
 ## Dữ liệu demo trong `facts`
 
