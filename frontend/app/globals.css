@@ -468,6 +468,385 @@ textarea:focus {
   grid-column: 1 / -1;
 }
 
+.dashboardGridSingle {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.headerCreateButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.emptyStateWithAction {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.newProfileShell {
+  width: min(1100px, calc(100% - 48px));
+}
+
+.newProfileHeader {
+  align-items: center;
+}
+
+.newProfileForm,
+.newProfileSections {
+  display: grid;
+  gap: 16px;
+}
+
+.profileIdentitySection {
+  display: grid;
+  gap: 18px;
+}
+
+.profileIdentityGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.newProfileNote {
+  padding: 16px;
+}
+
+.profileDisclosure summary {
+  padding: 17px 18px;
+}
+
+.profileDisclosure summary strong {
+  font-size: 17px;
+}
+
+.profileDisclosure .formDisclosureBody {
+  padding: 18px;
+}
+
+.profileDisclosure .topicGroup {
+  padding: 16px;
+}
+
+.profileDisclosure .topicGroupHeader strong {
+  font-size: 14px;
+}
+
+.profileSubmitBar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  border: 1px solid #c9d6cd;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 16px 36px rgba(20, 32, 26, 0.14);
+  backdrop-filter: blur(12px);
+}
+
+.profileSubmitBar > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.profileSubmitBar span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.profileSubmitActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profileSubmitActions .secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileBuilderShell {
+  width: min(1240px, calc(100% - 48px));
+}
+
+.profileBuilderHeader {
+  align-items: center;
+}
+
+.profileBuilderLayout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.profileBuilderNav {
+  position: sticky;
+  top: 88px;
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+}
+
+.profileBuilderNav a {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--muted);
+}
+
+.profileBuilderNav a span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--subtle);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.profileBuilderNav a strong {
+  font-size: 12px;
+}
+
+.profileBuilderNav a:hover,
+.profileBuilderNav a.active {
+  border-color: #bfd0c5;
+  color: var(--green-dark);
+  background: #f1f7f3;
+}
+
+.profileBuilderNav a.active span {
+  color: white;
+  background: var(--green);
+}
+
+.profileBuilderContent,
+.profileOverviewPage,
+.moduleProfilePage {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.moduleProfileIntro {
+  display: grid;
+  gap: 6px;
+}
+
+.moduleProfileIntro h2 {
+  margin: 2px 0 0;
+  font-size: 24px;
+}
+
+.moduleProfileIntro > p:last-child {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.moduleOwnedSection {
+  display: grid;
+  gap: 18px;
+}
+
+.moduleDraftGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.moduleDraftCard {
+  display: grid;
+  gap: 14px;
+  min-height: 190px;
+}
+
+.moduleDraftCard > div:first-child {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.moduleDraftCard strong {
+  font-size: 18px;
+}
+
+.moduleDraftCard p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.moduleDraftCard small {
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.moduleDraftCard:hover {
+  border-color: #a9c0b1;
+  transform: translateY(-2px);
+}
+
+.moduleSubmitBar {
+  justify-content: flex-end;
+}
+
+.fieldHelper {
+  margin-top: -4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.moduleFormNote {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid #c9d9cf;
+  border-radius: 8px;
+  background: #f1f7f3;
+}
+
+.moduleFormNote strong {
+  color: var(--green-dark);
+  font-size: 13px;
+}
+
+.moduleFormNote span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.formDisclosure {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+}
+
+.formDisclosure summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.formDisclosure summary::-webkit-details-marker {
+  display: none;
+}
+
+.formDisclosure summary span {
+  display: grid;
+  gap: 3px;
+}
+
+.formDisclosure summary small {
+  color: var(--green);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.formDisclosure summary strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.formDisclosure summary i {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #e8f1eb;
+  color: var(--green-dark);
+  font-size: 17px;
+  font-style: normal;
+  transition: transform 160ms ease;
+}
+
+.formDisclosure[open] summary {
+  border-bottom: 1px solid var(--line);
+  background: #f5f8f5;
+}
+
+.formDisclosure[open] summary i {
+  transform: rotate(45deg);
+}
+
+.formDisclosureBody {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.formDisclosureBody > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.topicGroupList {
+  display: grid;
+  gap: 12px;
+}
+
+.topicGroup {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e0e5df;
+  border-radius: 8px;
+  background: white;
+}
+
+.topicGroupHeader {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #edf0ec;
+}
+
+.topicGroupHeader strong {
+  color: var(--green-dark);
+  font-size: 12px;
+}
+
+.topicGroupHeader p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.createSubmit {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  box-shadow: 0 -8px 18px rgba(255, 255, 255, 0.86);
+}
+
 .primaryButton,
 .secondaryButton {
   min-height: 42px;
@@ -1707,6 +2086,20 @@ textarea:focus {
   line-height: 1.45;
 }
 
+.cashFlowDashboard { display: grid; gap: 12px; margin-top: 14px; }
+.cashFlowCards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.cashFlowCards > div, .cashFlowPanel { padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfa; }
+.cashFlowCards span { display: block; color: var(--muted); font-size: 11px; }
+.cashFlowCards strong { display: block; margin-top: 5px; color: var(--green-dark); font-size: 15px; }
+.cashFlowPanel h4 { margin: 0 0 8px; font-size: 13px; }
+.cashFlowPanel p { margin: 6px 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.scenarioRows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.scenarioRows div { display: grid; gap: 4px; font-size: 12px; }
+.scenarioRows span { color: var(--muted); }
+.cashFlowTable { display: grid; gap: 4px; overflow-x: auto; font-size: 11px; }
+.cashFlowHead { color: var(--green-dark); font-weight: 800; }
+.cashFlowRow { min-width: 640px; color: var(--muted); }
+
 html {
   scroll-behavior: smooth;
 }
@@ -2010,6 +2403,19 @@ html {
   .chatPanel {
     min-height: 520px;
   }
+
+  .profileBuilderLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .profileBuilderNav {
+    position: static;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .profileBuilderNav a {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 760px) {
@@ -2039,6 +2445,35 @@ html {
   .moduleTitleRow,
   .resultHeader {
     display: grid;
+  }
+
+  .headerActions,
+  .emptyStateWithAction,
+  .profileSubmitBar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profileSubmitActions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .profileIdentityGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileBuilderShell {
+    width: min(100% - 24px, 1240px);
+  }
+
+  .profileBuilderNav,
+  .moduleDraftGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileBuilderNav a {
+    grid-template-columns: 30px minmax(0, 1fr);
   }
 
   .factSectionHeader p:not(.eyebrow) {

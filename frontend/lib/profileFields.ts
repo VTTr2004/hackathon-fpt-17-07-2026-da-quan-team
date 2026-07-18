@@ -5,6 +5,7 @@ export type ProfileField = {
   label: string;
   type?: ProfileFieldType;
   placeholder?: string;
+  helper?: string;
   rows?: number;
   options?: string[];
 };
@@ -17,7 +18,16 @@ export type ProfileSection = {
   fields: ProfileField[];
 };
 
+export type ProfileFieldGroup = {
+  id: string;
+  title: string;
+  description?: string;
+  fieldKeys: string[];
+};
+
 export const stageOptions = ["Pre-seed", "Seed", "Series A", "Growth"];
+
+export const industryOptions = ["F&B", "Bán lẻ"];
 
 export const operatingScopeOptions = ["Địa phương", "Toàn quốc", "Quốc tế"];
 
@@ -44,29 +54,328 @@ export const quickCreateFields: ProfileSection[] = [
   {
     id: "quick-business",
     eyebrow: "BUSINESS MODEL",
-    title: "Mô hình kinh doanh",
-    description: "Những dữ kiện cốt lõi để chạy business model và định hướng phân tích.",
+    title: "Khách hàng và mô hình kinh doanh",
+    description: "Dữ kiện cốt lõi cho F&B và bán lẻ nhỏ. Không nhập số dư tiền hay dữ liệu khu vực tại đây.",
     fields: [
-      { key: "problem", label: "Bài toán kinh doanh", type: "textarea", rows: 3 },
-      { key: "solution", label: "Giải pháp", type: "textarea", rows: 3 },
-      { key: "target_customers", label: "Khách hàng mục tiêu", type: "list" },
-      { key: "core_products", label: "Sản phẩm/dịch vụ chính", type: "list" },
-      { key: "revenue_model", label: "Nguồn doanh thu", type: "list" },
-      { key: "sales_channels", label: "Kênh bán hàng", type: "list" },
+      {
+        key: "problem",
+        label: "Nhu cầu hoặc vấn đề của khách hàng",
+        type: "textarea",
+        rows: 3,
+        placeholder: "Ví dụ: nhân viên văn phòng cần bữa trưa nhanh, ổn định và vừa túi tiền.",
+      },
+      {
+        key: "solution",
+        label: "Giải pháp cửa hàng cung cấp",
+        type: "textarea",
+        rows: 3,
+        placeholder: "Mô tả sản phẩm, trải nghiệm hoặc cách phục vụ giải quyết nhu cầu trên.",
+      },
+      {
+        key: "target_customers",
+        label: "Nhóm khách hàng mục tiêu",
+        type: "list",
+        placeholder: "Nhân viên văn phòng, sinh viên, hộ gia đình",
+        helper: "Phân tách các nhóm bằng dấu phẩy.",
+      },
+      {
+        key: "core_products",
+        label: "Sản phẩm chủ lực",
+        type: "list",
+        placeholder: "Cà phê pha máy, trà trái cây, bánh ngọt",
+        helper: "Phân tách các sản phẩm bằng dấu phẩy.",
+      },
+      {
+        key: "customer_purchase_occasions",
+        label: "Dịp và lý do mua hàng",
+        type: "textarea",
+        rows: 2,
+        placeholder: "Bữa sáng, nghỉ trưa, mua mang đi, mua bổ sung hằng tuần...",
+      },
+      {
+        key: "differentiation",
+        label: "Giá trị khác biệt",
+        type: "textarea",
+        rows: 2,
+        placeholder: "Điểm khiến khách hàng chọn cửa hàng thay vì phương án khác.",
+      },
+      {
+        key: "revenue_model",
+        label: "Nguồn doanh thu",
+        type: "list",
+        placeholder: "Bán tại cửa hàng, giao hàng, đơn doanh nghiệp",
+        helper: "Chỉ mô tả nguồn thu; dòng tiền theo kỳ nhập ở phần Cash Flow.",
+      },
+      {
+        key: "sales_channels",
+        label: "Kênh bán hàng",
+        type: "list",
+        placeholder: "Tại cửa hàng, GrabFood, ShopeeFood, website",
+      },
+      {
+        key: "pricing_model",
+        label: "Cách định giá",
+        type: "textarea",
+        rows: 2,
+        placeholder: "Theo món, combo, theo trọng lượng, giá thành viên...",
+      },
+      {
+        key: "average_order_value",
+        label: "Giá trị đơn trung bình (VND)",
+        type: "number",
+        placeholder: "85000",
+        helper: "Dùng cho unit economics cấp đơn hàng, không phải doanh thu tháng.",
+      },
+      {
+        key: "variable_cost_per_order",
+        label: "Chi phí biến đổi trung bình/đơn (VND)",
+        type: "number",
+        placeholder: "42000",
+        helper: "Nguyên liệu, bao bì, phí nền tảng và chi phí tăng theo từng đơn.",
+      },
+      {
+        key: "traction",
+        label: "Bằng chứng sức hút hiện tại",
+        type: "textarea",
+        rows: 3,
+        placeholder: "Số đơn, số khách quay lại, sản phẩm bán chạy hoặc kết quả thử nghiệm; ghi rõ kỳ dữ liệu.",
+      },
+      {
+        key: "competitors",
+        label: "Đối thủ hoặc mô hình tương tự",
+        type: "list",
+        placeholder: "Tên thương hiệu hoặc loại cửa hàng cạnh tranh",
+        helper: "Chỉ nhập đối thủ đã biết; mật độ và khoảng cách do Surrounding Area xử lý.",
+      },
+      {
+        key: "market_size",
+        label: "Cơ sở ước tính thị trường",
+        type: "textarea",
+        rows: 3,
+        placeholder: "Số khách hàng mục tiêu, tần suất mua, mức chi tiêu và nguồn số liệu.",
+      },
+      {
+        key: "key_suppliers_partners",
+        label: "Nhà cung cấp và đối tác chính",
+        type: "list",
+        placeholder: "Nhà cung cấp nguyên liệu, nền tảng giao hàng, đơn vị vận chuyển",
+      },
+    ],
+  },
+  {
+    id: "quick-development",
+    eyebrow: "DEVELOPMENT PLAN",
+    title: "Kế hoạch phát triển",
+    description: "Đánh giá hướng đi, khả năng nhân rộng, milestone và mức sẵn sàng thực thi.",
+    fields: [
+      {
+        key: "planning_horizon_months",
+        label: "Thời hạn kế hoạch (tháng)",
+        type: "number",
+        placeholder: "12",
+      },
+      {
+        key: "development_objectives",
+        label: "Mục tiêu phát triển",
+        type: "textarea",
+        rows: 3,
+        placeholder: "Mục tiêu, giá trị hiện tại, giá trị cần đạt và thời hạn.",
+      },
+      {
+        key: "product_plan",
+        label: "Kế hoạch sản phẩm/danh mục",
+        type: "textarea",
+        rows: 3,
+        placeholder: "Sản phẩm mới, nhóm khách hàng phục vụ và cách đo kết quả.",
+      },
+      {
+        key: "customer_growth_plan",
+        label: "Kế hoạch phát triển khách hàng",
+        type: "textarea",
+        rows: 3,
+        placeholder: "Giữ chân, khách hàng thân thiết, phân khúc mới và chỉ số thành công.",
+      },
+      {
+        key: "channel_expansion_plan",
+        label: "Kế hoạch mở rộng kênh bán",
+        type: "textarea",
+        rows: 3,
+        placeholder: "Kênh mới, mục tiêu, giai đoạn thử nghiệm và điều kiện cần.",
+      },
+      {
+        key: "outlet_expansion_plan",
+        label: "Kế hoạch mở rộng điểm bán",
+        type: "textarea",
+        rows: 3,
+        placeholder: "Số điểm dự kiến, loại cửa hàng, thời hạn và tiêu chí lựa chọn.",
+        helper: "Việc chọn địa điểm cụ thể thuộc Surrounding Area.",
+      },
+      {
+        key: "operating_capability_plan",
+        label: "Năng lực vận hành cần chuẩn hóa",
+        type: "textarea",
+        rows: 3,
+        placeholder: "SOP, đào tạo, kiểm soát chất lượng, tồn kho hoặc năng lực cung ứng.",
+      },
+      {
+        key: "development_milestones",
+        label: "Milestone và tiêu chí hoàn thành",
+        type: "textarea",
+        rows: 3,
+        placeholder: "Mỗi milestone nên có thời hạn và kết quả đo được.",
+      },
+      {
+        key: "development_dependencies",
+        label: "Phụ thuộc và rủi ro chính",
+        type: "textarea",
+        rows: 3,
+        placeholder: "Nhân sự, nhà cung cấp, giấy phép, tài chính hoặc giả định chưa kiểm chứng.",
+      },
     ],
   },
   {
     id: "quick-finance",
-    eyebrow: "FINANCE",
-    title: "Tài chính ban đầu",
-    description: "Các số liệu tối thiểu để cash-flow module có điểm bắt đầu.",
+    eyebrow: "CASH FLOW · MODULE RIÊNG",
+    title: "Dòng tiền",
+    description: "Chỉ dành cho Cash Flow Analysis; Business Model không sử dụng để tính burn hoặc runway.",
     fields: [
-      { key: "current_cash", label: "Tiền mặt hiện có", type: "number" },
-      { key: "monthly_revenue", label: "Doanh thu trung bình tháng", type: "number" },
-      { key: "monthly_expense", label: "Chi phí trung bình tháng", type: "number" },
+      { key: "current_cash", label: "Tiền mặt hiện có (VND)", type: "number", placeholder: "500000000" },
+      { key: "minimum_cash_buffer", label: "Minimum cash buffer (VND)", type: "number", placeholder: "150000000" },
+      { key: "fixed_monthly_costs", label: "Fixed monthly costs (VND)", type: "number", placeholder: "80000000" },
+      { key: "variable_cost_ratio", label: "Variable-cost ratio", type: "number", placeholder: "0.45" },
+      { key: "accounts_receivable", label: "Accounts receivable (VND)", type: "number", placeholder: "0" },
+      { key: "accounts_payable", label: "Accounts payable (VND)", type: "number", placeholder: "0" },
+      { key: "inventory", label: "Inventory (VND)", type: "number", placeholder: "0" },
+      {
+        key: "financial_periods",
+        label: "Dòng tiền theo kỳ",
+        type: "textarea",
+        rows: 4,
+        placeholder: "2026-01, 100000000, 160000000\n2026-02, 120000000, 155000000",
+        helper: "Mỗi dòng: kỳ, tiền vào, tiền ra. Các kỳ phải có cùng độ dài.",
+      },
+    ],
+  },
+  {
+    id: "quick-location",
+    eyebrow: "SURROUNDING AREA · MODULE RIÊNG",
+    title: "Địa điểm và khu vực",
+    description: "Thông tin đầu vào để geocode và kiểm chứng các tuyên bố về khu vực.",
+    fields: [
+      {
+        key: "exact_location",
+        label: "Địa chỉ chính xác",
+        type: "textarea",
+        rows: 2,
+        placeholder: "Số nhà, đường, phường/xã, tỉnh/thành phố",
+        helper: "Tọa độ vẫn cần được chuyên viên xác nhận trên bản đồ trước khi phân tích.",
+      },
+      {
+        key: "location_dependency",
+        label: "Mức phụ thuộc lượng khách xung quanh",
+        type: "select",
+        options: locationDependencyOptions,
+      },
+      {
+        key: "target_customer_radius_m",
+        label: "Bán kính khách hàng mục tiêu (m)",
+        type: "number",
+        placeholder: "1000",
+      },
+      {
+        key: "area_claims",
+        label: "Tuyên bố cần kiểm chứng",
+        type: "list",
+        placeholder: "Chưa có đối thủ trong 500m, khu vực đông văn phòng",
+        helper: "Phân tách các tuyên bố bằng dấu phẩy.",
+      },
+      {
+        key: "known_nearby_competitors",
+        label: "Đối thủ gần đó đã biết",
+        type: "list",
+        placeholder: "Highlands Coffee, cửa hàng tiện lợi A",
+      },
     ],
   },
 ];
+
+export const quickCreateFieldGroups: Record<string, ProfileFieldGroup[]> = {
+  "quick-business": [
+    {
+      id: "customer",
+      title: "Khách hàng và nhu cầu",
+      description: "Xác định ai mua, họ cần gì và mua trong hoàn cảnh nào.",
+      fieldKeys: ["problem", "target_customers", "customer_purchase_occasions"],
+    },
+    {
+      id: "offering",
+      title: "Sản phẩm và giá trị khác biệt",
+      description: "Mô tả sản phẩm chủ lực và lý do khách hàng lựa chọn.",
+      fieldKeys: ["solution", "core_products", "differentiation"],
+    },
+    {
+      id: "commercial-model",
+      title: "Doanh thu, kênh bán và unit economics",
+      description: "Dữ liệu ở cấp mô hình hoặc đơn hàng; không phải dòng tiền theo tháng.",
+      fieldKeys: [
+        "revenue_model",
+        "sales_channels",
+        "pricing_model",
+        "average_order_value",
+        "variable_cost_per_order",
+      ],
+    },
+    {
+      id: "market-evidence",
+      title: "Thị trường, cạnh tranh và bằng chứng",
+      description: "Cơ sở kiểm chứng sức hút, quy mô thị trường và các phụ thuộc chính.",
+      fieldKeys: ["traction", "competitors", "market_size", "key_suppliers_partners"],
+    },
+  ],
+  "quick-development": [
+    {
+      id: "growth-direction",
+      title: "Mục tiêu và hướng phát triển",
+      description: "Kế hoạch phát triển sản phẩm, khách hàng, kênh bán và điểm bán.",
+      fieldKeys: [
+        "planning_horizon_months",
+        "development_objectives",
+        "product_plan",
+        "customer_growth_plan",
+        "channel_expansion_plan",
+        "outlet_expansion_plan",
+      ],
+    },
+    {
+      id: "execution-readiness",
+      title: "Mức sẵn sàng thực thi",
+      description: "Năng lực cần chuẩn hóa, milestone, phụ thuộc và rủi ro.",
+      fieldKeys: ["operating_capability_plan", "development_milestones", "development_dependencies"],
+    },
+  ],
+  "quick-finance": [
+    {
+      id: "cash-position",
+      title: "Số dư và dòng tiền theo kỳ",
+      description: "Dữ liệu đầu vào riêng cho Cash Flow Analysis.",
+      fieldKeys: ["current_cash", "financial_periods"],
+    },
+  ],
+  "quick-location": [
+    {
+      id: "location-profile",
+      title: "Địa điểm kinh doanh",
+      description: "Địa chỉ và mức phụ thuộc vào khách hàng xung quanh.",
+      fieldKeys: ["exact_location", "location_dependency", "target_customer_radius_m"],
+    },
+    {
+      id: "area-claims",
+      title: "Tuyên bố và đối thủ đã biết",
+      description: "Những thông tin Surrounding Area cần kiểm chứng bằng dữ liệu bản đồ.",
+      fieldKeys: ["area_claims", "known_nearby_competitors"],
+    },
+  ],
+};
 
 export const profileSections: ProfileSection[] = [
   {

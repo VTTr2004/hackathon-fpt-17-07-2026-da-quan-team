@@ -16,6 +16,7 @@ import type { ProfileField } from "@/lib/profileFields";
 import type { Analysis, AnalysisModule, ChatResponse, DocumentItem, Startup } from "@/types";
 
 import SurroundingArea from "./SurroundingArea";
+import CashFlowAnalysis from "./CashFlowAnalysis";
 
 const modules: Array<{ id: AnalysisModule; name: string; code: string; description: string }> = [
   {
@@ -401,7 +402,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
                         <span className={`status ${status}`}>{statusCopy[status] ?? status}</span>
                       </div>
                       {result ? (
-                        <ModuleReportPreview analysis={result} />
+                        {module.id === "cash_flow" ? <CashFlowAnalysis analysis={result} /> : <ModuleReportPreview analysis={result} />}
                       ) : (
                         <p className="muted smallText">Chưa có báo cáo cho module này.</p>
                       )}
