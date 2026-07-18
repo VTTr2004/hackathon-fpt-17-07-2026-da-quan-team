@@ -1,5 +1,7 @@
 # Startup Lens
 
+> CI/CD: xem hướng dẫn cấu hình deploy tự động bằng Docker và GitHub Actions tại [DEPLOYMENT.md](DEPLOYMENT.md).
+
 Monorepo cho hệ thống đánh giá startup và chatbot hỏi đáp tài liệu:
 
 - **Backend:** FastAPI, SQLAlchemy async và PostgreSQL.
