@@ -29,6 +29,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
   if (!response.ok) {
+    if (response.status === 401 && token && typeof window !== "undefined") {
+      window.localStorage.removeItem("startup_lens_token");
+      window.dispatchEvent(new Event("startup-lens-auth-invalidated"));
+    }
     const payload = await response.json().catch(() => null);
     throw new Error(payload?.detail ?? `API error ${response.status}`);
   }

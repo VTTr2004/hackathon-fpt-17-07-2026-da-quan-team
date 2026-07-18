@@ -32,6 +32,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     api.me().then(setUser).catch(() => window.localStorage.removeItem("startup_lens_token")).finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    const invalidate = () => setUser(null);
+    window.addEventListener("startup-lens-auth-invalidated", invalidate);
+    return () => window.removeEventListener("startup-lens-auth-invalidated", invalidate);
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,

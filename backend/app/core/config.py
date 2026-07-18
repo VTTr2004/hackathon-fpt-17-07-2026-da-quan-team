@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,6 +38,15 @@ class Settings(BaseSettings):
     nvidia_chat_model: str = "openai/gpt-oss-120b"
     nvidia_embed_model: str = "nvidia/nv-embedqa-e5-v5"
     nvidia_timeout_seconds: float = 60
+
+    @model_validator(mode="after")
+    def validate_production_auth_secret(self) -> "Settings":
+        placeholders = {"", "change-this-secret-before-production", "replace-with-a-long-random-secret"}
+        if self.environment.lower() in {"production", "prod"} and (
+            self.auth_secret in placeholders or len(self.auth_secret) < 32
+        ):
+            raise ValueError("AUTH_SECRET must be a unique value of at least 32 characters in production")
+        return self
 
     # RAG retrieval knobs (validated by the retrieval eval, see docs/methodology.md).
     rag_top_k: int = 5

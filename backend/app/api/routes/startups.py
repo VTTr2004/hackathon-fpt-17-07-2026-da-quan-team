@@ -202,7 +202,9 @@ async def update_startup(
 async def check_completeness(
     startup_id: UUID, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ) -> CompletenessRead:
-    startup = await get_accessible_startup(startup_id, user, db)
+    # This reads the mutable live draft. Investors must remain scoped to a
+    # submitted snapshot and therefore cannot inspect draft completeness.
+    startup = await get_owned_startup(startup_id, user, db)
     return await _completeness(startup, db)
 
 

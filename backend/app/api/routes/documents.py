@@ -29,6 +29,19 @@ async def _latest_version(startup_id: UUID, db: AsyncSession) -> StartupVersion 
     )
 
 
+async def _document_is_version_locked(startup_id: UUID, document_id: UUID, db: AsyncSession) -> bool:
+    """Return whether a submitted snapshot already references this document."""
+    version_id = await db.scalar(
+        select(StartupVersion.id)
+        .where(
+            StartupVersion.startup_id == startup_id,
+            StartupVersion.document_ids.contains([str(document_id)]),
+        )
+        .limit(1)
+    )
+    return version_id is not None
+
+
 @router.get("/{startup_id}/documents", response_model=list[DocumentRead])
 async def list_documents(
     startup_id: UUID,
@@ -131,7 +144,23 @@ async def update_document_visibility(
     document = await db.get(Document, document_id)
     if document is None or document.startup_id != startup_id:
         raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+    if document.visibility == payload.visibility:
+        return document
+    if await _document_is_version_locked(startup_id, document_id, db):
+        raise HTTPException(
+            status_code=409,
+            detail="Tài liệu đã được khóa trong phiên bản đã nộp; hãy tải lên một bản tài liệu mới.",
+        )
     document.visibility = payload.visibility
+    db.add(
+        AuditLog(
+            actor_id=user.id,
+            action="document.visibility_updated",
+            resource_type="document",
+            resource_id=document.id,
+            details={"visibility": payload.visibility},
+        )
+    )
     await db.commit()
     await db.refresh(document)
     return document

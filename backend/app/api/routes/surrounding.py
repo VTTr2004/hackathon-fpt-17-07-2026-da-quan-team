@@ -64,12 +64,17 @@ _map_limiter = _RateLimiter(max_calls=120, window_s=60)
 _satellite_limiter = _RateLimiter(max_calls=60, window_s=60)
 
 
-def _client_key(request: Request) -> str:
-    return request.client.host if request.client else "unknown"
+def _client_key(request: Request, user: User) -> str:
+    # These endpoints are authenticated. A user ID avoids grouping every user
+    # behind a reverse proxy without trusting spoofable forwarded headers.
+    user_id = getattr(user, "id", None)
+    if user_id is not None:
+        return f"user:{user_id}"
+    return f"client:{request.client.host if request.client else 'unknown'}"
 
 
-def _enforce(limiter: _RateLimiter, request: Request) -> None:
-    if not limiter.check(_client_key(request)):
+def _enforce(limiter: _RateLimiter, request: Request, user: User) -> None:
+    if not limiter.check(_client_key(request, user)):
         raise HTTPException(status_code=429, detail="Quá nhiều yêu cầu, thử lại sau ít giây.")
 
 
@@ -79,14 +84,14 @@ class GeocodeRequest(BaseModel):
 
 @router.post("/geocode")
 async def geocode_address(
-    payload: GeocodeRequest, request: Request, _: User = Depends(get_current_user)
+    payload: GeocodeRequest, request: Request, user: User = Depends(get_current_user)
 ) -> dict:
     """Địa chỉ -> danh sách tọa độ ứng viên để chuyên viên xác nhận trên bản đồ.
 
     Luôn kèm needs_confirmation=true (mục 4.2). Không tìm thấy -> candidates rỗng
     + cảnh báo (không lỗi), để UI hướng dẫn nhập lại hoặc nhập tọa độ tay.
     """
-    _enforce(_geocode_limiter, request)
+    _enforce(_geocode_limiter, request, user)
     result = await geocode(payload.address)
     return result.to_dict()
 
@@ -94,7 +99,7 @@ async def geocode_address(
 @router.get("/map")
 def surrounding_map(
     request: Request,
-    _: User = Depends(investor_only),
+    user: User = Depends(investor_only),
     lat: float = Query(ge=-90, le=90),
     lon: float = Query(ge=-180, le=180),
     industry: str | None = Query(default=None),
@@ -104,7 +109,7 @@ def surrounding_map(
 
     Mỗi điểm kèm google_maps_url để click khảo sát giá. poi.db chưa build -> 503.
     """
-    _enforce(_map_limiter, request)
+    _enforce(_map_limiter, request, user)
     try:
         store = get_poi_store()
     except PoiDatabaseUnavailableError as exc:
@@ -118,12 +123,12 @@ def surrounding_map(
 @router.get("/satellite")
 def surrounding_satellite(
     request: Request,
-    _: User = Depends(investor_only),
+    user: User = Depends(investor_only),
     lat: float = Query(ge=-90, le=90),
     lon: float = Query(ge=-180, le=180),
     radius_m: int = Query(default=1000, ge=100, le=3000),
     days: int = Query(default=180, ge=7, le=730),
 ) -> dict:
     """Recent Sentinel-2 scene metadata/quicklooks for the confirmed location."""
-    _enforce(_satellite_limiter, request)
+    _enforce(_satellite_limiter, request, user)
     return fetch_satellite_context(lat, lon, radius_m=radius_m, days=days)
