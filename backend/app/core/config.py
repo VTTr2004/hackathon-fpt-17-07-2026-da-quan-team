@@ -24,6 +24,17 @@ class Settings(BaseSettings):
     gemini_timeout_seconds: float = 60
 
     @property
+    def gemini_api_keys(self) -> list[str]:
+        """Return configured Gemini keys in failover order.
+
+        GEMINI_API_KEY remains a string so existing single-key deployments keep
+        working. Comma-separated values enable key rotation.
+        """
+        if not self.gemini_api_key:
+            return []
+        return list(dict.fromkeys(key.strip() for key in self.gemini_api_key.split(",") if key.strip()))
+
+    @property
     def cors_origin_list(self) -> list[str]:
         return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
 
