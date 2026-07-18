@@ -29,6 +29,7 @@ import type {
 import CashFlowAnalysis from "./CashFlowAnalysis";
 import CashFlowDataWorkspace from "./CashFlowDataWorkspace";
 import DocumentChat from "./DocumentChat";
+import ExtractionReview from "./ExtractionReview";
 import SurroundingArea from "./SurroundingArea";
 
 const modules: Array<{ id: AnalysisModule; name: string; icon: string; tone: string; description: string }> = [
@@ -485,6 +486,16 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
             {/* ---- Profile (startup) ---- */}
             {isStartup && (
               <div className="deskPanel" hidden={activeTab !== "profile"}>
+                {editable && (
+                  <ExtractionReview
+                    startup={startup}
+                    documents={documents}
+                    onStartupUpdated={(updated) => {
+                      setStartup(updated);
+                      void api.completeness(id).then(setCompleteness);
+                    }}
+                  />
+                )}
                 <section className="hdCard">
                   <div className="hdSectionHead"><h2><MIcon name="description" />Dữ liệu hồ sơ</h2><span className="hdCount">{editable ? "Bản nháp có thể chỉnh sửa" : "Chỉ đọc"}</span></div>
                   <form className="stackForm" onSubmit={saveProfile} key={startup.updated_at}>

@@ -10,6 +10,7 @@ import type {
   AuthResponse,
   Completeness,
   InvestorAccess,
+  ProfileExtractionJob,
   StartupVersion,
   User,
   VersionDiff,
@@ -115,6 +116,23 @@ export const api = {
     request<DocumentItem>(`/startups/${id}/documents/${documentId}`, {
       method: "PATCH",
       body: JSON.stringify({ visibility }),
+    }),
+  listExtractions: (id: string) => request<ProfileExtractionJob[]>(`/startups/${id}/extractions`),
+  createExtraction: (id: string, documentIds: string[], fieldKeys: string[] = []) =>
+    request<ProfileExtractionJob>(`/startups/${id}/extractions`, {
+      method: "POST",
+      body: JSON.stringify({ document_ids: documentIds, field_keys: fieldKeys }),
+    }),
+  getExtraction: (id: string, extractionId: string) =>
+    request<ProfileExtractionJob>(`/startups/${id}/extractions/${extractionId}`),
+  confirmExtraction: (
+    id: string,
+    extractionId: string,
+    decisions: Array<{ candidate_id: string; action: "accept" | "edit" | "reject"; value?: unknown }>,
+  ) =>
+    request<Startup>(`/startups/${id}/extractions/${extractionId}/confirm`, {
+      method: "POST",
+      body: JSON.stringify({ decisions }),
     }),
   listAnalyses: (id: string) => request<Analysis[]>(`/startups/${id}/analyses`),
   runAnalysis: (id: string, module: AnalysisModule, options: Record<string, unknown> = { use_gemini: true }) =>

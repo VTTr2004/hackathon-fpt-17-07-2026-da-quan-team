@@ -6008,3 +6008,92 @@ html {
   border-color: #ffb4ad;
   color: #ffd6d2;
 }
+
+.profileExtraction {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 22px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 18px;
+  background: var(--surface, #fff);
+}
+
+.extractionCandidateList {
+  display: grid;
+  gap: 12px;
+}
+
+.extractionCandidate {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-left: 4px solid #f59e0b;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface, #fff) 96%, #f8fafc);
+}
+
+.extractionCandidate.found {
+  border-left-color: #16a34a;
+}
+
+.extractionCandidate.not_found {
+  border-left-color: #94a3b8;
+  opacity: 0.82;
+}
+
+.extractionCandidateHead,
+.extractionCandidateHead label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.extractionCandidateHead {
+  justify-content: space-between;
+}
+
+.extractionCandidate textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.extractionEvidenceList {
+  display: grid;
+  gap: 7px;
+}
+
+.extractionEvidenceList details {
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--surface, #fff) 86%, #e0f2fe);
+}
+
+.extractionEvidenceList summary {
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.extractionEvidenceList blockquote {
+  margin: 9px 0 0;
+  padding-left: 12px;
+  border-left: 3px solid #38bdf8;
+  color: var(--muted, #475569);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 720px) {
+  .extractionCandidateHead,
+  .cashFlowApplyBar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

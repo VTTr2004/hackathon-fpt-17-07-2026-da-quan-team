@@ -87,6 +87,9 @@ POST /api/v1/auth/login
 GET  /api/v1/auth/me
 POST /api/v1/startups
 GET  /api/v1/startups/{id}/completeness
+POST /api/v1/startups/{id}/extractions
+GET  /api/v1/startups/{id}/extractions/{extraction_id}
+POST /api/v1/startups/{id}/extractions/{extraction_id}/confirm
 POST /api/v1/startups/{id}/submit
 POST /api/v1/startups/{id}/draft
 GET  /api/v1/startups/{id}/versions
