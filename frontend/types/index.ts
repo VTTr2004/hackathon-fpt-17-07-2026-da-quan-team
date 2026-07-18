@@ -1,10 +1,13 @@
 export type Startup = {
   id: string;
+  owner_id: string | null;
   name: string;
   industry: string | null;
   stage: string | null;
   primary_location: string | null;
   facts: Record<string, unknown>;
+  status: string;
+  current_version: number;
   created_at: string;
   updated_at: string;
 };
@@ -15,6 +18,7 @@ export type DocumentItem = {
   filename: string;
   content_type: string | null;
   status: string;
+  visibility: "private" | "shared" | "restricted";
   created_at: string;
 };
 
@@ -23,13 +27,68 @@ export type AnalysisModule = "business_model" | "cash_flow" | "surrounding_area"
 export type Analysis = {
   id: string;
   startup_id: string;
+  startup_version_id: string | null;
+  created_by_id: string | null;
   module: AnalysisModule;
   version: string;
   status: string;
   score: number | null;
   summary: string;
   report: ModuleReport;
+  rubric_version: string;
   created_at: string;
+};
+
+export type UserRole = "startup" | "investor";
+
+export type User = {
+  id: string;
+  email: string;
+  full_name: string;
+  role: UserRole;
+  status: string;
+  created_at: string;
+};
+
+export type AuthResponse = {
+  access_token: string;
+  token_type: "bearer";
+  user: User;
+};
+
+export type Completeness = {
+  complete: boolean;
+  completed_fields: number;
+  total_fields: number;
+  missing_fields: string[];
+  missing_documents: string[];
+  format_errors: string[];
+  can_submit: boolean;
+};
+
+export type StartupVersion = {
+  id: string;
+  startup_id: string;
+  version_number: number;
+  status: string;
+  snapshot: Record<string, unknown>;
+  document_ids: string[];
+  created_by_id: string;
+  submitted_at: string;
+  locked_at: string;
+};
+
+export type InvestorAccess = {
+  investor_id: string;
+  investor_name: string;
+  investor_email: string;
+  status: "active" | "revoked";
+};
+
+export type VersionDiff = {
+  from_version: number;
+  to_version: number;
+  changes: Array<{ field: string; before: unknown; after: unknown }>;
 };
 
 export type Finding = {

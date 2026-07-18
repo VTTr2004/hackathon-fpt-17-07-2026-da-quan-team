@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { useAuth } from "@/lib/auth";
 
 import { ProfileDraftProvider } from "./_components/ProfileDraftProvider";
 
@@ -15,6 +16,10 @@ const steps = [
 
 export default function NewStartupLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const { user } = useAuth();
+  if (user?.role !== "startup") {
+    return <div className="pageShell"><div className="alert">Chỉ tài khoản Startup được tạo hồ sơ.</div></div>;
+  }
   return (
     <ProfileDraftProvider>
       <div className="pageShell profileBuilderShell">

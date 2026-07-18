@@ -7,16 +7,24 @@ import type {
   GeocodeResult,
   SatelliteContext,
   Startup,
+  AuthResponse,
+  Completeness,
+  InvestorAccess,
+  StartupVersion,
+  User,
+  VersionDiff,
   SurroundingMapData,
 } from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = typeof window !== "undefined" ? window.localStorage.getItem("startup_lens_token") : null;
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
       ...(init?.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
   });
@@ -24,10 +32,17 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const payload = await response.json().catch(() => null);
     throw new Error(payload?.detail ?? `API error ${response.status}`);
   }
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 
 export const api = {
+  register: (payload: { email: string; full_name: string; password: string; role: "startup" | "investor" }) =>
+    request<AuthResponse>("/auth/register", { method: "POST", body: JSON.stringify(payload) }),
+  login: (email: string, password: string) =>
+    request<AuthResponse>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
+  me: () => request<User>("/auth/me"),
+  listInvestors: () => request<User[]>("/auth/investors"),
   listStartups: () => request<Startup[]>("/startups"),
   getStartup: (id: string) => request<Startup>(`/startups/${id}`),
   createStartup: (payload: {
@@ -47,12 +62,31 @@ export const api = {
       facts: Record<string, unknown>;
     }>,
   ) => request<Startup>(`/startups/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  completeness: (id: string) => request<Completeness>(`/startups/${id}/completeness`),
+  submitStartup: (id: string) => request<StartupVersion>(`/startups/${id}/submit`, { method: "POST" }),
+  createNextDraft: (id: string) => request<Startup>(`/startups/${id}/draft`, { method: "POST" }),
+  listVersions: (id: string) => request<StartupVersion[]>(`/startups/${id}/versions`),
+  compareVersions: (id: string, fromVersion: number, toVersion: number) =>
+    request<VersionDiff>(`/startups/${id}/versions/diff?from_version=${fromVersion}&to_version=${toVersion}`),
+  listAccess: (id: string) => request<InvestorAccess[]>(`/startups/${id}/access`),
+  grantAccess: (id: string, investorId: string) =>
+    request<InvestorAccess>(`/startups/${id}/access`, {
+      method: "POST",
+      body: JSON.stringify({ investor_id: investorId }),
+    }),
+  revokeAccess: (id: string, investorId: string) =>
+    request<void>(`/startups/${id}/access/${investorId}`, { method: "DELETE" }),
   listDocuments: (id: string) => request<DocumentItem[]>(`/startups/${id}/documents`),
   uploadDocument: (id: string, file: File) => {
     const formData = new FormData();
     formData.append("file", file);
     return request<DocumentItem>(`/startups/${id}/documents`, { method: "POST", body: formData });
   },
+  updateDocumentVisibility: (id: string, documentId: string, visibility: string) =>
+    request<DocumentItem>(`/startups/${id}/documents/${documentId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ visibility }),
+    }),
   listAnalyses: (id: string) => request<Analysis[]>(`/startups/${id}/analyses`),
   runAnalysis: (id: string, module: AnalysisModule, options: Record<string, unknown> = { use_gemini: true }) =>
     request<Analysis>(`/startups/${id}/analyses/${module}`, {

@@ -15,6 +15,12 @@ class ChatMessage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     startup_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("startups.id", ondelete="CASCADE"), index=True
     )
+    user_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=True
+    )
+    startup_version_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("startup_versions.id", ondelete="SET NULL"), index=True, nullable=True
+    )
     role: Mapped[str] = mapped_column(String(20), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     citations: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list, nullable=False)

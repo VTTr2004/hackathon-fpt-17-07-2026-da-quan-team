@@ -2379,6 +2379,118 @@ html {
   scroll-behavior: smooth;
 }
 
+.sessionBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.roleBadge {
+  border-radius: 999px;
+  background: #e8f2ec;
+  color: var(--green-dark);
+  padding: 5px 9px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.authPage {
+  min-height: calc(100dvh - 64px);
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+
+.authCard {
+  width: min(100%, 480px);
+  display: grid;
+  gap: 20px;
+  padding: 28px;
+}
+
+.authCard h1 {
+  margin: 6px 0;
+}
+
+.authMode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.lockedNotice,
+.completenessPanel,
+.versionPanel,
+.accessPanel {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+}
+
+.missingList {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--amber);
+}
+
+.versionList,
+.accessList {
+  display: grid;
+  gap: 8px;
+}
+
+.versionRow,
+.accessRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.readOnlyFact {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: white;
+}
+
+.readOnlyFact span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.readOnlyFact strong {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font-size: 13px;
+}
+
+.versionDiff {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.diffRow {
+  display: grid;
+  grid-template-columns: minmax(150px, .8fr) minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 9px;
+  border-radius: 6px;
+  background: white;
+  font-size: 12px;
+}
+
 .surface,
   .metricTile,
   .workflowStep,

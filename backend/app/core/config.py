@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     upload_dir: str = "./uploads"
     max_upload_mb: int = 25
+    auth_secret: str = "change-this-secret-before-production"
+    auth_token_ttl_hours: int = 24
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-flash-latest"
     gemini_embed_model: str = "gemini-embedding-001"
