@@ -1,8 +1,14 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
+from uuid import uuid4
+
+import pytest
 
 from app.api.routes.startups import REQUIRED_FIELDS
-from app.db.seed import SAMPLE_FACTS
+from app.core.security import verify_password
+from app.db.seed import DISCOVERY_SAMPLES, SAMPLE_FACTS, seed_sample_data
 from app.modules.business_model.facts import missing_business_fields
 from app.modules.cash_flow.normalizer import normalize_cash_flow_input
 
@@ -55,3 +61,62 @@ def test_goc_ho_sample_data_matches_current_profile_and_cashflow_contract() -> N
         cash_flow["variable_costs"] / cash_flow["monthly_revenue"]
     )
     assert truth["reconciliation"]["ending_cash"] == cash_flow["current_cash"]
+
+
+@pytest.mark.asyncio
+async def test_redeploy_seed_refreshes_demo_passwords_and_existing_profiles() -> None:
+    owner = SimpleNamespace(
+        id=uuid4(), full_name="Old", password_hash="old", role="startup", status="inactive"
+    )
+    investor = SimpleNamespace(
+        id=uuid4(), full_name="Old", password_hash="old", role="investor", status="inactive"
+    )
+    startup = SimpleNamespace(
+        id=uuid4(),
+        name="Lotus Fresh Kitchen",
+        industry=None,
+        stage=None,
+        primary_location=None,
+        facts={},
+        status="draft",
+        current_version=0,
+        discoverable=False,
+    )
+    version = SimpleNamespace(snapshot={})
+    samples = [
+        SimpleNamespace(
+            id=uuid4(),
+            name=item["name"],
+            industry=None,
+            stage=None,
+            primary_location=None,
+            facts={},
+            status="draft",
+            current_version=0,
+            discoverable=False,
+        )
+        for item in DISCOVERY_SAMPLES
+    ]
+    sample_versions = [SimpleNamespace(snapshot={}) for _ in DISCOVERY_SAMPLES]
+    access = SimpleNamespace(status="revoked", granted_by_id=None)
+    scalar_results = [owner, investor, startup, version]
+    for sample, sample_version in zip(samples, sample_versions, strict=True):
+        scalar_results.extend([sample, sample_version])
+    scalar_results.append(access)
+    session = SimpleNamespace(
+        execute=AsyncMock(),
+        scalar=AsyncMock(side_effect=scalar_results),
+        flush=AsyncMock(),
+        commit=AsyncMock(),
+        add=lambda _: None,
+    )
+
+    await seed_sample_data(session, "NewDemo123!")
+
+    assert verify_password("NewDemo123!", owner.password_hash)
+    assert verify_password("NewDemo123!", investor.password_hash)
+    assert startup.facts == SAMPLE_FACTS
+    assert startup.current_version == 1
+    assert all(sample.discoverable and sample.current_version == 1 for sample in samples)
+    assert access.status == "active"
+    session.commit.assert_awaited_once()

@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -12,6 +13,7 @@ from app.db.seed import seed_sample_data
 from app.db.session import SessionLocal, engine
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -21,8 +23,12 @@ async def lifespan(_: FastAPI):
             await connection.run_sync(Base.metadata.create_all)
             await migrate_legacy_schema(connection)
     if settings.seed_sample_data:
+        logger.info("Sample data seed enabled; ensuring demo accounts and profiles exist")
         async with SessionLocal() as session:
             await seed_sample_data(session, settings.sample_data_password)
+        logger.info("Sample data seed completed successfully")
+    else:
+        logger.warning("Sample data seed disabled; set SEED_SAMPLE_DATA=true to enable it")
     yield
     await engine.dispose()
 
