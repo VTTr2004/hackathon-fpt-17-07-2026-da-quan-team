@@ -272,7 +272,9 @@ class GoogleGeocodingProvider:
             raise GeocodingError("Unexpected Google Geocoding response shape")
         status = data.get("status")
         if status not in {"OK", "ZERO_RESULTS"}:
-            raise GeocodingError(f"Google Geocoding status {status}")
+            message = data.get("error_message")
+            detail = f": {message}" if message else ""
+            raise GeocodingError(f"Google Geocoding status {status}{detail}")
 
         candidates: list[GeocodeCandidate] = []
         for item in data.get("results", [])[:limit]:

@@ -18,6 +18,7 @@ import type { Analysis, AnalysisModule, DocumentItem, Startup } from "@/types";
 import ChatWidget from "./ChatWidget";
 import SurroundingArea from "./SurroundingArea";
 import CashFlowAnalysis from "./CashFlowAnalysis";
+import CashFlowDataWorkspace from "./CashFlowDataWorkspace";
 
 const modules: Array<{ id: AnalysisModule; name: string; code: string; description: string }> = [
   {
@@ -379,8 +380,22 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
                         </div>
                         <span className={`status ${status}`}>{statusCopy[status] ?? status}</span>
                       </div>
+                      {module.id === "cash_flow" && (
+                        <CashFlowDataWorkspace
+                          startup={startup}
+                          documents={documents}
+                          analysis={result}
+                          onDocumentsUploaded={(items) => setDocuments((current) => [...items, ...current])}
+                          onAnalysisComplete={mergeAnalysis}
+                          onStartupUpdated={setStartup}
+                        />
+                      )}
                       {result ? (
-                        module.id === "cash_flow" ? <CashFlowAnalysis analysis={result} /> : <ModuleReportPreview analysis={result} />
+                        module.id === "cash_flow" ? (
+                          <CashFlowAnalysis analysis={result} />
+                        ) : (
+                          <ModuleReportPreview analysis={result} />
+                        )
                       ) : (
                         <p className="muted smallText">Chưa có báo cáo cho module này.</p>
                       )}

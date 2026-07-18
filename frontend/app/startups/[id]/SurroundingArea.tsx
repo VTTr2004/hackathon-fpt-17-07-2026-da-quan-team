@@ -471,7 +471,11 @@ function PlacesSurveyList({ items }: { items: PlacesEnrichmentItem[] }) {
           <a href={item.google_maps_url} key={`${item.name}-${item.distance_m}-${index}`} target="_blank" rel="noreferrer">
             <span>
               <strong>{item.name ?? "Không tên"}</strong>
-              <small>{Math.round(item.distance_m)}m · {item.category}</small>
+              <small>
+                {Math.round(item.distance_m)}m · {item.category}
+                {item.user_ratings_total ? ` · ${item.user_ratings_total} đánh giá` : ""}
+              </small>
+              {item.reviews?.[0]?.text && <small className="reviewSnippet">{item.reviews[0].text}</small>}
             </span>
             <em>
               {item.rating ? `${item.rating}/5` : "Chưa có rating"}

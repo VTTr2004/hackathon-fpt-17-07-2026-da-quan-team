@@ -1,0 +1,2280 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Startup Lens - Bản mẫu thẩm định</title>
+    <style>
+      :root {
+        --ink: #111827;
+        --muted: #667085;
+        --subtle: #eef2f3;
+        --paper: #f6f7f4;
+        --surface: #ffffff;
+        --line: #d7dee0;
+        --line-strong: #aebbc0;
+        --teal: #0f766e;
+        --teal-dark: #134e4a;
+        --blue: #2563eb;
+        --amber: #b45309;
+        --rose: #be123c;
+        --violet: #6d28d9;
+        --graphite: #25303a;
+        --shadow: 0 18px 42px rgba(17, 24, 39, 0.09);
+        --sidebar: 284px;
+        --radius: 8px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: auto;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        background:
+          linear-gradient(180deg, rgba(238, 242, 243, 0.82), rgba(246, 247, 244, 0.96)),
+          var(--paper);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      }
+
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      img {
+        max-width: 100%;
+      }
+
+      h1,
+      h2,
+      h3,
+      p,
+      span,
+      strong,
+      small,
+      button,
+      input,
+      textarea {
+        overflow-wrap: anywhere;
+      }
+
+      #overview,
+      #modulePanel,
+      #businessView,
+      #cashView,
+      #areaView,
+      #evidenceView,
+      #copilot,
+      #review,
+      #sourceDrawer {
+        scroll-margin-top: 88px;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: var(--sidebar) minmax(0, 1fr);
+        min-height: 100dvh;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100dvh;
+        overflow-y: auto;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 20px;
+        padding: 22px;
+        border-right: 1px solid var(--line);
+        background: #f9faf8;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+      }
+
+      .brandMark {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border-radius: var(--radius);
+        background: var(--teal-dark);
+        color: white;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .brand strong,
+      .profileMini strong,
+      .sourceRow strong,
+      .riskLine strong {
+        display: block;
+      }
+
+      .brand span,
+      .profileMini span,
+      .sourceRow span,
+      .riskLine span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .navList {
+        display: grid;
+        align-content: start;
+        gap: 6px;
+      }
+
+      .navItem {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        color: #42505a;
+        padding: 8px;
+        text-decoration: none;
+      }
+
+      .navItem:hover,
+      .navItem.active {
+        border-color: #bed0d0;
+        background: white;
+        color: var(--teal-dark);
+        box-shadow: 0 8px 18px rgba(17, 24, 39, 0.05);
+      }
+
+      .navItem svg,
+      .iconButton svg,
+      .tinyIcon svg,
+      .toolButton svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .navIcon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 7px;
+        background: #ecf3f2;
+      }
+
+      .navItem small {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .profileMini {
+        display: grid;
+        gap: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: white;
+        padding: 12px;
+      }
+
+      .profileMiniBar {
+        overflow: hidden;
+        height: 8px;
+        border-radius: 999px;
+        background: #e5e7eb;
+      }
+
+      .profileMiniBar span {
+        display: block;
+        width: 86%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--teal), var(--blue), var(--amber));
+      }
+
+      .main {
+        min-width: 0;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: grid;
+        grid-template-columns: minmax(280px, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+        height: 66px;
+        padding: 0 28px;
+        border-bottom: 1px solid rgba(215, 222, 224, 0.92);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(14px);
+      }
+
+      .searchBox {
+        display: grid;
+        grid-template-columns: 20px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        width: min(620px, 100%);
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #f8faf9;
+        padding: 0 12px;
+      }
+
+      .searchBox input {
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--ink);
+      }
+
+      .topActions,
+      .moduleTabs,
+      .scenarioTabs,
+      .docActions,
+      .chipRow,
+      .drawerActions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .iconButton,
+      .tinyIcon {
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: white;
+        color: #43515d;
+      }
+
+      .iconButton {
+        width: 40px;
+        height: 40px;
+      }
+
+      .tinyIcon {
+        width: 32px;
+        height: 32px;
+      }
+
+      .primaryButton,
+      .secondaryButton,
+      .tabButton,
+      .scenarioButton,
+      .chipButton,
+      .sourceButton {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 0;
+        min-height: 40px;
+        border-radius: var(--radius);
+        border: 1px solid transparent;
+        padding: 9px 12px;
+        font-weight: 800;
+        line-height: 1.15;
+        text-align: center;
+        transition:
+          background-color 140ms ease,
+          border-color 140ms ease,
+          box-shadow 140ms ease,
+          color 140ms ease;
+      }
+
+      .primaryButton {
+        background: var(--teal-dark);
+        color: white;
+      }
+
+      .secondaryButton,
+      .tabButton,
+      .scenarioButton,
+      .chipButton,
+      .sourceButton {
+        background: white;
+        color: #34434d;
+        border-color: var(--line);
+      }
+
+      .primaryButton:hover,
+      .secondaryButton:hover,
+      .iconButton:hover,
+      .tinyIcon:hover,
+      .tabButton:hover,
+      .scenarioButton:hover,
+      .chipButton:hover,
+      .sourceButton:hover {
+        box-shadow: 0 9px 18px rgba(17, 24, 39, 0.08);
+      }
+
+      .primaryButton:focus-visible,
+      .secondaryButton:focus-visible,
+      .iconButton:focus-visible,
+      .tinyIcon:focus-visible,
+      .tabButton:focus-visible,
+      .scenarioButton:focus-visible,
+      .chipButton:focus-visible,
+      .sourceButton:focus-visible,
+      .toolButton:focus-visible,
+      .navItem:focus-visible {
+        outline: 3px solid rgba(37, 99, 235, 0.22);
+        outline-offset: 2px;
+      }
+
+      .workspace {
+        width: min(1500px, calc(100% - 48px));
+        margin: 0 auto;
+        padding: 26px 0 70px;
+      }
+
+      .pageTitle {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: start;
+        margin-bottom: 18px;
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        color: var(--teal);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 8px;
+        font-size: clamp(30px, 4.8vw, 54px);
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin-bottom: 0;
+        font-size: 21px;
+        line-height: 1.2;
+      }
+
+      h3 {
+        margin-bottom: 8px;
+        font-size: 15px;
+      }
+
+      .lead {
+        max-width: 760px;
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.58;
+      }
+
+      .statusStack {
+        display: grid;
+        justify-items: end;
+        gap: 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        width: fit-content;
+        max-width: 100%;
+        min-height: 28px;
+        border-radius: 999px;
+        padding: 5px 10px;
+        background: #edf7f5;
+        color: var(--teal-dark);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .pill.amber {
+        background: #fff4dc;
+        color: #8a4b10;
+      }
+
+      .pill.blue {
+        background: #eaf1ff;
+        color: #1d4ed8;
+      }
+
+      .pill.rose {
+        background: #fff1f2;
+        color: var(--rose);
+      }
+
+      .heroGrid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.14fr) minmax(360px, 0.86fr);
+        gap: 16px;
+        align-items: stretch;
+      }
+
+      .overviewBand,
+      .rightRail,
+      .modulePanel,
+      .timelineBand,
+      .sourceDrawer {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .overviewBand {
+        display: grid;
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .dealHeader {
+        display: grid;
+        grid-template-columns: minmax(240px, 1fr) minmax(260px, 420px);
+        gap: 16px;
+        align-items: start;
+      }
+
+      .dealIdentity {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+      }
+
+      .dealIdentity > div {
+        min-width: 0;
+      }
+
+      .avatar {
+        display: grid;
+        place-items: center;
+        flex: 0 0 58px;
+        width: 58px;
+        height: 58px;
+        border-radius: var(--radius);
+        background: var(--graphite);
+        color: white;
+        font-weight: 900;
+      }
+
+      .dealMeta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 7px;
+      }
+
+      .dealScore {
+        display: grid;
+        grid-template-columns: minmax(86px, 108px) minmax(0, 1fr);
+        gap: 14px;
+        align-items: center;
+        min-width: 0;
+        width: 100%;
+      }
+
+      .scoreRing {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 108px;
+        height: 108px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle, white 58%, transparent 59%),
+          conic-gradient(var(--teal) 0 282deg, #dbe2e2 282deg 360deg);
+      }
+
+      .scoreRing strong {
+        font-size: 31px;
+      }
+
+      .scoreCopy strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 16px;
+      }
+
+      .scoreCopy p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .metricGrid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .metricTile,
+      .moduleCard,
+      .riskLine,
+      .insightCard,
+      .docCard,
+      .sourceRow,
+      .chatBubble,
+      .reviewItem,
+      .timelineStep {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: white;
+      }
+
+      .metricTile {
+        min-height: 98px;
+        padding: 14px;
+      }
+
+      .metricTile span,
+      .insightCard span,
+      .chartLegend span,
+      .miniLabel,
+      .sourceRow span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .metricTile strong {
+        display: block;
+        margin: 7px 0 4px;
+        font-size: 26px;
+      }
+
+      .metricTile small {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .moduleCards {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .moduleCard {
+        display: grid;
+        gap: 12px;
+        min-height: 168px;
+        padding: 15px;
+      }
+
+      .moduleCardTop {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .moduleCode {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 7px;
+        color: white;
+        background: var(--teal);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .moduleCard:nth-child(2) .moduleCode {
+        background: var(--blue);
+      }
+
+      .moduleCard:nth-child(3) .moduleCode {
+        background: var(--amber);
+      }
+
+      .meter {
+        overflow: hidden;
+        height: 8px;
+        border-radius: 999px;
+        background: #e8ecec;
+      }
+
+      .meter span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+      }
+
+      .moduleCard:nth-child(1) .meter span {
+        width: 82%;
+        background: var(--teal);
+      }
+
+      .moduleCard:nth-child(2) .meter span {
+        width: 76%;
+        background: var(--blue);
+      }
+
+      .moduleCard:nth-child(3) .meter span {
+        width: 68%;
+        background: var(--amber);
+      }
+
+      .rightRail {
+        display: grid;
+        gap: 16px;
+        padding: 18px;
+      }
+
+      .railHeader,
+      .panelHeader,
+      .docHeader,
+      .drawerHeader,
+      .reviewHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 14px;
+      }
+
+      .riskList,
+      .sourceList,
+      .reviewQueue,
+      .docGrid,
+      .evidenceGrid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .riskLine {
+        display: grid;
+        grid-template-columns: 8px minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: start;
+        padding: 12px;
+      }
+
+      .riskRail {
+        width: 8px;
+        height: 100%;
+        min-height: 42px;
+        border-radius: 999px;
+        background: var(--amber);
+      }
+
+      .riskLine.rose .riskRail {
+        background: var(--rose);
+      }
+
+      .riskLine.blue .riskRail {
+        background: var(--blue);
+      }
+
+      .chatBubble {
+        padding: 13px;
+      }
+
+      .chatBubble p {
+        margin-bottom: 10px;
+        color: #34434d;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .citationList {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .citationList button,
+      .citationTag {
+        min-height: 28px;
+        border: 1px solid #cbd5e1;
+        border-radius: 999px;
+        background: #f8fafc;
+        color: #334155;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .queryBox {
+        display: grid;
+        gap: 8px;
+      }
+
+      .queryBox textarea {
+        min-height: 80px;
+        resize: vertical;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 10px;
+        outline: 0;
+      }
+
+      .modulePanel {
+        margin-top: 16px;
+        padding: 18px;
+      }
+
+      .moduleTabs {
+        flex-wrap: wrap;
+      }
+
+      .tabButton {
+        min-height: 36px;
+        padding: 8px 11px;
+        color: var(--muted);
+      }
+
+      .tabButton.active {
+        border-color: #9db8ba;
+        background: #edf7f5;
+        color: var(--teal-dark);
+      }
+
+      .moduleView {
+        display: none;
+        margin-top: 16px;
+      }
+
+      .moduleView.active {
+        display: block;
+      }
+
+      .insightGrid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .insightCard {
+        min-height: 138px;
+        padding: 14px;
+      }
+
+      .insightCard strong {
+        display: block;
+        margin: 8px 0;
+        font-size: 22px;
+      }
+
+      .insightCard p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .twoColumn {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .analysisBlock {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #fbfcfd;
+        padding: 14px;
+      }
+
+      .analysisBlock h3 {
+        margin-bottom: 12px;
+      }
+
+      .canvasList {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .canvasItem {
+        min-height: 86px;
+        border: 1px solid #dce3e5;
+        border-radius: var(--radius);
+        background: white;
+        padding: 12px;
+      }
+
+      .canvasItem strong {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 13px;
+      }
+
+      .canvasItem span {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .scenarioTabs {
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .scenarioButton.active {
+        border-color: #b8c5d9;
+        background: #eef4ff;
+        color: #1d4ed8;
+      }
+
+      .cashBoard {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+        gap: 12px;
+      }
+
+      .chartBox {
+        min-height: 340px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(#ffffff, #ffffff),
+          repeating-linear-gradient(0deg, transparent 0 39px, rgba(37, 99, 235, 0.07) 39px 40px);
+        padding: 14px;
+      }
+
+      .chartLegend {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .chart {
+        width: 100%;
+        height: 250px;
+      }
+
+      .chart path,
+      .chart rect,
+      .chart circle {
+        transition: none;
+      }
+
+      .cashAside {
+        display: grid;
+        gap: 10px;
+      }
+
+      .cashKpi {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #fbfcfd;
+        padding: 13px;
+      }
+
+      .cashKpi span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .cashKpi strong {
+        display: block;
+        margin-top: 5px;
+        font-size: 22px;
+      }
+
+      .mapStage {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 0.64fr);
+        gap: 12px;
+      }
+
+      .mapCanvas {
+        position: relative;
+        min-height: 448px;
+        overflow: hidden;
+        border: 1px solid #cfd8dc;
+        border-radius: var(--radius);
+        background:
+          linear-gradient(90deg, rgba(15, 118, 110, 0.16) 1px, transparent 1px),
+          linear-gradient(rgba(37, 99, 235, 0.12) 1px, transparent 1px),
+          linear-gradient(135deg, #eaf3f0, #edf1f8);
+        background-size: 56px 56px, 56px 56px, cover;
+      }
+
+      .scanRing {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: min(62%, 430px);
+        aspect-ratio: 1;
+        border: 2px solid rgba(15, 118, 110, 0.7);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 0 26px rgba(15, 118, 110, 0.06);
+      }
+
+      .street {
+        position: absolute;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 1px 0 rgba(17, 24, 39, 0.07);
+      }
+
+      .street.one {
+        left: -9%;
+        top: 38%;
+        width: 118%;
+        height: 24px;
+        transform: rotate(-13deg);
+      }
+
+      .street.two {
+        left: 28%;
+        top: -10%;
+        width: 22px;
+        height: 120%;
+        transform: rotate(21deg);
+      }
+
+      .street.three {
+        right: 4%;
+        top: -4%;
+        width: 18px;
+        height: 118%;
+        transform: rotate(-31deg);
+      }
+
+      .marker {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border: 3px solid white;
+        border-radius: 999px;
+        box-shadow: 0 8px 18px rgba(17, 24, 39, 0.22);
+        color: white;
+        font-size: 10px;
+        font-weight: 900;
+      }
+
+      .marker.site {
+        left: calc(50% - 15px);
+        top: calc(50% - 15px);
+        background: var(--teal-dark);
+      }
+
+      .marker.c1 {
+        left: 47%;
+        top: 30%;
+        background: var(--rose);
+      }
+
+      .marker.c2 {
+        left: 61%;
+        top: 43%;
+        background: var(--rose);
+      }
+
+      .marker.c3 {
+        left: 35%;
+        top: 57%;
+        background: var(--rose);
+      }
+
+      .marker.e1 {
+        left: 22%;
+        top: 34%;
+        background: var(--amber);
+      }
+
+      .marker.e2 {
+        left: 70%;
+        top: 62%;
+        background: var(--amber);
+      }
+
+      .marker.r1 {
+        left: 26%;
+        top: 69%;
+        background: var(--blue);
+      }
+
+      .mapBadge {
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        top: 14px;
+        display: grid;
+        gap: 3px;
+        max-width: 360px;
+        border: 1px solid rgba(255, 255, 255, 0.88);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.88);
+        padding: 10px;
+        backdrop-filter: blur(10px);
+      }
+
+      .mapBadge strong {
+        font-size: 13px;
+      }
+
+      .mapBadge span {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .mapSide {
+        display: grid;
+        gap: 10px;
+      }
+
+      .mapSide .metricGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .verdictCard {
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--amber);
+        border-radius: var(--radius);
+        background: white;
+        padding: 13px;
+      }
+
+      .verdictCard.confirmed {
+        border-left-color: var(--teal);
+      }
+
+      .verdictCard.insufficient {
+        border-left-color: var(--blue);
+      }
+
+      .verdictCard p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .docGrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .docCard {
+        overflow: hidden;
+      }
+
+      .docPreview {
+        position: relative;
+        display: grid;
+        place-items: center;
+        height: clamp(180px, 18vw, 240px);
+        min-height: 180px;
+        overflow: hidden;
+        background: #eef2f3;
+      }
+
+      .docPreview img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: top left;
+      }
+
+      .docPreview.tall img {
+        object-fit: contain;
+        object-position: top center;
+      }
+
+      .docBody {
+        display: grid;
+        gap: 9px;
+        padding: 12px;
+      }
+
+      .docBody strong {
+        font-size: 13px;
+      }
+
+      .docBody span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .sourceRow {
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+        padding: 11px;
+      }
+
+      .sourceRow > div,
+      .riskLine > div {
+        min-width: 0;
+      }
+
+      .sourceIcon {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 7px;
+        background: #edf7f5;
+        color: var(--teal-dark);
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .reviewQueue {
+        margin-top: 4px;
+      }
+
+      .reviewItem {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .reviewItem strong {
+        display: block;
+        font-size: 13px;
+      }
+
+      .reviewItem span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .timelineBand {
+        margin-top: 16px;
+        padding: 16px;
+      }
+
+      .timelineSteps {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .timelineStep {
+        min-height: 118px;
+        padding: 13px;
+      }
+
+      .timelineStep.is-active {
+        border-color: #0f766e;
+        box-shadow: 0 12px 24px rgba(15, 118, 110, 0.11);
+      }
+
+      .timelineStep strong {
+        display: block;
+        margin: 8px 0 5px;
+      }
+
+      .timelineStep span {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: #edf7f5;
+        color: var(--teal-dark);
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .timelineStep p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .sourceDrawer {
+        display: none;
+        margin-top: 16px;
+        padding: 16px;
+      }
+
+      .sourceDrawer.open {
+        display: grid;
+        gap: 14px;
+      }
+
+      .sourceDrawer .metricGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .drawerQuote {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #f8fafc;
+        padding: 12px;
+        color: #34434d;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .toolButton {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: white;
+        color: #334155;
+        padding: 9px 11px;
+        font-weight: 800;
+      }
+
+      .mobileMenuButton {
+        display: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 1ms !important;
+        }
+      }
+
+      @media (max-width: 1220px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+          height: auto;
+          grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr);
+          grid-template-rows: auto;
+          align-items: start;
+        }
+
+        .profileMini {
+          display: none;
+        }
+
+        .navList {
+          grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+
+        .navItem {
+          grid-template-columns: 34px minmax(0, 1fr);
+        }
+
+        .navItem small {
+          display: none;
+        }
+
+        .heroGrid,
+        .twoColumn,
+        .cashBoard,
+        .mapStage {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 880px) {
+        .topbar,
+        .pageTitle,
+        .dealHeader,
+        .railHeader,
+        .panelHeader,
+        .drawerHeader {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+
+        .topbar {
+          height: auto;
+          padding: 12px 14px;
+        }
+
+        .topActions {
+          justify-content: space-between;
+        }
+
+        .workspace {
+          width: min(100% - 24px, 1500px);
+          padding-top: 18px;
+        }
+
+        .sidebar {
+          padding: 14px;
+        }
+
+        .navList {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .statusStack {
+          justify-items: start;
+        }
+
+        .metricGrid,
+        .sourceDrawer .metricGrid,
+        .mapSide .metricGrid,
+        .moduleCards,
+        .insightGrid,
+        .docGrid,
+        .timelineSteps,
+        .canvasList {
+          grid-template-columns: 1fr;
+        }
+
+        .dealScore {
+          grid-template-columns: 90px 1fr;
+          min-width: 0;
+        }
+
+        .scoreRing {
+          width: 88px;
+          height: 88px;
+        }
+
+        h1 {
+          font-size: 34px;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .navList,
+        .moduleTabs,
+        .scenarioTabs,
+        .docActions,
+        .chipRow,
+        .drawerActions {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+
+        .topActions {
+          display: grid;
+          grid-template-columns: 42px minmax(0, 1fr);
+        }
+
+        .topActions .primaryButton {
+          grid-column: 1 / -1;
+        }
+
+        .iconButton {
+          width: 42px;
+        }
+
+        .tinyIcon {
+          width: 36px;
+          justify-self: start;
+        }
+
+        .dealIdentity {
+          align-items: start;
+        }
+
+        .avatar {
+          flex-basis: 48px;
+          width: 48px;
+          height: 48px;
+        }
+
+        .sourceRow,
+        .riskLine,
+        .reviewItem {
+          grid-template-columns: 1fr;
+        }
+
+        .sourceIcon {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg aria-hidden="true" style="display: none">
+      <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="m20 20-3.5-3.5"></path>
+      </symbol>
+      <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m3 11 9-8 9 8"></path>
+        <path d="M5 10v10h14V10"></path>
+      </symbol>
+      <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <path d="M14 2v6h6"></path>
+      </symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 3v18h18"></path>
+        <path d="m7 15 4-4 3 3 5-7"></path>
+      </symbol>
+      <symbol id="i-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m9 18-6 3V6l6-3 6 3 6-3v15l-6 3z"></path>
+        <path d="M9 3v15"></path>
+        <path d="M15 6v15"></path>
+      </symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </symbol>
+      <symbol id="i-export" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <path d="M7 10l5 5 5-5"></path>
+        <path d="M12 15V3"></path>
+      </symbol>
+      <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m7 4 14 8-14 8z"></path>
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </symbol>
+    </svg>
+
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brandMark">SL</div>
+          <div>
+            <strong>Startup Lens</strong>
+            <span>Thẩm định có dẫn chứng</span>
+          </div>
+        </div>
+
+        <nav class="navList" aria-label="Không gian làm việc">
+          <a class="navItem active" href="#overview">
+            <span class="navIcon"><svg><use href="#i-home"></use></svg></span>
+            <span>Hồ sơ</span>
+            <small>Đang mở</small>
+          </a>
+          <a class="navItem" href="#modulePanel" data-nav-view="businessView">
+            <span class="navIcon"><svg><use href="#i-chart"></use></svg></span>
+            <span>Phân tích</span>
+            <small>3/3</small>
+          </a>
+          <a class="navItem" href="#modulePanel" data-nav-view="evidenceView">
+            <span class="navIcon"><svg><use href="#i-file"></use></svg></span>
+            <span>Bằng chứng</span>
+            <small>24</small>
+          </a>
+          <a class="navItem" href="#modulePanel" data-nav-view="areaView">
+            <span class="navIcon"><svg><use href="#i-map"></use></svg></span>
+            <span>Khu vực</span>
+            <small>500 m</small>
+          </a>
+          <a class="navItem" href="#copilot">
+            <span class="navIcon"><svg><use href="#i-chat"></use></svg></span>
+            <span>Trợ lý</span>
+            <small>Có nguồn</small>
+          </a>
+          <a class="navItem" href="#review">
+            <span class="navIcon"><svg><use href="#i-shield"></use></svg></span>
+            <span>Rà soát</span>
+            <small>4 mục</small>
+          </a>
+        </nav>
+
+        <div class="profileMini">
+          <div>
+            <strong>Mức sẵn sàng</strong>
+          <span>86% dữ liệu đã có đủ nguồn từ hồ sơ, tài liệu và kết quả phân tích.</span>
+          </div>
+          <div class="profileMiniBar" aria-label="Mức sẵn sàng 86 phần trăm"><span></span></div>
+          <span>Tiếp theo: xác minh chi phí thuê và doanh thu cuối tuần.</span>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <label class="searchBox">
+            <svg><use href="#i-search"></use></svg>
+            <input value="Góc Hồ Coffee - tóm tắt thẩm định" aria-label="Tìm kiếm" />
+          </label>
+          <div class="topActions">
+            <button class="iconButton" title="Thông báo" aria-label="Thông báo">
+              <svg><use href="#i-bell"></use></svg>
+            </button>
+            <button class="secondaryButton">Chế độ rà soát</button>
+            <button class="primaryButton">Xuất tóm tắt</button>
+          </div>
+        </header>
+
+        <div class="workspace">
+          <section class="pageTitle" id="overview">
+            <div>
+              <p class="eyebrow">HỒ SƠ KHỞI NGHIỆP</p>
+              <h1>Bàn thẩm định Góc Hồ Coffee</h1>
+              <p class="lead">
+                Một không gian thẩm định gọn, giàu bằng chứng cho đội đầu tư: nhập hồ sơ, kiểm tra dữ liệu,
+                chạy từng phần phân tích và chốt câu hỏi cần làm rõ trước buổi rà soát.
+              </p>
+            </div>
+            <div class="statusStack">
+              <span class="pill">Hồ sơ đã xử lý</span>
+              <span class="pill amber">Cần người duyệt</span>
+            </div>
+          </section>
+
+          <section class="heroGrid">
+            <div class="overviewBand">
+              <div class="dealHeader">
+                <div class="dealIdentity">
+                  <div class="avatar">GH</div>
+                  <div>
+                    <p class="eyebrow">THẺ HỒ SƠ</p>
+                    <h2>Góc Hồ Coffee</h2>
+                    <div class="dealMeta">
+                      <span class="pill blue">Ẩm thực bán lẻ</span>
+                      <span class="pill">Đang vận hành</span>
+                      <span class="pill">Hoàn Kiếm, Hà Nội</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="dealScore">
+                  <div class="scoreRing" aria-label="Điểm tổng 78 trên 100"><strong>78</strong></div>
+                  <div class="scoreCopy">
+                    <strong>Có thể xem xét đầu tư</strong>
+                    <p>Số dư tiền mặt đã đối soát, tín hiệu nhu cầu tốt, nhưng cần kiểm chứng tuyên bố vị trí và chi phí thuê.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="metricGrid" aria-label="Chỉ số hồ sơ">
+                <div class="metricTile">
+                  <span>Độ phủ dữ liệu</span>
+                  <strong>91%</strong>
+                  <small>24 nguồn đã lập chỉ mục</small>
+                </div>
+                <div class="metricTile">
+                  <span>Dòng tiền thuần</span>
+                  <strong>59,3 tr</strong>
+                  <small>VND, 3 tháng gần nhất</small>
+                </div>
+                <div class="metricTile">
+                  <span>Doanh thu</span>
+                  <strong>671 tr</strong>
+                  <small>Doanh thu thuần từ 910 dòng</small>
+                </div>
+                <div class="metricTile">
+                  <span>Độ tin cậy khu vực</span>
+                  <strong>Vừa</strong>
+                  <small>Đã quét bán kính 500 m</small>
+                </div>
+              </div>
+
+              <div class="moduleCards" aria-label="Tình trạng phân tích">
+                <article class="moduleCard">
+                  <div class="moduleCardTop">
+                    <div>
+                      <div class="moduleCode">KD</div>
+                    </div>
+                    <span class="pill">82/100</span>
+                  </div>
+                  <div>
+                    <h3>Mô hình kinh doanh</h3>
+                    <p class="lead">Mô hình quán cà phê khu dân cư rõ ràng, có tệp khách quay lại và giá bán hợp lý.</p>
+                  </div>
+                  <div class="meter"><span></span></div>
+                </article>
+                <article class="moduleCard">
+                  <div class="moduleCardTop">
+                    <div>
+                      <div class="moduleCode">TC</div>
+                    </div>
+                    <span class="pill blue">76/100</span>
+                  </div>
+                  <div>
+                    <h3>Dòng tiền</h3>
+                    <p class="lead">Số dư cuối kỳ khớp sổ, nhưng tháng 5 và tháng 6 có dòng tiền vận hành âm.</p>
+                  </div>
+                  <div class="meter"><span></span></div>
+                </article>
+                <article class="moduleCard">
+                  <div class="moduleCardTop">
+                    <div>
+                      <div class="moduleCode">KV</div>
+                    </div>
+                    <span class="pill amber">68/100</span>
+                  </div>
+                  <div>
+                    <h3>Khu vực xung quanh</h3>
+                    <p class="lead">Tín hiệu lưu lượng khách khá tốt, nhưng tuyên bố ít đối thủ chưa đủ chắc.</p>
+                  </div>
+                  <div class="meter"><span></span></div>
+                </article>
+              </div>
+            </div>
+
+            <aside class="rightRail" id="copilot">
+              <div class="railHeader">
+                <div>
+                  <p class="eyebrow">TRỢ LÝ TÀI LIỆU</p>
+                  <h2>Trả lời có dẫn chứng</h2>
+                </div>
+                <span class="pill">Có trích dẫn</span>
+              </div>
+
+              <div class="chatBubble">
+                <p>
+                  Doanh thu thuần ba tháng là 671.303.450 VND. Sổ thu chi ghi tổng tiền vào 821.303.450 VND,
+                  bao gồm 150.000.000 VND vốn góp chủ sở hữu.
+                </p>
+                <div class="citationList">
+                  <button data-source="sales" type="button">Tóm tắt bán hàng</button>
+                  <button data-source="ledger" type="button">Sổ thu chi</button>
+                </div>
+              </div>
+
+              <div class="chipRow">
+                <button class="chipButton" data-fill="Dòng tiền có điểm yếu nào?" type="button">Rủi ro dòng tiền</button>
+                <button class="chipButton" data-fill="Tuyên bố vị trí nào cần kiểm chứng?" type="button">Tuyên bố vị trí</button>
+                <button class="chipButton" data-fill="Hồ sơ còn thiếu bằng chứng gì?" type="button">Thiếu bằng chứng</button>
+              </div>
+
+              <div class="queryBox">
+                <textarea id="copilotQuestion">Dòng tiền có đủ khỏe để mở rộng thêm ca tối không?</textarea>
+                <button class="primaryButton" id="askButton" type="button">Hỏi bằng chứng</button>
+              </div>
+
+              <div class="riskList" id="review">
+                <div class="reviewHeader">
+                  <div>
+                    <p class="eyebrow">VIỆC CẦN RÀ SOÁT</p>
+                    <h2>Mục đang mở</h2>
+                  </div>
+                  <span class="pill rose">4</span>
+                </div>
+                <article class="riskLine rose">
+                  <span class="riskRail"></span>
+                  <div>
+                    <strong>Tuyên bố giá thuê thiếu nguồn</strong>
+                    <span>Dữ liệu hiện có chưa chứng minh mặt bằng rẻ hơn các tuyến phố lân cận.</span>
+                  </div>
+                  <button class="tinyIcon" data-source="rent" title="Mở nguồn" aria-label="Mở nguồn giá thuê">
+                    <svg><use href="#i-file"></use></svg>
+                  </button>
+                </article>
+                <article class="riskLine">
+                  <span class="riskRail"></span>
+                  <div>
+                    <strong>Hai tháng dòng tiền vận hành âm</strong>
+                    <span>Tháng 5 và tháng 6 có tiền ra lớn hơn tiền vào trước phần vốn góp bổ sung.</span>
+                  </div>
+                  <button class="tinyIcon" data-source="cash" title="Mở nguồn" aria-label="Mở nguồn dòng tiền">
+                    <svg><use href="#i-file"></use></svg>
+                  </button>
+                </article>
+                <article class="riskLine blue">
+                  <span class="riskRail"></span>
+                  <div>
+                    <strong>Mật độ đối thủ cần khảo sát thực địa</strong>
+                    <span>Bản đồ ghi nhận quán cà phê gần vị trí, nhưng cần xác minh giờ mở cửa và phân khúc giá.</span>
+                  </div>
+                  <button class="tinyIcon" data-source="area" title="Mở nguồn" aria-label="Mở nguồn khu vực">
+                    <svg><use href="#i-map"></use></svg>
+                  </button>
+                </article>
+              </div>
+            </aside>
+          </section>
+
+          <section class="modulePanel" id="modulePanel">
+            <div class="panelHeader">
+              <div>
+                <p class="eyebrow">BÀN PHÂN TÍCH</p>
+                <h2>Kết quả phân tích</h2>
+              </div>
+              <div class="moduleTabs" role="tablist" aria-label="Các phần phân tích">
+                <button class="tabButton active" data-view="businessView" type="button">Kinh doanh</button>
+                <button class="tabButton" data-view="cashView" type="button">Dòng tiền</button>
+                <button class="tabButton" data-view="areaView" type="button">Khu vực</button>
+                <button class="tabButton" data-view="evidenceView" type="button">Bằng chứng</button>
+              </div>
+            </div>
+
+            <div class="moduleView active" id="businessView">
+              <div class="insightGrid">
+                <article class="insightCard">
+                  <span>Khách hàng mục tiêu</span>
+                  <strong>Văn phòng + du khách</strong>
+                  <p>Nhu cầu buổi sáng và cuối tuần tạo hai khung doanh thu chính.</p>
+                </article>
+                <article class="insightCard">
+                  <span>Giá trị khác biệt</span>
+                  <strong>Quán cà phê địa phương</strong>
+                  <p>Vị trí thuận tiện và mức giá dễ tiếp cận quan trọng hơn sự mới lạ của menu.</p>
+                </article>
+                <article class="insightCard">
+                  <span>Hiệu quả đơn vị</span>
+                  <strong>Cần tách giá vốn</strong>
+                  <p>Đã có doanh thu, nhưng chưa đủ phân bổ chi phí nguyên liệu theo từng nhóm món.</p>
+                </article>
+                <article class="insightCard">
+                  <span>Sẵn sàng mở rộng</span>
+                  <strong>Còn hạn chế</strong>
+                  <p>Quy mô nhân sự và số chỗ ngồi cho thấy nên tối ưu vận hành trước khi mở điểm mới.</p>
+                </article>
+              </div>
+
+              <div class="twoColumn">
+                <div class="analysisBlock">
+                  <h3>Khung mô hình kinh doanh</h3>
+                  <div class="canvasList">
+                    <div class="canvasItem">
+                      <strong>Vấn đề</strong>
+                      <span>Khách quanh khu vực cần điểm cà phê gần, ổn định cho thói quen trong ngày làm việc.</span>
+                    </div>
+                    <div class="canvasItem">
+                      <strong>Giải pháp</strong>
+                      <span>Quán 42 chỗ, phục vụ nhanh tại quầy và menu cà phê dễ chọn.</span>
+                    </div>
+                    <div class="canvasItem">
+                      <strong>Doanh thu</strong>
+                      <span>Bán đồ uống trực tiếp, món ăn nhẹ kèm theo và thanh toán QR.</span>
+                    </div>
+                    <div class="canvasItem">
+                      <strong>Lợi thế</strong>
+                      <span>Vị trí và thói quen khách hàng chỉ bền nếu điều kiện thuê ổn định.</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="analysisBlock">
+                  <h3>Câu hỏi cần làm rõ</h3>
+                  <div class="sourceList">
+                    <button class="sourceButton" data-source="unit" type="button">Biên lợi nhuận gộp theo nhóm món là bao nhiêu?</button>
+                    <button class="sourceButton" data-source="rent" type="button">Hợp đồng thuê cố định trong bao lâu?</button>
+                    <button class="sourceButton" data-source="team" type="button">Vai trò nào đang giới hạn công suất ca tối?</button>
+                    <button class="sourceButton" data-source="competition" type="button">Quán nào gần đó là đối thủ thay thế trực tiếp?</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="moduleView" id="cashView">
+              <div class="scenarioTabs" role="tablist" aria-label="Kịch bản dòng tiền">
+                <button class="scenarioButton active" data-scenario="base" type="button">Cơ sở</button>
+                <button class="scenarioButton" data-scenario="downside" type="button">Suy giảm</button>
+                <button class="scenarioButton" data-scenario="severe" type="button">Căng thẳng</button>
+              </div>
+              <div class="cashBoard">
+                <div class="chartBox">
+                  <div class="chartLegend">
+                    <div>
+                      <span>Dự phóng tiền mặt</span>
+                      <strong id="scenarioTitle">Kịch bản cơ sở</strong>
+                    </div>
+                    <span id="scenarioNote">Doanh thu giữ ổn định, chi phí trở về mức vận hành bình thường.</span>
+                  </div>
+                  <svg class="chart" viewBox="0 0 720 260" role="img" aria-label="Biểu đồ dự phóng tiền mặt">
+                    <defs>
+                      <linearGradient id="cashArea" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stop-color="#2563eb" stop-opacity="0.22"></stop>
+                        <stop offset="100%" stop-color="#2563eb" stop-opacity="0"></stop>
+                      </linearGradient>
+                    </defs>
+                    <g stroke="#d9e1e5" stroke-width="1">
+                      <line x1="54" x2="688" y1="38" y2="38"></line>
+                      <line x1="54" x2="688" y1="108" y2="108"></line>
+                      <line x1="54" x2="688" y1="178" y2="178"></line>
+                      <line x1="54" x2="688" y1="228" y2="228"></line>
+                    </g>
+                    <path id="cashAreaPath" d="M54 142 L180 120 L306 132 L432 126 L558 115 L688 102 L688 228 L54 228 Z" fill="url(#cashArea)"></path>
+                    <path id="cashLinePath" d="M54 142 L180 120 L306 132 L432 126 L558 115 L688 102" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round"></path>
+                    <g id="cashDots" fill="#2563eb" stroke="white" stroke-width="3">
+                      <circle cx="54" cy="142" r="6"></circle>
+                      <circle cx="180" cy="120" r="6"></circle>
+                      <circle cx="306" cy="132" r="6"></circle>
+                      <circle cx="432" cy="126" r="6"></circle>
+                      <circle cx="558" cy="115" r="6"></circle>
+                      <circle cx="688" cy="102" r="6"></circle>
+                    </g>
+                    <g fill="#667085" font-size="12" font-weight="700">
+                      <text x="54" y="250">T4</text>
+                      <text x="180" y="250">T5</text>
+                      <text x="306" y="250">T6</text>
+                      <text x="432" y="250">T7</text>
+                      <text x="558" y="250">T8</text>
+                      <text x="666" y="250">T9</text>
+                    </g>
+                  </svg>
+                </div>
+                <aside class="cashAside">
+                  <div class="cashKpi">
+                    <span>Tiền cuối kỳ</span>
+                    <strong>439,4 tr VND</strong>
+                  </div>
+                  <div class="cashKpi">
+                    <span>Thời gian duy trì</span>
+                    <strong id="runwayValue">18,6 tháng</strong>
+                  </div>
+                  <div class="cashKpi">
+                    <span>Đối soát</span>
+                    <strong>Khớp</strong>
+                  </div>
+                  <div class="cashKpi">
+                    <span>Tín hiệu gọi vốn</span>
+                    <strong id="fundingSignal">Chưa khẩn cấp</strong>
+                  </div>
+                </aside>
+              </div>
+            </div>
+
+            <div class="moduleView" id="areaView">
+              <div class="mapStage">
+                <div class="mapCanvas">
+                  <span class="street one"></span>
+                  <span class="street two"></span>
+                  <span class="street three"></span>
+                  <span class="scanRing"></span>
+                  <span class="marker site">GH</span>
+                  <span class="marker c1">ĐT</span>
+                  <span class="marker c2">ĐT</span>
+                  <span class="marker c3">ĐT</span>
+                  <span class="marker e1">ĂU</span>
+                  <span class="marker e2">ĂU</span>
+                  <span class="marker r1">DC</span>
+                  <div class="mapBadge">
+                    <strong>Bán kính kiểm chứng 500 m</strong>
+                    <span>21.0285, 105.8524 - Hoàn Kiếm</span>
+                  </div>
+                </div>
+                <div class="mapSide">
+                  <article class="verdictCard">
+                    <span class="pill amber">Bác bỏ</span>
+                    <p><strong>Tuyên bố:</strong> "Không có đối thủ trực tiếp trong 500 m" mâu thuẫn với mật độ quán cà phê gần vị trí.</p>
+                  </article>
+                  <article class="verdictCard confirmed">
+                    <span class="pill">Xác nhận</span>
+                    <p>Khu dân cư và dịch vụ ăn uống xung quanh ủng hộ giả định có lưu lượng khách ổn định.</p>
+                  </article>
+                  <article class="verdictCard insufficient">
+                    <span class="pill blue">Chưa đủ dữ liệu</span>
+                    <p>So sánh giá thuê thị trường chưa được chứng minh bằng tài liệu hiện có.</p>
+                  </article>
+                  <div class="metricGrid">
+                    <div class="metricTile">
+                      <span>Đối thủ</span>
+                      <strong>11</strong>
+                      <small>trong bán kính 500 m</small>
+                    </div>
+                    <div class="metricTile">
+                      <span>Gần nhất</span>
+                      <strong>71 m</strong>
+                      <small>quán cà phê được ghi nhận</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="moduleView" id="evidenceView">
+              <div class="docHeader">
+                <div>
+                  <p class="eyebrow">KHO BẰNG CHỨNG</p>
+                  <h2>Xem trước tài liệu</h2>
+                </div>
+                <div class="docActions">
+                  <button class="toolButton" data-source="sales" type="button">
+                    <svg><use href="#i-file"></use></svg>
+                    Bán hàng
+                  </button>
+                  <button class="toolButton" data-source="ledger" type="button">
+                    <svg><use href="#i-file"></use></svg>
+                    Thu chi
+                  </button>
+                </div>
+              </div>
+              <div class="docGrid" style="margin-top: 14px">
+                <article class="docCard">
+                  <div class="docPreview">
+                    <img alt="Xem trước bảng bán hàng" src="bins/tmp/coffee_sample/previews/03_du_lieu_ban_hang_3_thang_T%C3%B3m_t%E1%BA%AFt.png" />
+                  </div>
+                  <div class="docBody">
+                    <strong>Dữ liệu bán hàng</strong>
+                    <span>910 dòng giao dịch, doanh thu thuần theo tháng và ảnh chụp menu.</span>
+                    <div class="citationList"><button data-source="sales" type="button">Mở bằng chứng</button></div>
+                  </div>
+                </article>
+                <article class="docCard">
+                  <div class="docPreview">
+                    <img alt="Xem trước sổ thu chi" src="bins/tmp/coffee_sample/previews/05_so_thu_chi_3_thang_T%C3%B3m_t%E1%BA%AFt.png" />
+                  </div>
+                  <div class="docBody">
+                    <strong>Sổ thu chi</strong>
+                    <span>Số dư đầu kỳ, tiền vào, tiền ra, số dư cuối kỳ và trạng thái đối soát.</span>
+                    <div class="citationList"><button data-source="ledger" type="button">Mở bằng chứng</button></div>
+                  </div>
+                </article>
+                <article class="docCard">
+                  <div class="docPreview tall">
+                    <img alt="Xem trước hóa đơn mẫu" src="bins/tmp/coffee_sample/pdf_previews/03_hoa_don_ban_hang_mau_HDBH-MAU-001-checked.png" />
+                  </div>
+                  <div class="docBody">
+                    <strong>Hóa đơn mẫu</strong>
+                    <span>Bằng chứng giao dịch có đơn vị bán, ngày bán, phương thức thanh toán và chi tiết món.</span>
+                    <div class="citationList"><button data-source="invoice" type="button">Mở bằng chứng</button></div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="evidenceGrid" style="margin-top: 14px">
+                <article class="sourceRow">
+                  <span class="sourceIcon">XLS</span>
+                  <div>
+                    <strong>03_du_lieu_ban_hang_3_thang.xlsx</strong>
+                    <span>Dữ kiện trích xuất: doanh thu, số đơn, giá trị trung bình.</span>
+                  </div>
+                  <button class="sourceButton" data-source="sales" type="button">Xem</button>
+                </article>
+                <article class="sourceRow">
+                  <span class="sourceIcon">XLS</span>
+                  <div>
+                    <strong>05_so_thu_chi_3_thang.xlsx</strong>
+                    <span>Dữ kiện trích xuất: tiền đầu kỳ, tiền vào, tiền ra, tiền cuối kỳ.</span>
+                  </div>
+                  <button class="sourceButton" data-source="ledger" type="button">Xem</button>
+                </article>
+                <article class="sourceRow">
+                  <span class="sourceIcon">PDF</span>
+                  <div>
+                    <strong>hop_dong_thue_mat_bang_mo_phong.pdf</strong>
+                    <span>Chờ xác minh: thời hạn thuê và điều khoản tăng giá.</span>
+                  </div>
+                  <button class="sourceButton" data-source="rent" type="button">Xem</button>
+                </article>
+              </div>
+            </div>
+          </section>
+
+          <aside class="sourceDrawer" id="sourceDrawer" aria-live="polite">
+            <div class="drawerHeader">
+              <div>
+                <p class="eyebrow">XEM NGUỒN</p>
+                <h2 id="drawerTitle">Bằng chứng</h2>
+              </div>
+              <button class="tinyIcon" id="closeDrawer" title="Đóng" aria-label="Đóng phần xem nguồn" type="button">
+                <svg><use href="#i-close"></use></svg>
+              </button>
+            </div>
+            <div class="drawerQuote" id="drawerQuote"></div>
+            <div class="metricGrid">
+              <div class="metricTile">
+                <span>Độ tin cậy</span>
+                <strong id="drawerReliability">Cao</strong>
+                <small>Lấy từ tệp nguồn</small>
+              </div>
+              <div class="metricTile">
+                <span>Được dùng bởi</span>
+          <strong id="drawerUsedBy">2 phần phân tích</strong>
+                <small>Kinh doanh và dòng tiền</small>
+              </div>
+            </div>
+            <div class="drawerActions">
+              <button class="secondaryButton" type="button">Đánh dấu đã xem</button>
+              <button class="primaryButton" type="button">Thêm vào tóm tắt</button>
+            </div>
+          </aside>
+
+          <section class="timelineBand">
+            <div class="panelHeader" style="margin-bottom: 12px">
+              <div>
+                <p class="eyebrow">QUY TRÌNH THẨM ĐỊNH</p>
+                <h2>Luồng rà soát</h2>
+              </div>
+              <button class="toolButton" id="runFlow" type="button">
+                <svg><use href="#i-play"></use></svg>
+                Chạy quy trình
+              </button>
+            </div>
+            <div class="timelineSteps">
+              <article class="timelineStep">
+                <span>01</span>
+                <strong>Tiếp nhận</strong>
+                <p>Hồ sơ, ngành, vị trí và tài liệu được chuẩn hóa thành dữ kiện chung.</p>
+              </article>
+              <article class="timelineStep">
+                <span>02</span>
+                <strong>Bằng chứng</strong>
+                <p>Bảng tính và PDF được lập chỉ mục để truy xuất kèm nguồn.</p>
+              </article>
+              <article class="timelineStep">
+                <span>03</span>
+                <strong>Phân tích</strong>
+                <p>Các phần kinh doanh, dòng tiền và khu vực tạo báo cáo độc lập.</p>
+              </article>
+              <article class="timelineStep">
+                <span>04</span>
+                <strong>Rà soát</strong>
+                <p>Chuyên viên duyệt, đặt câu hỏi hoặc đánh dấu kết luận thiếu nguồn.</p>
+              </article>
+              <article class="timelineStep">
+                <span>05</span>
+                <strong>Kết luận</strong>
+                <p>Hệ thống xuất tóm tắt ngắn gọn kèm trích dẫn và câu hỏi còn mở.</p>
+              </article>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const sources = {
+        sales: {
+          title: "Bảng bán hàng - tháng 4 đến tháng 6/2026",
+          quote:
+            "Tổng doanh thu thuần là 671.303.450 VND từ 14.854 sản phẩm đã bán. Bảng tóm tắt có chỉ số doanh thu trung bình theo ngày.",
+          reliability: "Cao",
+          usedBy: "Kinh doanh, dòng tiền"
+        },
+        ledger: {
+          title: "Đối soát sổ thu chi",
+          quote:
+            "Tiền đầu kỳ: 380.000.000 VND. Tổng tiền vào: 821.303.450 VND. Tổng tiền ra: 761.931.040 VND. Tiền cuối kỳ: 439.372.410 VND. Trạng thái: khớp.",
+          reliability: "Cao",
+          usedBy: "Dòng tiền"
+        },
+        invoice: {
+          title: "Hóa đơn bán hàng HDBH-MAU-001",
+          quote:
+            "Hóa đơn xác nhận giao dịch ở cấp từng món, gồm phương thức thanh toán QR, ngày bán và danh sách sản phẩm.",
+          reliability: "Vừa",
+          usedBy: "Kho bằng chứng"
+        },
+        rent: {
+          title: "Khoảng trống bằng chứng về giá thuê",
+          quote:
+            "Tài liệu hiện có ghi nhận một số thông tin thuê mặt bằng nhưng chưa chứng minh khu vực này rẻ hơn các vị trí tương đương gần đó.",
+          reliability: "Vừa",
+          usedBy: "Kinh doanh, khu vực"
+        },
+        cash: {
+          title: "Cảnh báo dòng tiền vận hành",
+          quote:
+            "Tháng 5 và tháng 6 có dòng tiền thuần âm trước khi xét đến số dư đầu kỳ và phần vốn góp bổ sung của chủ sở hữu.",
+          reliability: "Cao",
+          usedBy: "Dòng tiền"
+        },
+        area: {
+          title: "Kết quả kiểm chứng khu vực",
+          quote:
+            "Quét bán kính 500 m ghi nhận các quán cà phê gần vị trí, nên tuyên bố không có đối thủ trực tiếp cần được xem là chưa đúng cho đến khi khảo sát thực địa chứng minh khác đi.",
+          reliability: "Vừa",
+          usedBy: "Khu vực xung quanh"
+        },
+        unit: {
+          title: "Thiếu đầu vào về hiệu quả đơn vị",
+          quote:
+            "Đã có doanh thu theo nhóm sản phẩm, nhưng bộ bảng tính chưa có giá vốn và phân bổ chi phí nhân sự theo từng nhóm món.",
+          reliability: "Vừa",
+          usedBy: "Mô hình kinh doanh"
+        },
+        team: {
+          title: "Năng lực nhân sự",
+          quote:
+            "Bảng vận hành ghi nhận 8 nhân sự và lịch ca, đủ để đánh giá hoạt động hiện tại nhưng chưa đủ để kết luận năng lực mở rộng.",
+          reliability: "Vừa",
+          usedBy: "Mô hình kinh doanh"
+        },
+        competition: {
+          title: "Khảo sát đối thủ",
+          quote:
+            "Để xác định đối thủ thay thế trực tiếp, cần bổ sung giờ mở cửa, mức trùng menu, số lượng đánh giá và phân khúc giá.",
+          reliability: "Vừa",
+          usedBy: "Kinh doanh, khu vực"
+        }
+      };
+
+      const scenarios = {
+        base: {
+          title: "Kịch bản cơ sở",
+          note: "Doanh thu giữ ổn định, chi phí trở về mức vận hành bình thường.",
+          line: "M54 142 L180 120 L306 132 L432 126 L558 115 L688 102",
+          area: "M54 142 L180 120 L306 132 L432 126 L558 115 L688 102 L688 228 L54 228 Z",
+          dots: [
+            [54, 142],
+            [180, 120],
+            [306, 132],
+            [432, 126],
+            [558, 115],
+            [688, 102]
+          ],
+          runway: "18,6 tháng",
+          funding: "Chưa khẩn cấp"
+        },
+        downside: {
+          title: "Kịch bản suy giảm",
+          note: "Doanh thu giảm 12%, tiền ra tăng 6% do nhân sự và hao hụt.",
+          line: "M54 142 L180 128 L306 145 L432 162 L558 181 L688 198",
+          area: "M54 142 L180 128 L306 145 L432 162 L558 181 L688 198 L688 228 L54 228 Z",
+          dots: [
+            [54, 142],
+            [180, 128],
+            [306, 145],
+            [432, 162],
+            [558, 181],
+            [688, 198]
+          ],
+          runway: "9,4 tháng",
+          funding: "Cần theo dõi"
+        },
+        severe: {
+          title: "Kịch bản căng thẳng",
+          note: "Doanh thu giảm 24%, tiền ra tăng 11%, không tính thêm vốn góp.",
+          line: "M54 142 L180 150 L306 176 L432 205 L558 226 L688 238",
+          area: "M54 142 L180 150 L306 176 L432 205 L558 226 L688 238 L688 228 L54 228 Z",
+          dots: [
+            [54, 142],
+            [180, 150],
+            [306, 176],
+            [432, 205],
+            [558, 226],
+            [688, 238]
+          ],
+          runway: "5,8 tháng",
+          funding: "Cần bổ sung đệm vốn"
+        }
+      };
+
+      const drawer = document.getElementById("sourceDrawer");
+      const drawerTitle = document.getElementById("drawerTitle");
+      const drawerQuote = document.getElementById("drawerQuote");
+      const drawerReliability = document.getElementById("drawerReliability");
+      const drawerUsedBy = document.getElementById("drawerUsedBy");
+
+      function openSource(key) {
+        const source = sources[key] || sources.sales;
+        drawerTitle.textContent = source.title;
+        drawerQuote.textContent = source.quote;
+        drawerReliability.textContent = source.reliability;
+        drawerUsedBy.textContent = source.usedBy;
+        drawer.classList.add("open");
+        drawer.scrollIntoView({ block: "nearest" });
+      }
+
+      document.querySelectorAll("[data-source]").forEach((button) => {
+        button.addEventListener("click", () => openSource(button.dataset.source));
+      });
+
+      document.getElementById("closeDrawer").addEventListener("click", () => {
+        drawer.classList.remove("open");
+      });
+
+      function activateView(viewId) {
+        const selectedView = document.getElementById(viewId);
+        const selectedButton = document.querySelector(`.tabButton[data-view="${viewId}"]`);
+        if (!selectedView || !selectedButton) return;
+
+          document.querySelectorAll(".tabButton").forEach((item) => item.classList.remove("active"));
+          document.querySelectorAll(".moduleView").forEach((item) => item.classList.remove("active"));
+        selectedButton.classList.add("active");
+        selectedView.classList.add("active");
+      }
+
+      document.querySelectorAll(".tabButton").forEach((button) => {
+        button.addEventListener("click", () => {
+          activateView(button.dataset.view);
+        });
+      });
+
+      document.querySelectorAll(".navItem").forEach((link) => {
+        link.addEventListener("click", () => {
+          document.querySelectorAll(".navItem").forEach((item) => item.classList.remove("active"));
+          link.classList.add("active");
+        });
+      });
+
+      document.querySelectorAll("[data-nav-view]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          activateView(link.dataset.navView);
+          document.getElementById("modulePanel").scrollIntoView({ block: "start" });
+        });
+      });
+
+      const linePath = document.getElementById("cashLinePath");
+      const areaPath = document.getElementById("cashAreaPath");
+      const dots = document.getElementById("cashDots");
+      const scenarioTitle = document.getElementById("scenarioTitle");
+      const scenarioNote = document.getElementById("scenarioNote");
+      const runwayValue = document.getElementById("runwayValue");
+      const fundingSignal = document.getElementById("fundingSignal");
+
+      function setScenario(name) {
+        const scenario = scenarios[name];
+        scenarioTitle.textContent = scenario.title;
+        scenarioNote.textContent = scenario.note;
+        runwayValue.textContent = scenario.runway;
+        fundingSignal.textContent = scenario.funding;
+        linePath.setAttribute("d", scenario.line);
+        areaPath.setAttribute("d", scenario.area);
+        dots.innerHTML = scenario.dots
+          .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="6"></circle>`)
+          .join("");
+      }
+
+      document.querySelectorAll(".scenarioButton").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".scenarioButton").forEach((item) => item.classList.remove("active"));
+          button.classList.add("active");
+          setScenario(button.dataset.scenario);
+        });
+      });
+
+      document.querySelectorAll("[data-fill]").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.getElementById("copilotQuestion").value = button.dataset.fill;
+        });
+      });
+
+      document.getElementById("askButton").addEventListener("click", () => {
+        openSource("cash");
+      });
+
+      document.getElementById("runFlow").addEventListener("click", () => {
+        document.querySelectorAll(".timelineStep").forEach((step) => {
+          step.classList.add("is-active");
+        });
+      });
+    </script>
+  </body>
+</html>

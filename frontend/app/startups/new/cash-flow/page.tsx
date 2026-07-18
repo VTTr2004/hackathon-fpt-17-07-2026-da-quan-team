@@ -1,6 +1,7 @@
 "use client";
 
 import { ModuleFormPage } from "../_components/ModuleFormPage";
+import { CashFlowDraftFiles } from "./CashFlowDraftFiles";
 import { cashFlowGroups, cashFlowSections } from "./fields";
 
 export default function CashFlowProfilePage() {
@@ -13,6 +14,7 @@ export default function CashFlowProfilePage() {
       groupsBySection={cashFlowGroups}
       previousHref="/startups/new/business-model"
       nextHref="/startups/new/surrounding-area"
+      beforeSections={<CashFlowDraftFiles />}
     />
   );
 }
