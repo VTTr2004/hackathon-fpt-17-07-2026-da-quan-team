@@ -5924,3 +5924,87 @@ html {
     grid-template-columns: 1fr;
   }
 }
+
+/* Auth dark mode needs a clearer, standalone treatment than generic controls. */
+:root[data-theme="dark"] .authShell {
+  background: #100c0f;
+}
+
+:root[data-theme="dark"] .authFormPane {
+  background:
+    radial-gradient(520px 360px at 50% 0%, rgba(255, 180, 173, 0.06), transparent 62%),
+    #100c0f;
+}
+
+:root[data-theme="dark"] .authFormHead h1,
+:root[data-theme="dark"] .authField > label,
+:root[data-theme="dark"] .authRemember,
+:root[data-theme="dark"] .authSwitch span {
+  color: #fffaf7;
+}
+
+:root[data-theme="dark"] .authFormHead p {
+  color: #eadbd7;
+}
+
+:root[data-theme="dark"] .authMode {
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid #704b54;
+  border-radius: 12px;
+  background: #181216;
+}
+
+:root[data-theme="dark"] .authMode.segmentedControl button {
+  border-color: transparent;
+  background: transparent;
+  color: #eadbd7;
+}
+
+:root[data-theme="dark"] .authMode.segmentedControl button:hover {
+  border-color: #704b54;
+  background: #2a1f23;
+  color: #ffd6d2;
+}
+
+:root[data-theme="dark"] .authMode.segmentedControl button.active {
+  border-color: #ffb4ad;
+  background: #ffb4ad;
+  color: #341012;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
+}
+
+:root[data-theme="dark"] .authInputWrap input,
+:root[data-theme="dark"] .authInputWrap select {
+  border-color: #704b54;
+  background: #21181d;
+  color: #fffaf7;
+}
+
+:root[data-theme="dark"] .authInputWrap input::placeholder {
+  color: #bea6a0;
+}
+
+:root[data-theme="dark"] .authInputWrap .lead,
+:root[data-theme="dark"] .authReveal {
+  color: #d7c1bb;
+}
+
+:root[data-theme="dark"] .authReveal:hover {
+  background: rgba(255, 180, 173, 0.12);
+  color: #ffd6d2;
+}
+
+:root[data-theme="dark"] .authSubmit.primaryButton {
+  background: #ffb4ad;
+  color: #341012;
+}
+
+:root[data-theme="dark"] .authSubmit.primaryButton:hover {
+  background: #ffd6d2;
+}
+
+:root[data-theme="dark"] .authSwitchBtn {
+  border-color: #ffb4ad;
+  color: #ffd6d2;
+}
