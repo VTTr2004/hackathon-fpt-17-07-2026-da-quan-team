@@ -17,8 +17,10 @@ type ProfileDraft = {
 type ProfileDraftContextValue = {
   draft: ProfileDraft;
   ready: boolean;
+  cashFlowFiles: File[];
   updateIdentity: (patch: Partial<ProfileIdentityDraft>) => void;
   saveModuleFacts: (ownedKeys: string[], values: Record<string, unknown>) => void;
+  setCashFlowFiles: (files: File[]) => void;
   clearDraft: () => void;
 };
 
@@ -32,6 +34,7 @@ const ProfileDraftContext = createContext<ProfileDraftContextValue | null>(null)
 
 export function ProfileDraftProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState<ProfileDraft>(emptyDraft);
+  const [cashFlowFiles, setCashFlowFiles] = useState<File[]>([]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -60,6 +63,7 @@ export function ProfileDraftProvider({ children }: { children: ReactNode }) {
     () => ({
       draft,
       ready,
+      cashFlowFiles,
       updateIdentity: (patch) => {
         setDraft((current) => ({
           ...current,
@@ -73,12 +77,14 @@ export function ProfileDraftProvider({ children }: { children: ReactNode }) {
           return { ...current, facts: { ...nextFacts, ...values } };
         });
       },
+      setCashFlowFiles,
       clearDraft: () => {
         window.sessionStorage.removeItem(STORAGE_KEY);
         setDraft(emptyDraft);
+        setCashFlowFiles([]);
       },
     }),
-    [draft, ready],
+    [cashFlowFiles, draft, ready],
   );
 
   return <ProfileDraftContext.Provider value={value}>{children}</ProfileDraftContext.Provider>;

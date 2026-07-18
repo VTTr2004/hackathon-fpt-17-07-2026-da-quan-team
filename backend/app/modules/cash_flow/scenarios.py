@@ -4,13 +4,14 @@ from .schemas import CashFlowPeriodSummary
 
 DEFAULTS = {
     "base": (Decimal(0), Decimal(0)),
+    "best": (Decimal(".10"), Decimal("-.05")),
     "downside": (Decimal("-.15"), Decimal(".05")),
     "severe": (Decimal("-.30"), Decimal(".15")),
 }
 
 
 def run_scenarios(periods: list[CashFlowPeriodSummary], available_cash: Decimal, options: dict, facts: dict) -> dict:
-    months = max(1, min(int(options.get("scenario_months", 12)), 120))
+    months = max(1, min(int(options.get("scenario_months", facts.get("scenario_months", 12))), 120))
     latest = periods[-1]
     buffer = Decimal(
         str(facts.get("minimum_cash_buffer", options.get("minimum_cash_buffer", latest.operating_outflow)))
@@ -18,8 +19,12 @@ def run_scenarios(periods: list[CashFlowPeriodSummary], available_cash: Decimal,
     output = {}
     for name, default in DEFAULTS.items():
         override = (options.get("scenario_assumptions") or {}).get(name, {})
-        income_change = Decimal(str(override.get("operating_inflow_change", default[0])))
-        cost_change = Decimal(str(override.get("operating_outflow_change", default[1])))
+        income_change = Decimal(
+            str(override.get("operating_inflow_change", facts.get(f"{name}_inflow_change", default[0])))
+        )
+        cost_change = Decimal(
+            str(override.get("operating_outflow_change", facts.get(f"{name}_outflow_change", default[1])))
+        )
         cash, projection, minimum, first_negative, funding_by = available_cash, [], available_cash, None, None
         for index in range(months):
             inflow = latest.operating_inflow * (1 + income_change)

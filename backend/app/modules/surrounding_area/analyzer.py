@@ -25,8 +25,8 @@ from app.modules.surrounding_area.data_store.poi_store import (
     get_poi_store,
 )
 from app.modules.surrounding_area.map_data import build_map_payload
-from app.modules.surrounding_area.providers.places import enrich_place
 from app.modules.surrounding_area.providers.places import is_configured as places_is_configured
+from app.modules.surrounding_area.providers.places import lookup_place
 from app.modules.surrounding_area.providers.satellite import SATELLITE_CONTEXT_VERSION, fetch_satellite_context
 from app.modules.surrounding_area.tools.coverage import assess_coverage
 from app.modules.surrounding_area.tools.geo import score_location
@@ -180,7 +180,7 @@ class SurroundingAreaAnalyzer:
             industry=industry,
             radius_m=target_radius_m,
         )
-        places_enrichment = await asyncio.to_thread(self._places_enrichment, competitors_list[:20], lat, lon)
+        places_enrichment = await asyncio.to_thread(self._places_enrichment, competitors_list[:20])
         satellite_context = None
         if options.get("include_satellite") is True:
             satellite_context = await asyncio.to_thread(
@@ -374,7 +374,7 @@ class SurroundingAreaAnalyzer:
         return claims
 
     @staticmethod
-    def _places_enrichment(competitors, lat: float, lon: float) -> dict[str, Any]:
+    def _places_enrichment(competitors) -> dict[str, Any]:
         """Top-nearest competitor enrichment.
 
         With GOOGLE_PLACES_API_KEY this adds official rating/price fields. Without
@@ -383,28 +383,38 @@ class SurroundingAreaAnalyzer:
         """
         configured = places_is_configured()
         rows: list[dict[str, Any]] = []
+        warnings = []
         for poi in competitors:
-            google_data = enrich_place(poi.name or "", lat, lon) if configured and poi.name else None
+            lookup = lookup_place(poi.name or "", poi.lat, poi.lon) if configured and poi.name else None
+            if lookup and lookup.warning:
+                warnings.append(lookup.warning)
+            google_data = lookup.enrichment if lookup else None
             rows.append(
                 {
                     "name": poi.name,
                     "category": poi.category_value,
                     "distance_m": poi.distance_m,
                     "is_chain": poi.is_chain,
+                    "place_id": google_data.place_id if google_data else None,
                     "google_maps_url": poi.google_maps_url(),
                     "rating": google_data.rating if google_data else None,
                     "user_ratings_total": google_data.user_ratings_total if google_data else None,
                     "price_level": google_data.price_level if google_data else None,
                     "price_label": google_data.price_label if google_data else None,
+                    "reviews": google_data.reviews if google_data else [],
                     "source": "google_places" if google_data else "manual_survey_link",
                 }
             )
-        warnings = []
         if not configured:
             warnings.append(
                 "Không có GOOGLE_PLACES_API_KEY; rating/price không được bịa, chỉ cung cấp link khảo sát thủ công."
             )
-        return {"configured": configured, "items": rows, "warnings": warnings}
+        elif rows and not any(row["source"] == "google_places" for row in rows):
+            warnings.append(
+                "GOOGLE_PLACES_API_KEY đã cấu hình nhưng chưa match được đối thủ nào; "
+                "kiểm tra Places API, hạn chế key hoặc tên/vị trí POI."
+            )
+        return {"configured": configured, "items": rows, "warnings": list(dict.fromkeys(warnings))}
 
     def _build_report(
         self,

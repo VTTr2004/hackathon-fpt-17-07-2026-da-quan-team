@@ -89,7 +89,7 @@ class GeminiClient:
         last_error: errors.APIError | None = None
         for round_index in range(retries):
             attempts = self._client_attempts()
-            for position, (index, client) in enumerate(attempts):
+            for index, client in attempts:
                 try:
                     response = await make_call(client)
                 except errors.APIError as exc:

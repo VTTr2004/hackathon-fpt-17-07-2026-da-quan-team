@@ -27,6 +27,7 @@ import type {
 } from "@/types";
 
 import CashFlowAnalysis from "./CashFlowAnalysis";
+import CashFlowDataWorkspace from "./CashFlowDataWorkspace";
 import ChatWidget from "./ChatWidget";
 import SurroundingArea from "./SurroundingArea";
 
@@ -96,14 +97,15 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     const common = [api.getStartup(id), api.listDocuments(id), api.listVersions(id)] as const;
     try {
       if (isStartup) {
-        const [profile, docs, history, check, investorUsers, grants] = await Promise.all([
+        const [profile, docs, history, check, investorUsers, grants, draftAnalyses] = await Promise.all([
           ...common,
           api.completeness(id),
           api.listInvestors(),
           api.listAccess(id),
+          api.listAnalyses(id),
         ]);
         setStartup(profile); setDocuments(docs); setVersions(history); setCompleteness(check);
-        setInvestors(investorUsers); setAccess(grants);
+        setInvestors(investorUsers); setAccess(grants); setAnalyses(draftAnalyses);
         if (history.length >= 2) setVersionDiff(await api.compareVersions(id, history[1].version_number, history[0].version_number));
       } else {
         const [profile, docs, history, results] = await Promise.all([...common, api.listAnalyses(id)]);
@@ -121,6 +123,10 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     return () => window.clearTimeout(task);
   }, [load]);
   const analysisMap = useMemo(() => latestByModule(analyses), [analyses]);
+
+  function mergeAnalysis(result: Analysis) {
+    setAnalyses((current) => [result, ...current.filter((item) => item.module !== result.module)]);
+  }
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -236,6 +242,33 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
           {[...completeness.missing_fields, ...completeness.missing_documents, ...completeness.format_errors].length > 0 ? (
             <ul className="missingList">{[...completeness.missing_fields, ...completeness.missing_documents, ...completeness.format_errors].map((item) => <li key={item}>{item}</li>)}</ul>
           ) : <p>Hồ sơ đã đủ các trường và tài liệu bắt buộc. Hệ thống không chấm điểm hoặc phân tích ở bước này.</p>}
+        </section>
+      )}
+
+      {isStartup && editable && startup && (
+        <section className="surface" id="cash-flow-workspace">
+          <div className="sectionHeader">
+            <div>
+              <p className="eyebrow">CASH FLOW DATA</p>
+              <h2>Nhập và duyệt dữ liệu dòng tiền</h2>
+            </div>
+            <span className="roleBadge">BẢN NHÁP STARTUP</span>
+          </div>
+          <CashFlowDataWorkspace
+            startup={startup}
+            documents={documents}
+            analysis={analysisMap.cash_flow}
+            onDocumentsUploaded={(items) => {
+              setDocuments((current) => [...items, ...current]);
+              void api.completeness(id).then(setCompleteness);
+            }}
+            onAnalysisComplete={mergeAnalysis}
+            onStartupUpdated={(updated) => {
+              setStartup(updated);
+              void api.completeness(id).then(setCompleteness);
+            }}
+          />
+          {analysisMap.cash_flow && <CashFlowAnalysis analysis={analysisMap.cash_flow} />}
         </section>
       )}
 

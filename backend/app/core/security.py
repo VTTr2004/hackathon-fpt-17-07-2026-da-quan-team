@@ -33,7 +33,10 @@ def _b64encode(value: bytes) -> str:
 
 
 def _b64decode(value: str) -> bytes:
-    return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+    decoded = base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+    if not hmac.compare_digest(_b64encode(decoded), value):
+        raise ValueError("Non-canonical base64url value")
+    return decoded
 
 
 def create_access_token(user_id: UUID) -> str:

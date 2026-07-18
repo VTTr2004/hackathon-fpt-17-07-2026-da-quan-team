@@ -13,6 +13,7 @@ out/
 coverage/
 uploads/
 *.log
+.runtime-logs/
 .DS_Store
 
 # Surrounding-area OSM data — do NOT commit (310MB pbf + 44MB db).

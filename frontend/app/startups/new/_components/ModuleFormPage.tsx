@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent } from "react";
+import { FormEvent, ReactNode } from "react";
 
 import { formatProfileValue, readProfileField } from "@/lib/profileFields";
 import type { ProfileField, ProfileFieldGroup, ProfileSection } from "@/lib/profileFields";
@@ -81,6 +81,7 @@ export function ModuleFormPage({
   previousHref,
   nextHref,
   nextLabel = "Lưu và tiếp tục",
+  beforeSections,
 }: {
   eyebrow: string;
   title: string;
@@ -90,6 +91,7 @@ export function ModuleFormPage({
   previousHref: string;
   nextHref: string;
   nextLabel?: string;
+  beforeSections?: ReactNode;
 }) {
   const router = useRouter();
   const { draft, ready, saveModuleFacts } = useProfileDraft();
@@ -119,6 +121,8 @@ export function ModuleFormPage({
         <h2>{title}</h2>
         <p>{description}</p>
       </section>
+
+      {beforeSections}
 
       {sections.map((section) => (
         <section className="surface moduleOwnedSection" key={section.id}>

@@ -55,6 +55,7 @@ OPERATING = (
 def _contains_any(text: str, keywords: tuple[str, ...]) -> bool:
     return any(keyword in text for keyword in keywords)
 
+
 def classify_transaction(transaction: CashFlowTransaction) -> CashFlowTransaction:
     if transaction.activity != CashActivity.UNCLASSIFIED:
         return transaction

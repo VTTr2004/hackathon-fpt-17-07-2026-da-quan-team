@@ -77,7 +77,7 @@ class HybridIndex:
             np.save(directory / f"{key}.npy", self._unit.astype(np.float32))
 
     @classmethod
-    def load(cls, directory: Path, key: str) -> "HybridIndex | None":
+    def load(cls, directory: Path, key: str) -> HybridIndex | None:
         meta = directory / f"{key}.json"
         if not meta.exists():
             return None

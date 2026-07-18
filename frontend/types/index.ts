@@ -146,6 +146,48 @@ export type ModuleReport = {
   };
 };
 
+export type CashFlowProposalSource = {
+  document_id: string;
+  filename: string;
+  sheet: string;
+  range?: string | null;
+};
+
+export type CashFlowAutofillProposal = {
+  proposal_id: string;
+  field: string;
+  value: unknown;
+  status: string;
+  confidence: string;
+  sources: CashFlowProposalSource[];
+  generated_by_tool: string;
+  warnings: string[];
+};
+
+export type CashFlowIngestionCall = {
+  tool: string;
+  document_id: string;
+  sheet: string;
+  header_row: number;
+  columns: Record<string, number>;
+  field_map?: Record<string, string>;
+  notes?: string | null;
+};
+
+export type CashFlowIngestionDetails = {
+  status: string;
+  preview_id?: string;
+  plan_source?: string;
+  plan?: {
+    calls: CashFlowIngestionCall[];
+    ignored_sheets?: string[];
+    assumptions?: string[];
+  };
+  supporting_metrics?: Record<string, unknown>;
+  autofill_proposals?: CashFlowAutofillProposal[];
+  warnings?: string[];
+};
+
 // --- Surrounding-area module ------------------------------------------------
 
 export type GeocodeCandidate = {
@@ -210,6 +252,7 @@ export type SatelliteContext = {
 };
 
 export type PlacesEnrichmentItem = {
+  place_id: string | null;
   name: string | null;
   category: string;
   distance_m: number;
@@ -219,6 +262,13 @@ export type PlacesEnrichmentItem = {
   user_ratings_total: number | null;
   price_level: number | null;
   price_label: string | null;
+  reviews: Array<{
+    author_name: string | null;
+    rating: number | null;
+    relative_time_description: string | null;
+    text: string | null;
+    time: number | null;
+  }>;
   source: "google_places" | "manual_survey_link";
 };
 

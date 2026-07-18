@@ -15,7 +15,6 @@ dependencies = [
   "httpx>=0.28,<1",
   "numpy>=2.0,<3",
   "openpyxl>=3.1,<4",
-  "osmium>=4,<5",           # surrounding_area: build poi.db from the OSM extract (setup only)
   "rank-bm25>=0.2.2,<1",    # document_chatbot: BM25 lexical arm of hybrid retrieval
   "pydantic-settings>=2.7,<3",
   "pypdf>=5,<7",
@@ -27,6 +26,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# surrounding_area setup only (build poi.db from an OSM extract). osmium often fails to build on
+# Windows, so it is optional — not needed to run the API. Install with: pip install .[osm]
+osm = ["osmium>=4,<5"]
 dev = [
   "httpx>=0.28,<1",
   "pytest>=8.3,<9",

@@ -32,11 +32,8 @@ from pathlib import Path
 
 try:
     import osmium
-except ImportError as exc:  # pragma: no cover - guides a teammate who skipped the dep
-    raise SystemExit(
-        "Thiếu thư viện 'osmium'. Cài đặt: pip install -e \".[dev]\" (hoặc: pip install osmium), "
-        "rồi chạy lại. osmium chỉ cần khi BUILD poi.db, không cần lúc chạy app."
-    ) from exc
+except ImportError:  # pragma: no cover - optional setup dependency
+    osmium = None
 
 DEFAULT_PBF = Path(__file__).resolve().parents[4] / "data" / "vietnam-latest.osm.pbf"
 DEFAULT_DB = Path(__file__).resolve().parents[4] / "data" / "poi.db"
@@ -170,6 +167,10 @@ def _rows_for(
 
 
 def extract(pbf: Path, db_path: Path) -> dict[str, int]:
+    if osmium is None:
+        raise RuntimeError(
+            "Thiếu thư viện 'osmium'. Cài đặt bằng pip install .[osm] trước khi build poi.db."
+        )
     if not pbf.exists():
         raise FileNotFoundError(f"{pbf} not found. Run download_osm.py first.")
 

@@ -13,6 +13,7 @@ from app.models.document import Document
 from app.models.startup_version import StartupVersion
 from app.models.user import User
 from app.schemas.document import DocumentRead, DocumentVisibilityUpdate
+from app.services.chat_service import ensure_startup_index, startup_profile
 from app.services.document_parser import extract_text
 
 router = APIRouter()
@@ -30,7 +31,9 @@ async def _latest_version(startup_id: UUID, db: AsyncSession) -> StartupVersion 
 
 @router.get("/{startup_id}/documents", response_model=list[DocumentRead])
 async def list_documents(
-    startup_id: UUID, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    startup_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ) -> list[Document]:
     await get_accessible_startup(startup_id, user, db)
     query = select(Document).where(Document.startup_id == startup_id)
@@ -50,7 +53,7 @@ async def upload_document(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Document:
-    await get_owned_startup(startup_id, user, db, require_draft=True)
+    startup = await get_owned_startup(startup_id, user, db, require_draft=True)
     settings = get_settings()
     original_name = Path(file.filename or "document").name
     suffix = Path(original_name).suffix.lower()
@@ -91,6 +94,26 @@ async def upload_document(
     )
     await db.commit()
     await db.refresh(document)
+
+    # Best effort: prebuild the owner's draft index so the first chat is fast.
+    # Investor/version indexes use submitted snapshots and are built under separate keys.
+    try:
+        all_docs = list(await db.scalars(select(Document).where(Document.startup_id == startup_id)))
+        await ensure_startup_index(
+            f"{startup_id}:draft",
+            startup_profile(startup),
+            [
+                {
+                    "id": str(item.id),
+                    "filename": item.filename,
+                    "text": item.extracted_text,
+                    "storage_path": item.storage_path,
+                }
+                for item in all_docs
+            ],
+        )
+    except Exception:
+        pass
     return document
 
 
