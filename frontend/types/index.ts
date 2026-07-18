@@ -193,6 +193,7 @@ export type SatelliteContext = {
 };
 
 export type PlacesEnrichmentItem = {
+  place_id: string | null;
   name: string | null;
   category: string;
   distance_m: number;
@@ -202,6 +203,13 @@ export type PlacesEnrichmentItem = {
   user_ratings_total: number | null;
   price_level: number | null;
   price_label: string | null;
+  reviews: Array<{
+    author_name: string | null;
+    rating: number | null;
+    relative_time_description: string | null;
+    text: string | null;
+    time: number | null;
+  }>;
   source: "google_places" | "manual_survey_link";
 };
 
@@ -222,15 +230,26 @@ export type ClaimVerdict = {
   explanation: string | null;
 };
 
+export type Citation = {
+  document_id: string;
+  filename: string;
+  excerpt: string;
+  page: number | null;
+  locator?: string | null;
+};
+
 export type ChatResponse = {
   answer: string;
   grounded: boolean;
   model: string | null;
-  citations: Array<{
-    document_id: string;
-    filename: string;
-    excerpt: string;
-    page: number | null;
-  }>;
+  metadata?: Record<string, unknown>;
+  citations: Citation[];
+};
+
+export type ChatMessageItem = {
+  role: "user" | "assistant";
+  content: string;
+  citations: Citation[];
+  created_at: string;
 };
 

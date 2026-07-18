@@ -1,0 +1,402 @@
+[
+  {
+    "gold": 72,
+    "kind": "name",
+    "q": "How much total funding did 1d4 Pty raise and what is its status?"
+  },
+  {
+    "gold": 72,
+    "kind": "attr",
+    "q": "Which Norwegian company has received a total funding of $40,000?"
+  },
+  {
+    "gold": 6,
+    "kind": "name",
+    "q": "How much total funding did .Fox Networks raise and what is its status?"
+  },
+  {
+    "gold": 6,
+    "kind": "attr",
+    "q": "Which advertising company based in Buenos Aires, Argentina has raised about $4.9 million in total funding?"
+  },
+  {
+    "gold": 94,
+    "kind": "name",
+    "q": "How much total funding did 2 Minutes raise and what is its status?"
+  },
+  {
+    "gold": 94,
+    "kind": "attr",
+    "q": "Which game company founded in 2000 in Paris, France, has raised a total of $1.66 million in funding?"
+  },
+  {
+    "gold": 13,
+    "kind": "name",
+    "q": "How much total funding did 1-800-DOCTORS raise and what is its status?"
+  },
+  {
+    "gold": 13,
+    "kind": "attr",
+    "q": "Which health and wellness company founded in 1984 in Iselin, USA has raised a total of $1,750,000 in funding?"
+  },
+  {
+    "gold": 95,
+    "kind": "name",
+    "q": "How much total funding did 2 Pro Media Group raise and what is its status?"
+  },
+  {
+    "gold": 95,
+    "kind": "attr",
+    "q": "Which company founded in 2011 has total funding of $41,250?"
+  },
+  {
+    "gold": 77,
+    "kind": "name",
+    "q": "How much total funding did 1EQ raise and what is its status?"
+  },
+  {
+    "gold": 77,
+    "kind": "attr",
+    "q": "Which mobile health company founded in 2013 has raised a total of $2.1 million in funding?"
+  },
+  {
+    "gold": 70,
+    "kind": "name",
+    "q": "How much total funding did 1CLICK raise and what is its status?"
+  },
+  {
+    "gold": 70,
+    "kind": "attr",
+    "q": "Which chat company founded in 2012 in Bangalore, India, has raised no external funding?"
+  },
+  {
+    "gold": 8,
+    "kind": "name",
+    "q": "How much total funding did 004 Technologies raise and what is its status?"
+  },
+  {
+    "gold": 8,
+    "kind": "attr",
+    "q": "Which software company founded in 2010 in Champaign, USA has raised no external funding?"
+  },
+  {
+    "gold": 90,
+    "kind": "name",
+    "q": "How much total funding did 1stdibs raise and what is its status?"
+  },
+  {
+    "gold": 90,
+    "kind": "attr",
+    "q": "Which e‑commerce company founded in 2001 in New York, USA, has raised a total of $117 million in funding?"
+  },
+  {
+    "gold": 67,
+    "kind": "name",
+    "q": "How much total funding did 1C Company raise and what is its status?"
+  },
+  {
+    "gold": 67,
+    "kind": "attr",
+    "q": "Which software company founded in 1991 in Moscow, Russia, has raised a total of $200 million in funding?"
+  },
+  {
+    "gold": 48,
+    "kind": "name",
+    "q": "How much total funding did 12Bis raise and what is its status?"
+  },
+  {
+    "gold": 48,
+    "kind": "attr",
+    "q": "What company was founded in 2008 in Paris, France, and has total funding of $130,636?"
+  },
+  {
+    "gold": 5,
+    "kind": "name",
+    "q": "How much total funding did .Club Domains raise and what is its status?"
+  },
+  {
+    "gold": 5,
+    "kind": "attr",
+    "q": "Which software company founded in 2011 in Oakland Park, USA has raised a total of $7 million in funding?"
+  },
+  {
+    "gold": 36,
+    "kind": "name",
+    "q": "How much total funding did 115 network disks raise and what is its status?"
+  },
+  {
+    "gold": 36,
+    "kind": "attr",
+    "q": "Which education company has received $0 in total funding?"
+  },
+  {
+    "gold": 55,
+    "kind": "name",
+    "q": "How much total funding did 140Fire raise and what is its status?"
+  },
+  {
+    "gold": 55,
+    "kind": "attr",
+    "q": "Which entertainment company founded in 2010 in Santa Monica, USA, has raised a total of $500,000 in funding?"
+  },
+  {
+    "gold": 64,
+    "kind": "name",
+    "q": "How much total funding did 1871 raise and what is its status?"
+  },
+  {
+    "gold": 64,
+    "kind": "attr",
+    "q": "Which company serving designers, based in Chicago, USA, has raised a total of $2.5 million in funding?"
+  },
+  {
+    "gold": 9,
+    "kind": "name",
+    "q": "How much total funding did 01Games Technology raise and what is its status?"
+  },
+  {
+    "gold": 9,
+    "kind": "attr",
+    "q": "What is the name of the games company based in Hong Kong, HKG, with total funding of $41,250?"
+  },
+  {
+    "gold": 20,
+    "kind": "name",
+    "q": "How much total funding did 1000memories raise and what is its status?"
+  },
+  {
+    "gold": 20,
+    "kind": "attr",
+    "q": "Which company in the curated web market, founded in 2010 in San Francisco, USA, has raised a total of $2,535,000 in funding?"
+  },
+  {
+    "gold": 63,
+    "kind": "name",
+    "q": "How much total funding did 17u.cn raise and what is its status?"
+  },
+  {
+    "gold": 63,
+    "kind": "attr",
+    "q": "Which travel company founded in 2004 in Suzhou, China has raised approximately $84.4 million in total funding?"
+  },
+  {
+    "gold": 40,
+    "kind": "name",
+    "q": "How much total funding did 12 Star Survival raise and what is its status?"
+  },
+  {
+    "gold": 40,
+    "kind": "attr",
+    "q": "Which sports company founded in 2013 has received no external funding?"
+  },
+  {
+    "gold": 78,
+    "kind": "name",
+    "q": "How much total funding did 1jiajie raise and what is its status?"
+  },
+  {
+    "gold": 78,
+    "kind": "attr",
+    "q": "Which Beijing‑based e‑commerce company has total funding of $4,163,132?"
+  },
+  {
+    "gold": 74,
+    "kind": "name",
+    "q": "How much total funding did 1DayMakeover raise and what is its status?"
+  },
+  {
+    "gold": 74,
+    "kind": "attr",
+    "q": "Which e‑commerce company founded in 2008 in Santa Ana, USA, has total funding of $50,000?"
+  },
+  {
+    "gold": 39,
+    "kind": "name",
+    "q": "How much total funding did 12 Labs raise and what is its status?"
+  },
+  {
+    "gold": 39,
+    "kind": "attr",
+    "q": "Which personal health company has never raised any external funding?"
+  },
+  {
+    "gold": 28,
+    "kind": "name",
+    "q": "How much total funding did 1010data raise and what is its status?"
+  },
+  {
+    "gold": 28,
+    "kind": "attr",
+    "q": "Which software company founded in 2000 in New York, USA, has raised a total of $35 million in funding?"
+  },
+  {
+    "gold": 83,
+    "kind": "name",
+    "q": "How much total funding did 1Rebel raise and what is its status?"
+  },
+  {
+    "gold": 83,
+    "kind": "attr",
+    "q": "Which fitness company has raised a total of $2,572,969 in funding?"
+  },
+  {
+    "gold": 47,
+    "kind": "name",
+    "q": "How much total funding did 1248 raise and what is its status?"
+  },
+  {
+    "gold": 47,
+    "kind": "attr",
+    "q": "Which software company founded in 2013 in Cambridge, UK, has raised a total of $378,812?"
+  },
+  {
+    "gold": 81,
+    "kind": "name",
+    "q": "How much total funding did 1Mind raise and what is its status?"
+  },
+  {
+    "gold": 81,
+    "kind": "attr",
+    "q": "Which social media company founded in 2011 in Hampton Falls, USA, has raised a total of $500,000 in funding?"
+  },
+  {
+    "gold": 53,
+    "kind": "name",
+    "q": "How much total funding did 13th Lab raise and what is its status?"
+  },
+  {
+    "gold": 53,
+    "kind": "attr",
+    "q": "Which mobile company founded in 2010 in Stockholm, Sweden, has raised a total of $700,000 in funding?"
+  },
+  {
+    "gold": 37,
+    "kind": "name",
+    "q": "How much total funding did 117go raise and what is its status?"
+  },
+  {
+    "gold": 37,
+    "kind": "attr",
+    "q": "Which social travel startup founded in 2011 in Shanghai, China, has raised a total of $20 million in funding?"
+  },
+  {
+    "gold": 56,
+    "kind": "name",
+    "q": "How much total funding did 159.com raise and what is its status?"
+  },
+  {
+    "gold": 56,
+    "kind": "attr",
+    "q": "Which Chinese software company has raised approximately $6.2 million in total funding?"
+  },
+  {
+    "gold": 15,
+    "kind": "name",
+    "q": "How much total funding did 10 Minutes With raise and what is its status?"
+  },
+  {
+    "gold": 15,
+    "kind": "attr",
+    "q": "Which education company founded in 2013 in London, UK, has raised a total of $4.4 million in funding?"
+  },
+  {
+    "gold": 84,
+    "kind": "name",
+    "q": "How much total funding did 1Ring raise and what is its status?"
+  },
+  {
+    "gold": 84,
+    "kind": "attr",
+    "q": "Which sales and marketing company founded in 2009 has never raised any external funding?"
+  },
+  {
+    "gold": 30,
+    "kind": "name",
+    "q": "How much total funding did 10BestThings raise and what is its status?"
+  },
+  {
+    "gold": 30,
+    "kind": "attr",
+    "q": "Which company in the curated web market, founded in 2009 in Cleveland, USA, has total funding of $50,000?"
+  },
+  {
+    "gold": 27,
+    "kind": "name",
+    "q": "How much total funding did 100Plus raise and what is its status?"
+  },
+  {
+    "gold": 27,
+    "kind": "attr",
+    "q": "Which analytics company founded in 2011 in San Francisco, USA, has raised a total of $1.25 million in funding?"
+  },
+  {
+    "gold": 59,
+    "kind": "name",
+    "q": "How much total funding did 16 Mile Solutions raise and what is its status?"
+  },
+  {
+    "gold": 59,
+    "kind": "attr",
+    "q": "Which software company founded in 2006 in Seattle, USA, has total funding of $199,957?"
+  },
+  {
+    "gold": 52,
+    "kind": "name",
+    "q": "How much total funding did 139shop raise and what is its status?"
+  },
+  {
+    "gold": 52,
+    "kind": "attr",
+    "q": "Which e‑commerce company based in China has never raised any external funding?"
+  },
+  {
+    "gold": 41,
+    "kind": "name",
+    "q": "How much total funding did 120 Sports raise and what is its status?"
+  },
+  {
+    "gold": 41,
+    "kind": "attr",
+    "q": "Which sports company founded in 2013 in Chicago, USA, has never received any external funding?"
+  },
+  {
+    "gold": 73,
+    "kind": "name",
+    "q": "How much total funding did 1DayLater raise and what is its status?"
+  },
+  {
+    "gold": 73,
+    "kind": "attr",
+    "q": "Which company, founded in 2009 and operating in the curated web market, has total funding of $43,811?"
+  },
+  {
+    "gold": 35,
+    "kind": "name",
+    "q": "How much total funding did 10X10 Room raise and what is its status?"
+  },
+  {
+    "gold": 35,
+    "kind": "attr",
+    "q": "Which software company founded in 2010 in Lexington, USA has raised a total of $77,500 in funding?"
+  },
+  {
+    "gold": 89,
+    "kind": "name",
+    "q": "How much total funding did 1st Merchant Funding raise and what is its status?"
+  },
+  {
+    "gold": 89,
+    "kind": "attr",
+    "q": "Which financial services company founded in 2007 in Miami, USA has raised a total of $10 million in funding?"
+  },
+  {
+    "gold": 66,
+    "kind": "name",
+    "q": "How much total funding did 1bib raise and what is its status?"
+  },
+  {
+    "gold": 66,
+    "kind": "attr",
+    "q": "Which company in the curated web market, founded in 2006 in Guangzhou, China, has raised no external funding?"
+  }
+]

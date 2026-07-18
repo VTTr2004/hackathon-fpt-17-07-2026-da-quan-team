@@ -1,0 +1,222 @@
+﻿{
+    "center":  {
+                   "lat":  20.9933618530001,
+                   "lon":  105.954333713
+               },
+    "eateries":  [
+                     {
+                         "name":  "Chá»p Coffee \u0026 Tea",
+                         "category":  "cafe",
+                         "category_key":  "amenity",
+                         "lat":  20.9973589,
+                         "lon":  105.9517556,
+                         "distance_m":  519.0,
+                         "is_chain":  false,
+                         "source":  "openstreetmap",
+                         "source_id":  "n13033222658",
+                         "position_quality":  "point",
+                         "maps_match_status":  "unverified_google_maps",
+                         "google_maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Ch%E1%BB%9Bp+Coffee+%26+Tea+20.9973589%2C105.9517556"
+                     },
+                     {
+                         "name":  "Chao QuÃ¡n",
+                         "category":  "restaurant",
+                         "category_key":  "amenity",
+                         "lat":  20.9913416,
+                         "lon":  105.9462847,
+                         "distance_m":  865.0,
+                         "is_chain":  false,
+                         "source":  "openstreetmap",
+                         "source_id":  "n11372720517",
+                         "position_quality":  "point",
+                         "maps_match_status":  "unverified_google_maps",
+                         "google_maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Chao+Qu%C3%A1n+20.9913416%2C105.9462847"
+                     },
+                     {
+                         "name":  "Highlands Coffee",
+                         "category":  "cafe",
+                         "category_key":  "amenity",
+                         "lat":  20.9932057,
+                         "lon":  105.9459678,
+                         "distance_m":  869.0,
+                         "is_chain":  true,
+                         "source":  "openstreetmap",
+                         "source_id":  "n11372720369",
+                         "position_quality":  "point",
+                         "maps_match_status":  "unverified_google_maps",
+                         "google_maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Highlands+Coffee+20.9932057%2C105.9459678"
+                     },
+                     {
+                         "name":  "Vá»±a Háº£i Sáº£n GiÃ³ Biá»n",
+                         "category":  "restaurant",
+                         "category_key":  "amenity",
+                         "lat":  20.9914455,
+                         "lon":  105.9461001,
+                         "distance_m":  881.0,
+                         "is_chain":  false,
+                         "source":  "openstreetmap",
+                         "source_id":  "n11372720516",
+                         "position_quality":  "point",
+                         "maps_match_status":  "unverified_google_maps",
+                         "google_maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=V%E1%BB%B1a+H%E1%BA%A3i+S%E1%BA%A3n+Gi%C3%B3+Bi%E1%BB%83n+20.9914455%2C105.9461001"
+                     },
+                     {
+                         "name":  "Ngan Huáº¿ ThÆ°Æ¡ng",
+                         "category":  "restaurant",
+                         "category_key":  "amenity",
+                         "lat":  20.9917089,
+                         "lon":  105.9456661,
+                         "distance_m":  918.0,
+                         "is_chain":  false,
+                         "source":  "openstreetmap",
+                         "source_id":  "n11372720514",
+                         "position_quality":  "point",
+                         "maps_match_status":  "unverified_google_maps",
+                         "google_maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Ngan+Hu%E1%BA%BF+Th%C6%B0%C6%A1ng+20.9917089%2C105.9456661"
+                     },
+                     {
+                         "name":  "NhÃ  hÃ ng Nháº­t Báº£n Minori",
+                         "category":  "restaurant",
+                         "category_key":  "amenity",
+                         "lat":  20.9917641,
+                         "lon":  105.9455472,
+                         "distance_m":  929.0,
+                         "is_chain":  false,
+                         "source":  "openstreetmap",
+                         "source_id":  "n11372720513",
+                         "position_quality":  "point",
+                         "maps_match_status":  "unverified_google_maps",
+                         "google_maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Nh%C3%A0+h%C3%A0ng+Nh%E1%BA%ADt+B%E1%BA%A3n+Minori+20.9917641%2C105.9455472"
+                     }
+                 ],
+    "residential":  [
+                        {
+                            "name":  "Vinhomes Ocean Park",
+                            "lat":  20.99554521098901,
+                            "lon":  105.94398345824176,
+                            "distance_m":  0.0
+                        },
+                        {
+                            "name":  "San HÃ´ Vinhomes Ocean Park",
+                            "lat":  20.99142715,
+                            "lon":  105.94720155,
+                            "distance_m":  406.0
+                        },
+                        {
+                            "name":  null,
+                            "lat":  20.9818369480916,
+                            "lon":  105.95700867480916,
+                            "distance_m":  819.0
+                        },
+                        {
+                            "name":  null,
+                            "lat":  20.996057125,
+                            "lon":  105.962952,
+                            "distance_m":  841.0
+                        },
+                        {
+                            "name":  "Masteri Waterfront",
+                            "lat":  20.994291552941178,
+                            "lon":  105.9448278117647,
+                            "distance_m":  847.0
+                        },
+                        {
+                            "name":  "The Ocean View",
+                            "lat":  21.001820835714284,
+                            "lon":  105.94474826428572,
+                            "distance_m":  964.0
+                        },
+                        {
+                            "name":  "Sapphire 1 Vinhomes Ocean Park",
+                            "lat":  20.994747911764705,
+                            "lon":  105.94304615882352,
+                            "distance_m":  967.0
+                        }
+                    ],
+    "competitors":  [
+                        {
+                            "name":  "Chá»p Coffee \u0026 Tea",
+                            "category":  "cafe",
+                            "category_key":  "amenity",
+                            "lat":  20.9973589,
+                            "lon":  105.9517556,
+                            "distance_m":  519.0,
+                            "is_chain":  false,
+                            "source":  "openstreetmap",
+                            "source_id":  "n13033222658",
+                            "position_quality":  "point",
+                            "maps_match_status":  "unverified_google_maps",
+                            "google_maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Ch%E1%BB%9Bp+Coffee+%26+Tea+20.9973589%2C105.9517556"
+                        },
+                        {
+                            "name":  "Chao QuÃ¡n",
+                            "category":  "restaurant",
+                            "category_key":  "amenity",
+                            "lat":  20.9913416,
+                            "lon":  105.9462847,
+                            "distance_m":  865.0,
+                            "is_chain":  false,
+                            "source":  "openstreetmap",
+                            "source_id":  "n11372720517",
+                            "position_quality":  "point",
+                            "maps_match_status":  "unverified_google_maps",
+                            "google_maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Chao+Qu%C3%A1n+20.9913416%2C105.9462847"
+                        },
+                        {
+                            "name":  "Highlands Coffee",
+                            "category":  "cafe",
+                            "category_key":  "amenity",
+                            "lat":  20.9932057,
+                            "lon":  105.9459678,
+                            "distance_m":  869.0,
+                            "is_chain":  true,
+                            "source":  "openstreetmap",
+                            "source_id":  "n11372720369",
+                            "position_quality":  "point",
+                            "maps_match_status":  "unverified_google_maps",
+                            "google_maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Highlands+Coffee+20.9932057%2C105.9459678"
+                        },
+                        {
+                            "name":  "Vá»±a Háº£i Sáº£n GiÃ³ Biá»n",
+                            "category":  "restaurant",
+                            "category_key":  "amenity",
+                            "lat":  20.9914455,
+                            "lon":  105.9461001,
+                            "distance_m":  881.0,
+                            "is_chain":  false,
+                            "source":  "openstreetmap",
+                            "source_id":  "n11372720516",
+                            "position_quality":  "point",
+                            "maps_match_status":  "unverified_google_maps",
+                            "google_maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=V%E1%BB%B1a+H%E1%BA%A3i+S%E1%BA%A3n+Gi%C3%B3+Bi%E1%BB%83n+20.9914455%2C105.9461001"
+                        },
+                        {
+                            "name":  "Ngan Huáº¿ ThÆ°Æ¡ng",
+                            "category":  "restaurant",
+                            "category_key":  "amenity",
+                            "lat":  20.9917089,
+                            "lon":  105.9456661,
+                            "distance_m":  918.0,
+                            "is_chain":  false,
+                            "source":  "openstreetmap",
+                            "source_id":  "n11372720514",
+                            "position_quality":  "point",
+                            "maps_match_status":  "unverified_google_maps",
+                            "google_maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Ngan+Hu%E1%BA%BF+Th%C6%B0%C6%A1ng+20.9917089%2C105.9456661"
+                        },
+                        {
+                            "name":  "NhÃ  hÃ ng Nháº­t Báº£n Minori",
+                            "category":  "restaurant",
+                            "category_key":  "amenity",
+                            "lat":  20.9917641,
+                            "lon":  105.9455472,
+                            "distance_m":  929.0,
+                            "is_chain":  false,
+                            "source":  "openstreetmap",
+                            "source_id":  "n11372720513",
+                            "position_quality":  "point",
+                            "maps_match_status":  "unverified_google_maps",
+                            "google_maps_url":  "https://www.google.com/maps/search/?api=1\u0026query=Nh%C3%A0+h%C3%A0ng+Nh%E1%BA%ADt+B%E1%BA%A3n+Minori+20.9917641%2C105.9455472"
+                        }
+                    ]
+}

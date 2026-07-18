@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ChatRequest(BaseModel):
@@ -12,6 +13,7 @@ class Citation(BaseModel):
     filename: str
     excerpt: str
     page: int | None = None
+    locator: str | None = None  # human-readable source position, e.g. "row 5", "slide 2"
 
 
 class ChatResponse(BaseModel):
@@ -20,3 +22,12 @@ class ChatResponse(BaseModel):
     grounded: bool
     model: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class ChatMessageRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    role: str
+    content: str
+    citations: list[Citation] = Field(default_factory=list)
+    created_at: datetime

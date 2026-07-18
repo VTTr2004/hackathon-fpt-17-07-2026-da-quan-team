@@ -1,6 +1,7 @@
 import type {
   Analysis,
   AnalysisModule,
+  ChatMessageItem,
   ChatResponse,
   DocumentItem,
   GeocodeResult,
@@ -63,6 +64,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ question }),
     }),
+  chatHistory: (id: string) => request<ChatMessageItem[]>(`/startups/${id}/chat/history`),
 
   // --- Surrounding-area module ---------------------------------------------
   geocode: (address: string) =>
