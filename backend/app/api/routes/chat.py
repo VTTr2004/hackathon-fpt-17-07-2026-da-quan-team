@@ -45,7 +45,15 @@ async def chat_with_documents(
     history = [{"role": message.role, "content": message.content} for message in reversed(prior)]
     response = await answer_question(
         str(startup_id),
-        [{"id": str(doc.id), "filename": doc.filename, "text": doc.extracted_text} for doc in docs],
+        [
+            {
+                "id": str(doc.id),
+                "filename": doc.filename,
+                "text": doc.extracted_text,
+                "storage_path": doc.storage_path,
+            }
+            for doc in docs
+        ],
         payload.question,
         history,
     )

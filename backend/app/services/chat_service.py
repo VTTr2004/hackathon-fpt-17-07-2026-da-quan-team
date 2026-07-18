@@ -5,6 +5,7 @@ Pipeline: load/build a startup-scoped hybrid index -> embed the query -> hybrid 
 The LLM provider (Gemini or NVIDIA) is selected by LLM_PROVIDER. Every step degrades gracefully
 when the provider is not configured.
 """
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -17,8 +18,31 @@ from app.modules.document_chatbot.index_store import (
     load_index,
     stored_signature,
 )
-from app.modules.document_chatbot.ingestion import text_to_chunks
+from app.modules.document_chatbot.ingestion import file_to_chunks, text_to_chunks
 from app.schemas.chat import ChatResponse, Citation
+
+
+def _document_chunks(documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Chunk each uploaded document with structure-aware ingestion when the file is available.
+
+    Uses ``file_to_chunks`` on the stored path so Excel/JSON get the tiered ingestion (same as the
+    seed scripts); falls back to chunking the pre-extracted text if the file is missing or fails.
+    """
+    chunks: list[dict[str, Any]] = []
+    for document in documents:
+        document_id = str(document["id"])
+        filename = document["filename"]
+        storage_path = document.get("storage_path")
+        produced: list[dict[str, Any]] | None = None
+        if storage_path and Path(storage_path).exists():
+            try:
+                produced = file_to_chunks(Path(storage_path), document_id=document_id, filename=filename)
+            except Exception:
+                produced = None
+        if produced is None:
+            produced = text_to_chunks(document.get("text", ""), document_id=document_id, filename=filename)
+        chunks.extend(produced)
+    return chunks
 
 _SYSTEM = (
     "Bạn là trợ lý hỏi đáp tài liệu của một hồ sơ startup. Trả lời tự nhiên, thân thiện như đang "
@@ -72,15 +96,7 @@ async def answer_question(
     if documents:
         signature = documents_signature(documents)
         if index is None or stored_signature(startup_id) != signature:
-            chunks = [
-                chunk
-                for document in documents
-                for chunk in text_to_chunks(
-                    document.get("text", ""),
-                    document_id=str(document["id"]),
-                    filename=document["filename"],
-                )
-            ]
+            chunks = _document_chunks(documents)
             index = await build_index(startup_id, chunks, signature=signature) if chunks else None
 
     if index is None or not index.chunks:
