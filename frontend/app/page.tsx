@@ -69,6 +69,7 @@ export default function DashboardPage() {
   const [startups, setStartups] = useState<Startup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -90,6 +91,23 @@ export default function DashboardPage() {
       ignore = true;
     };
   }, []);
+
+  async function deleteProfile(startup: Startup) {
+    const confirmed = window.confirm(
+      `Xóa hồ sơ “${startup.name}”? Toàn bộ tài liệu, phiên bản và kết quả phân tích của hồ sơ sẽ bị xóa vĩnh viễn.`,
+    );
+    if (!confirmed) return;
+    setDeletingId(startup.id);
+    setError("");
+    try {
+      await api.deleteStartup(startup.id);
+      setStartups((current) => current.filter((item) => item.id !== startup.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không thể xóa hồ sơ");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const stats = useMemo(() => {
     const withIndustry = startups.filter((startup) => startup.industry).length;
@@ -206,6 +224,18 @@ export default function DashboardPage() {
                     <small>{progress}%</small>
                   </div>
                   <div className="hdRecordActions">
+                    {isStartup && (
+                      <button
+                        type="button"
+                        className="hdIconAction danger"
+                        title="Xóa hồ sơ"
+                        aria-label={`Xóa hồ sơ ${startup.name}`}
+                        disabled={deletingId === startup.id}
+                        onClick={() => void deleteProfile(startup)}
+                      >
+                        <MIcon name="delete" />
+                      </button>
+                    )}
                     <Link className="hdIconAction" href={`/startups/${startup.id}`} title="Mở hồ sơ" aria-label="Mở hồ sơ">
                       <MIcon name="arrow_forward" />
                     </Link>

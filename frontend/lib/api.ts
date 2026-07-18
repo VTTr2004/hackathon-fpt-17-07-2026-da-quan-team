@@ -85,6 +85,7 @@ export const api = {
     primary_location?: string;
     facts?: Record<string, unknown>;
   }) => request<Startup>("/startups", { method: "POST", body: JSON.stringify(payload) }),
+  deleteStartup: (id: string) => request<void>(`/startups/${id}`, { method: "DELETE" }),
   updateStartup: (
     id: string,
     payload: Partial<{
@@ -149,6 +150,8 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ visibility }),
     }),
+  deleteDocument: (id: string, documentId: string) =>
+    request<void>(`/startups/${id}/documents/${documentId}`, { method: "DELETE" }),
   listExtractions: (id: string) => request<ProfileExtractionJob[]>(`/startups/${id}/extractions`),
   createExtraction: (id: string, documentIds: string[], fieldKeys: string[] = []) =>
     request<ProfileExtractionJob>(`/startups/${id}/extractions`, {

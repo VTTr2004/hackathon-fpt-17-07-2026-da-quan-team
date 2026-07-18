@@ -1329,9 +1329,9 @@ textarea:focus {
 }
 
 .documentCategory > summary {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px 24px;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   min-height: 52px;
   padding: 10px 14px;
@@ -1340,13 +1340,19 @@ textarea:focus {
   font-weight: 800;
 }
 
+.documentCategory > summary > .hdCount {
+  width: 96px;
+  text-align: right;
+  white-space: nowrap;
+}
+
 .documentCategory > summary::-webkit-details-marker {
   display: none;
 }
 
 .documentCategory > summary::after {
   content: "expand_more";
-  order: 3;
+  justify-self: center;
   color: var(--muted);
   font-family: "Material Symbols Outlined";
   font-size: 22px;
@@ -1382,11 +1388,41 @@ textarea:focus {
 
 .documentRow {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-columns: 40px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   padding: 11px 0;
   border-top: 1px solid var(--line);
+}
+
+.documentActions {
+  display: flex !important;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 8px !important;
+}
+
+.documentDeleteButton {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid #e7c5c1;
+  border-radius: 8px;
+  color: #a33a32;
+  background: #fff;
+  cursor: pointer;
+}
+
+.documentDeleteButton:hover:not(:disabled) {
+  border-color: #c9665d;
+  background: #fff2f0;
+}
+
+.documentDeleteButton:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .documentRow:first-child {
@@ -5306,6 +5342,21 @@ html {
 .hdIconAction:hover {
   border-color: var(--primary);
   color: var(--primary-dark);
+}
+
+.hdIconAction.danger {
+  cursor: pointer;
+  color: #a33a32;
+}
+
+.hdIconAction.danger:hover:not(:disabled) {
+  border-color: #c9665d;
+  background: #fff2f0;
+}
+
+.hdIconAction:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .hdIconAction .material-symbols-outlined {

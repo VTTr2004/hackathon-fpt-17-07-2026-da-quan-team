@@ -206,3 +206,37 @@ async def update_document_visibility(
     await db.commit()
     await db.refresh(document)
     return document
+
+
+@router.delete("/{startup_id}/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_document(
+    startup_id: UUID,
+    document_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    await get_owned_startup(startup_id, user, db, require_draft=True)
+    document = await db.get(Document, document_id)
+    if document is None or document.startup_id != startup_id:
+        raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+    if await _document_is_version_locked(startup_id, document_id, db):
+        raise HTTPException(
+            status_code=409,
+            detail="Tài liệu đã được khóa trong phiên bản đã nộp nên không thể xóa.",
+        )
+
+    storage_path = Path(document.storage_path)
+    db.add(
+        AuditLog(
+            actor_id=user.id,
+            action="document.deleted",
+            resource_type="document",
+            resource_id=document.id,
+            details={"filename": document.filename},
+        )
+    )
+    await db.delete(document)
+    await db.commit()
+
+    # Delete the physical file only after the database transaction succeeds.
+    storage_path.unlink(missing_ok=True)

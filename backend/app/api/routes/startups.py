@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -204,6 +205,41 @@ async def update_startup(
     await db.commit()
     await db.refresh(startup)
     return startup
+
+
+@router.delete("/{startup_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_startup(
+    startup_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    startup = await get_owned_startup(startup_id, user, db)
+    documents = list(await db.scalars(select(Document).where(Document.startup_id == startup_id)))
+    storage_paths = [Path(document.storage_path) for document in documents]
+
+    db.add(
+        AuditLog(
+            actor_id=user.id,
+            action="startup.deleted",
+            resource_type="startup",
+            resource_id=startup.id,
+            details={"name": startup.name, "document_count": len(documents)},
+        )
+    )
+    await db.delete(startup)
+    await db.commit()
+
+    # The database is authoritative; physical upload cleanup is best effort.
+    for storage_path in storage_paths:
+        try:
+            storage_path.unlink(missing_ok=True)
+        except OSError:
+            continue
+    for parent in {storage_path.parent for storage_path in storage_paths}:
+        try:
+            parent.rmdir()
+        except OSError:
+            continue
 
 
 @router.patch("/{startup_id}/discovery", response_model=StartupRead)

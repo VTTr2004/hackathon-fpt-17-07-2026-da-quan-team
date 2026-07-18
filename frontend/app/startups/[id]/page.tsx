@@ -366,6 +366,17 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     } catch (err) { setError(err instanceof Error ? err.message : "Không thể cập nhật quyền tài liệu"); }
   }
 
+  async function removeDocument(documentId: string, filename: string) {
+    if (!window.confirm(`Xóa tài liệu “${filename}”? Hành động này không thể hoàn tác.`)) return;
+    setBusy(`delete-document-${documentId}`);
+    try {
+      await api.deleteDocument(id, documentId);
+      setDocuments((current) => current.filter((item) => item.id !== documentId));
+      setCompleteness(await api.completeness(id));
+    } catch (err) { setError(err instanceof Error ? err.message : "Không thể xóa tài liệu"); }
+    finally { setBusy(null); }
+  }
+
   async function revoke(investorId: string) {
     try { await api.revokeAccess(id, investorId); setAccess(await api.listAccess(id)); }
     catch (err) { setError(err instanceof Error ? err.message : "Không thể thu hồi quyền"); }
@@ -748,7 +759,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
                           <span className="hdCount">{categoryDocuments.length} tài liệu</span>
                         </summary>
                         <div className="documentList">
-                          {categoryDocuments.map((item) => <div className="documentRow" key={item.id}><span className="fileIcon">DOC</span><div><strong>{item.filename}</strong><span>{item.status} · {item.visibility} · {item.categorized_by === "ai" ? "AI phân loại" : "Tự động phân loại"}</span></div>{editable && <select aria-label={`Quyền truy cập ${item.filename}`} value={item.visibility} onChange={(event) => void changeVisibility(item.id, event.target.value)}><option value="shared">Chia sẻ</option><option value="private">Riêng tư</option><option value="restricted">Hạn chế</option></select>}</div>)}
+                          {categoryDocuments.map((item) => <div className="documentRow" key={item.id}><span className="fileIcon">DOC</span><div><strong>{item.filename}</strong><span>{item.status} · {item.visibility} · {item.categorized_by === "ai" ? "AI phân loại" : "Tự động phân loại"}</span></div>{editable && <div className="documentActions"><select aria-label={`Quyền truy cập ${item.filename}`} value={item.visibility} onChange={(event) => void changeVisibility(item.id, event.target.value)}><option value="shared">Chia sẻ</option><option value="private">Riêng tư</option><option value="restricted">Hạn chế</option></select><button type="button" className="documentDeleteButton" aria-label={`Xóa ${item.filename}`} title="Xóa tài liệu" disabled={busy === `delete-document-${item.id}`} onClick={() => void removeDocument(item.id, item.filename)}><MIcon name="delete" /></button></div>}</div>)}
                           {!categoryDocuments.length && <div className="documentCategoryEmpty">Chưa có tài liệu trong nhóm này.</div>}
                         </div>
                       </details>
