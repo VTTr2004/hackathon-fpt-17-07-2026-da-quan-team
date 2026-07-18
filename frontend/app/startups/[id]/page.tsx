@@ -28,6 +28,7 @@ import type {
 
 import CashFlowAnalysis from "./CashFlowAnalysis";
 import CashFlowDataWorkspace from "./CashFlowDataWorkspace";
+import ChatWidget from "./ChatWidget";
 import DocumentChat from "./DocumentChat";
 import SurroundingArea from "./SurroundingArea";
 
@@ -351,7 +352,6 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     }
   }
   const sectionMetrics = metricsFor(activeTab);
-  const hideRail = isStartup && (activeTab === "assistant" || activeTab === "area");
 
   return (
     <div className="hdShell">
@@ -410,7 +410,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </section>
 
-        <div className={`deskBody${hideRail ? " noRail" : ""}`}>
+        <div className="deskBody noRail">
           <main className="deskMain">
             {/* ---- Overview ---- */}
             <div className="deskPanel" hidden={activeTab !== "overview"}>
@@ -583,20 +583,12 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
             </div>
           </main>
 
-          {/* Right rail: Document Copilot */}
-          {!hideRail && (
-            <aside className="deskRail" aria-label="Trợ lý tài liệu">
-              <div className="deskRailHead">
-                <span className="ic"><MIcon name="psychology" /></span>
-                <strong>Trợ lý tài liệu</strong>
-              </div>
-              <div className="deskRailBody">
-                <DocumentChat startupId={id} />
-              </div>
-            </aside>
-          )}
         </div>
       </div>
+
+      {/* Document Copilot: floating bubble. Hidden on the assistant tab, which already
+          renders the chat inline — otherwise two DocumentChat instances would mount. */}
+      {activeTab !== "assistant" && <ChatWidget startupId={id} />}
     </div>
   );
 }
