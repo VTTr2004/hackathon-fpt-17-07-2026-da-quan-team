@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.5-flash"
     gemini_timeout_seconds: float = 60
+    goong_api_key: str | None = None
+    google_geocoding_api_key: str | None = None
+    google_places_api_key: str | None = None
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -10,6 +10,7 @@ from __future__ import annotations
 import pytest
 
 from app.modules.surrounding_area.providers.geocoding import (
+    GoogleGeocodingProvider,
     GoongProvider,
     NominatimProvider,
     geocode,
@@ -93,6 +94,34 @@ class TestGoongProvider:
         assert candidates[0].provider == "goong"
 
 
+class TestGoogleGeocodingProvider:
+    def test_requires_key(self) -> None:
+        from app.modules.surrounding_area.providers.geocoding import GeocodingError
+
+        with pytest.raises(GeocodingError):
+            GoogleGeocodingProvider("")
+
+    def test_parses_google_shape(self) -> None:
+        payload = {
+            "status": "OK",
+            "results": [
+                {
+                    "formatted_address": "Vinhomes Ocean Park, Gia Lâm, Hà Nội, Việt Nam",
+                    "geometry": {
+                        "location": {"lat": 20.9933, "lng": 105.9543},
+                        "location_type": "ROOFTOP",
+                    },
+                }
+            ],
+        }
+        provider = GoogleGeocodingProvider("fake-key", fetch=fetch_returning(payload))
+        candidates = provider.geocode_sync("Vinhomes Ocean Park")
+        assert candidates[0].lat == 20.9933
+        assert candidates[0].lon == 105.9543
+        assert candidates[0].provider == "google_geocoding"
+        assert candidates[0].confidence == "high"
+
+
 class TestGeocodeFacade:
     @pytest.mark.asyncio
     async def test_returns_candidates_and_needs_confirmation(self) -> None:
@@ -131,6 +160,53 @@ class TestGeocodeFacade:
             nominatim_fetch=fetch_returning(BEN_THANH_RESPONSE),
         )
         assert result.provider == "goong"
+
+    @pytest.mark.asyncio
+    async def test_google_preferred_when_key_present(self) -> None:
+        google_payload = {
+            "status": "OK",
+            "results": [
+                {
+                    "formatted_address": "Google result",
+                    "geometry": {"location": {"lat": 10.78, "lng": 106.71}, "location_type": "ROOFTOP"},
+                }
+            ],
+        }
+        goong_payload = {
+            "results": [
+                {"formatted_address": "Goong result", "geometry": {"location": {"lat": 10.77, "lng": 106.70}}}
+            ]
+        }
+        result = await geocode(
+            "15 Nguyễn Huệ",
+            google_geocoding_api_key="fake-google-key",
+            google_fetch=fetch_returning(google_payload),
+            goong_api_key="fake-goong-key",
+            goong_fetch=fetch_returning(goong_payload),
+            nominatim_fetch=fetch_returning(BEN_THANH_RESPONSE),
+        )
+        assert result.provider == "google_geocoding"
+
+    @pytest.mark.asyncio
+    async def test_falls_back_to_goong_when_google_fails(self) -> None:
+        def failing_google(url, params):
+            raise RuntimeError("google down")
+
+        goong_payload = {
+            "results": [
+                {"formatted_address": "Goong result", "geometry": {"location": {"lat": 10.77, "lng": 106.70}}}
+            ]
+        }
+        result = await geocode(
+            "15 Nguyễn Huệ",
+            google_geocoding_api_key="fake-google-key",
+            google_fetch=failing_google,
+            goong_api_key="fake-goong-key",
+            goong_fetch=fetch_returning(goong_payload),
+            nominatim_fetch=fetch_returning(BEN_THANH_RESPONSE),
+        )
+        assert result.provider == "goong"
+        assert any("google" in w.lower() for w in result.warnings)
 
     @pytest.mark.asyncio
     async def test_falls_back_to_nominatim_when_goong_fails(self) -> None:

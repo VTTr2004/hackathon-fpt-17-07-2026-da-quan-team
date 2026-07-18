@@ -12,9 +12,9 @@ Nominatim's administrative labels are unreliable after the 2025 provincial
 mergers (it placed Bến Thành in "Thủ Đức"), so only the COORDINATES are used;
 the display label is shown to the human but never parsed for logic.
 
-If ``GOONG_API_KEY`` is set in the environment, Goong (Google-compatible, tuned
-for Vietnamese addresses) is tried first and Nominatim is the fallback. With no
-key the whole module still works — geocoding is fully keyless by default.
+If ``GOOGLE_GEOCODING_API_KEY`` is set, Google Geocoding is tried first. If not,
+``GOONG_API_KEY`` can provide Vietnam-tuned geocoding. Nominatim remains the
+keyless fallback so the module still works without paid keys.
 
 Runtime uses stdlib ``urllib`` (not httpx, which is a dev-only dependency) run in
 a worker thread so the async event loop is never blocked. The low-level fetch is
@@ -34,6 +34,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from threading import Lock
 from typing import Any
+
+from app.core.config import get_settings
 
 GEOCODING_VERSION = "1.0.0"
 
@@ -74,6 +76,7 @@ def clear_geocode_cache() -> None:
         _cache.clear()
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
+GOOGLE_GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 GOONG_URL = "https://rsapi.goong.io/geocode"
 # Nominatim usage policy requires an identifying User-Agent and <= 1 req/s.
 USER_AGENT = "startup-lens-diligence/0.1 (hackathon; contact: thanhdat3108k67@gmail.com)"
@@ -233,17 +236,84 @@ class GoongProvider:
         return candidates
 
 
+def _google_confidence(item: dict[str, Any]) -> str:
+    geometry = item.get("geometry", {}) if isinstance(item.get("geometry"), dict) else {}
+    location_type = geometry.get("location_type")
+    if location_type in {"ROOFTOP", "RANGE_INTERPOLATED"} and not item.get("partial_match"):
+        return "high"
+    if location_type == "GEOMETRIC_CENTER":
+        return "medium"
+    return "low"
+
+
+class GoogleGeocodingProvider:
+    """Official Google geocoder. Active only when GOOGLE_GEOCODING_API_KEY is set."""
+
+    name = "google_geocoding"
+
+    def __init__(self, api_key: str, fetch: Fetcher | None = None) -> None:
+        if not api_key:
+            raise GeocodingError("GoogleGeocodingProvider requires an API key")
+        self._api_key = api_key
+        self._fetch = fetch or _default_fetch
+
+    def geocode_sync(self, address: str, *, limit: int = 5) -> list[GeocodeCandidate]:
+        data = self._fetch(
+            GOOGLE_GEOCODING_URL,
+            {
+                "address": address,
+                "components": "country:VN",
+                "region": "vn",
+                "key": self._api_key,
+            },
+        )
+        if not isinstance(data, dict):
+            raise GeocodingError("Unexpected Google Geocoding response shape")
+        status = data.get("status")
+        if status not in {"OK", "ZERO_RESULTS"}:
+            raise GeocodingError(f"Google Geocoding status {status}")
+
+        candidates: list[GeocodeCandidate] = []
+        for item in data.get("results", [])[:limit]:
+            loc = item.get("geometry", {}).get("location", {})
+            if "lat" not in loc or "lng" not in loc:
+                continue
+            candidates.append(
+                GeocodeCandidate(
+                    lat=float(loc["lat"]),
+                    lon=float(loc["lng"]),
+                    display_name=item.get("formatted_address", ""),
+                    provider=self.name,
+                    confidence=_google_confidence(item),
+                    raw=item,
+                )
+            )
+        return candidates
+
+
 def _build_providers(
     nominatim_fetch: Fetcher | None = None,
     goong_fetch: Fetcher | None = None,
+    google_fetch: Fetcher | None = None,
     goong_api_key: str | None = None,
+    google_geocoding_api_key: str | None = None,
 ) -> list[Any]:
-    """Ordered provider list. Goong first when a key exists (better for VN street
-    addresses), Nominatim always present as the keyless fallback."""
+    """Ordered provider list. Google/Goong when configured, Nominatim fallback."""
     providers: list[Any] = []
-    key = goong_api_key if goong_api_key is not None else os.environ.get("GOONG_API_KEY", "")
-    if key:
-        providers.append(GoongProvider(key, fetch=goong_fetch))
+    google_key = (
+        google_geocoding_api_key
+        if google_geocoding_api_key is not None
+        else get_settings().google_geocoding_api_key or os.environ.get("GOOGLE_GEOCODING_API_KEY", "")
+    )
+    goong_key = (
+        goong_api_key
+        if goong_api_key is not None
+        else get_settings().goong_api_key or os.environ.get("GOONG_API_KEY", "")
+    )
+    if google_key:
+        providers.append(GoogleGeocodingProvider(google_key, fetch=google_fetch))
+    if goong_key:
+        providers.append(GoongProvider(goong_key, fetch=goong_fetch))
     providers.append(NominatimProvider(fetch=nominatim_fetch))
     return providers
 
@@ -253,7 +323,9 @@ async def geocode(
     *,
     nominatim_fetch: Fetcher | None = None,
     goong_fetch: Fetcher | None = None,
+    google_fetch: Fetcher | None = None,
     goong_api_key: str | None = None,
+    google_geocoding_api_key: str | None = None,
 ) -> GeocodeResult:
     """Geocode an address, returning ranked candidates for human confirmation.
 
@@ -267,14 +339,20 @@ async def geocode(
 
     # Serve a repeat address from cache — no upstream call, no rate-limit pressure.
     # Tests that inject a fetch bypass the cache so they always exercise parsing.
-    cacheable = nominatim_fetch is None and goong_fetch is None
+    cacheable = nominatim_fetch is None and goong_fetch is None and google_fetch is None
     cache_key = address.strip().lower()
     if cacheable:
         cached = _cache_get(cache_key)
         if cached is not None:
             return cached
 
-    providers = _build_providers(nominatim_fetch, goong_fetch, goong_api_key)
+    providers = _build_providers(
+        nominatim_fetch,
+        goong_fetch,
+        google_fetch,
+        goong_api_key,
+        google_geocoding_api_key,
+    )
     warnings: list[str] = []
     for provider in providers:
         try:

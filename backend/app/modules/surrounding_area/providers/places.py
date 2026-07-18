@@ -23,6 +23,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from app.core.config import get_settings
+
 PLACES_VERSION = "1.0.0"
 TEXT_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/findplacefromtext/json"
 
@@ -58,7 +60,11 @@ class PlaceEnrichment:
 
 
 def is_configured(api_key: str | None = None) -> bool:
-    key = api_key if api_key is not None else os.environ.get("GOOGLE_PLACES_API_KEY", "")
+    key = (
+        api_key
+        if api_key is not None
+        else get_settings().google_places_api_key or os.environ.get("GOOGLE_PLACES_API_KEY", "")
+    )
     return bool(key)
 
 
@@ -78,7 +84,11 @@ def enrich_place(
 ) -> PlaceEnrichment | None:
     """Look up one place by name near a point. Returns None if not configured or
     not found. Never raises for a normal miss."""
-    key = api_key if api_key is not None else os.environ.get("GOOGLE_PLACES_API_KEY", "")
+    key = (
+        api_key
+        if api_key is not None
+        else get_settings().google_places_api_key or os.environ.get("GOOGLE_PLACES_API_KEY", "")
+    )
     if not key:
         return None
     fetch = fetch or _default_fetch
