@@ -66,6 +66,15 @@ def normalize_cash_flow_input(
         ]
         return dataset
     if extracted_dataset and extracted_dataset.transactions:
+        # A workbook commonly contains transactions but omits the current balance.
+        # Preserve a manually declared balance instead of replacing it with a
+        # synthetic balance calculated from a zero opening balance.
+        if extracted_dataset.reported_ending_cash is None and startup_facts.get("current_cash") is not None:
+            extracted_dataset.reported_ending_cash = normalize_amount(startup_facts["current_cash"])
+            extracted_dataset.warnings.append(
+                "Reported ending cash was supplied from current_cash because the workbook did not contain "
+                "an ending balance."
+            )
         return extracted_dataset
     periods = startup_facts.get("financial_periods") or []
     if periods and startup_facts.get("current_cash") is not None:

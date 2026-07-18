@@ -4,27 +4,45 @@ from .schemas import CashFlowDataset, CashFlowTransaction
 
 
 def remove_duplicates(transactions: list[CashFlowTransaction]) -> tuple[list[CashFlowTransaction], list[str]]:
-    result, seen, warnings = [], set(), []
+    result, seen, possible_duplicates, warnings = [], set(), set(), []
     for item in transactions:
-        key = (
-            (item.document_id, item.sheet, item.row_number)
-            if item.document_id and item.row_number
-            else (item.date, item.amount, item.direction, item.source_ref)
-        )
-        if key in seen:
+        key = None
+        if item.document_id and item.row_number is not None:
+            key = ("document_row", item.document_id, item.sheet, item.row_number)
+        elif item.source_ref:
+            key = ("source_ref", item.source_ref)
+
+        if key is not None and key in seen:
             warnings.append(f"Duplicate transaction excluded: {item.period} {item.amount}")
-        else:
+            continue
+
+        if key is not None:
             seen.add(key)
-            result.append(item)
+        else:
+            fingerprint = (
+                item.period,
+                item.date,
+                item.amount,
+                item.direction,
+                item.activity,
+                item.category,
+                item.description,
+            )
+            if fingerprint in possible_duplicates:
+                warnings.append(
+                    f"Possible duplicate preserved because source identity is missing: {item.period} {item.amount}"
+                )
+            possible_duplicates.add(fingerprint)
+        result.append(item)
     return result, warnings
 
 
 def reconcile_balance(dataset: CashFlowDataset, tolerance: Decimal = Decimal(1000)) -> dict:
     inflows = sum((x.amount for x in dataset.transactions if x.direction == "inflow"), Decimal(0))
     outflows = sum((x.amount for x in dataset.transactions if x.direction == "outflow"), Decimal(0))
-    expected = (dataset.opening_cash or Decimal(0)) + inflows - outflows
+    expected = dataset.opening_cash + inflows - outflows if dataset.opening_cash is not None else None
     reported = dataset.reported_ending_cash
-    difference = expected - reported if reported is not None and dataset.opening_cash is not None else None
+    difference = expected - reported if expected is not None and reported is not None else None
     movement = inflows + outflows
     if difference is None:
         severity = "not_available" if dataset.opening_cash is None else "matched"

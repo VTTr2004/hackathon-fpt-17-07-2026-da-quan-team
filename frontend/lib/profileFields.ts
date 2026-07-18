@@ -358,7 +358,19 @@ export const quickCreateFieldGroups: Record<string, ProfileFieldGroup[]> = {
       id: "cash-position",
       title: "Số dư và dòng tiền theo kỳ",
       description: "Dữ liệu đầu vào riêng cho Cash Flow Analysis.",
-      fieldKeys: ["current_cash", "financial_periods"],
+      fieldKeys: ["current_cash", "minimum_cash_buffer", "financial_periods"],
+    },
+    {
+      id: "break-even",
+      title: "Hòa vốn và chi phí",
+      description: "Dùng để tính doanh thu hòa vốn và mức đệm tiền mặt cần duy trì.",
+      fieldKeys: ["fixed_monthly_costs", "variable_cost_ratio"],
+    },
+    {
+      id: "working-capital",
+      title: "Vốn lưu động",
+      description: "Các khoản phải thu, phải trả và tồn kho hỗ trợ đánh giá nhu cầu vốn lưu động.",
+      fieldKeys: ["accounts_receivable", "accounts_payable", "inventory"],
     },
   ],
   "quick-location": [
@@ -425,12 +437,22 @@ export const profileSections: ProfileSection[] = [
     description: "Dữ liệu đầu vào cho runway, burn rate, biên lợi nhuận và dự báo 6-12 tháng.",
     fields: [
       { key: "current_cash", label: "Tiền mặt hiện có", type: "number" },
+      { key: "minimum_cash_buffer", label: "Mức đệm tiền mặt tối thiểu", type: "number" },
+      { key: "fixed_monthly_costs", label: "Định phí hàng tháng", type: "number" },
+      {
+        key: "variable_cost_ratio",
+        label: "Tỷ lệ biến phí",
+        type: "number",
+        placeholder: "0.45",
+        helper: "Nhập từ 0 đến 1, ví dụ 0.45 tương đương 45%.",
+      },
       { key: "monthly_revenue", label: "Doanh thu trung bình tháng", type: "number" },
       { key: "monthly_expense", label: "Chi phí trung bình tháng", type: "number" },
       { key: "fixed_costs", label: "Chi phí cố định", type: "number" },
       { key: "variable_costs", label: "Chi phí biến đổi", type: "number" },
       { key: "accounts_receivable", label: "Khoản phải thu", type: "number" },
       { key: "accounts_payable", label: "Khoản phải trả", type: "number" },
+      { key: "inventory", label: "Tồn kho", type: "number" },
       { key: "debt_obligations", label: "Khoản vay và nghĩa vụ trả nợ", type: "textarea", rows: 2 },
       { key: "average_price", label: "Giá bán trung bình", type: "number" },
       { key: "unit_cost", label: "Chi phí tạo ra một sản phẩm/dịch vụ", type: "number" },
@@ -579,6 +601,12 @@ export function parseNumberValue(raw: string) {
   return Number.isFinite(value) ? value : null;
 }
 
+export function parseRatioValue(raw: string) {
+  const normalized = raw.trim().replace(",", ".");
+  const value = Number(normalized);
+  return Number.isFinite(value) && value >= 0 && value <= 1 ? value : null;
+}
+
 export function parsePeriods(raw: string) {
   return raw
     .split("\n")
@@ -608,6 +636,7 @@ export function readProfileField(form: FormData, field: ProfileField) {
   }
 
   if (field.type === "number") {
+    if (field.key === "variable_cost_ratio") return parseRatioValue(raw) ?? undefined;
     return parseNumberValue(raw) ?? undefined;
   }
 

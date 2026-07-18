@@ -402,7 +402,11 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
                         <span className={`status ${status}`}>{statusCopy[status] ?? status}</span>
                       </div>
                       {result ? (
-                        module.id === "cash_flow" ? <CashFlowAnalysis analysis={result} /> : <ModuleReportPreview analysis={result} />
+                        module.id === "cash_flow" ? (
+                          <CashFlowAnalysis analysis={result} />
+                        ) : (
+                          <ModuleReportPreview analysis={result} />
+                        )
                       ) : (
                         <p className="muted smallText">Chưa có báo cáo cho module này.</p>
                       )}
