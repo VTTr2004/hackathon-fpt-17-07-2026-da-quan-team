@@ -34,10 +34,18 @@ Percent-encode reserved URL characters in the password. The application creates 
 | --- | --- |
 | `DATABASE_URL` | Supabase Session pooler URI from step 1 |
 | `AUTH_SECRET` | Unique random secret with at least 32 characters; never reuse the development value |
+| `SAMPLE_DATA_PASSWORD` | Mật khẩu riêng (tối thiểu 8 ký tự) cho hai tài khoản demo |
 | `CORS_ORIGINS` | Temporary Vercel URL or final frontend domain, e.g. `https://your-app.vercel.app` |
 | `GEMINI_API_KEY` | Một Gemini key hoặc danh sách key phân tách bằng dấu phẩy; để trống nếu chỉ cần fallback deterministic |
 | `GOONG_API_KEY` | Optional |
 | `GOOGLE_PLACES_API_KEY` | Optional |
+
+Blueprint bật `SEED_SAMPLE_DATA=true`. Mỗi lần backend khởi động, seed idempotent sẽ bảo đảm có hồ sơ mẫu
+`Lotus Fresh Kitchen` và quyền truy cập tương ứng; dữ liệu không bị nhân đôi khi redeploy.
+
+- Startup demo: `startup.demo@startuplens.vn`
+- Investor demo: `investor.demo@startuplens.vn`
+- Cả hai dùng mật khẩu cấu hình trong `SAMPLE_DATA_PASSWORD`.
 
 The backend health endpoint is `/api/v1/health`. Copy the resulting Render URL, for example:
 
