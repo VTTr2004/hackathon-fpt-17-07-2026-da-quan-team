@@ -5,6 +5,81 @@ from typing import Any
 from ..schemas import CashActivity, CashDirection, CashFlowDataset, CashFlowPeriodSummary
 
 
+def _non_negative_decimal(value: Any, field: str) -> Decimal:
+    try:
+        number = Decimal(str(value))
+    except Exception as exc:
+        raise ValueError(f"{field} must be numeric") from exc
+    if not number.is_finite() or number < 0:
+        raise ValueError(f"{field} must be finite and non-negative")
+    return number
+
+
+def calculate_break_even(*, fixed_monthly_costs: Any, variable_cost_ratio: Any) -> dict[str, Any]:
+    fixed_costs = _non_negative_decimal(fixed_monthly_costs, "fixed_monthly_costs")
+    ratio = _non_negative_decimal(variable_cost_ratio, "variable_cost_ratio")
+    if ratio >= 1:
+        raise ValueError("variable_cost_ratio must be less than 1")
+    contribution_margin_ratio = Decimal(1) - ratio
+    return {
+        "fixed_monthly_costs": fixed_costs,
+        "variable_cost_ratio": ratio,
+        "contribution_margin_ratio": contribution_margin_ratio,
+        "break_even_revenue": fixed_costs / contribution_margin_ratio,
+    }
+
+
+def calculate_working_capital(
+    *,
+    accounts_receivable: Any | None,
+    accounts_payable: Any | None,
+    inventory: Any | None,
+    period_revenue: Any | None = None,
+    period_cogs: Any | None = None,
+    period_days: int | None = None,
+) -> dict[str, Any]:
+    raw_balances = {
+        "accounts_receivable": accounts_receivable,
+        "accounts_payable": accounts_payable,
+        "inventory": inventory,
+    }
+    missing = [field for field, value in raw_balances.items() if value is None]
+    balances = {
+        field: _non_negative_decimal(value, field) for field, value in raw_balances.items() if value is not None
+    }
+    output: dict[str, Any] = {
+        "available": not missing,
+        "missing_data": missing,
+        **balances,
+        "net_working_capital": None,
+        "dso_days": None,
+        "dpo_days": None,
+        "inventory_days": None,
+        "cash_conversion_cycle_days": None,
+    }
+    if not missing:
+        output["net_working_capital"] = (
+            balances["accounts_receivable"] + balances["inventory"] - balances["accounts_payable"]
+        )
+    if period_days is None:
+        return output
+    if isinstance(period_days, bool) or not 1 <= period_days <= 366:
+        raise ValueError("period_days must be between 1 and 366")
+    revenue = _non_negative_decimal(period_revenue, "period_revenue") if period_revenue is not None else None
+    cogs = _non_negative_decimal(period_cogs, "period_cogs") if period_cogs is not None else None
+    days = Decimal(period_days)
+    if revenue and accounts_receivable is not None:
+        output["dso_days"] = balances["accounts_receivable"] / revenue * days
+    if cogs:
+        if accounts_payable is not None:
+            output["dpo_days"] = balances["accounts_payable"] / cogs * days
+        if inventory is not None:
+            output["inventory_days"] = balances["inventory"] / cogs * days
+    if all(output[field] is not None for field in ("dso_days", "dpo_days", "inventory_days")):
+        output["cash_conversion_cycle_days"] = output["dso_days"] + output["inventory_days"] - output["dpo_days"]
+    return output
+
+
 def aggregate_cash_flow_by_period(dataset: CashFlowDataset) -> list[CashFlowPeriodSummary]:
     rows: dict[str, CashFlowPeriodSummary] = {}
     for item in dataset.transactions:
@@ -37,9 +112,7 @@ def calculate_burn_metrics(periods: list[CashFlowPeriodSummary], available_cash:
     net = max(-average_net, Decimal(0))
     runway = available_cash / net if net else None
     nets = [x.net_operating_cash_flow for x in periods]
-    cash_flow_state = (
-        "generating" if average_net > 0 else "burning" if average_net < 0 else "break_even"
-    )
+    cash_flow_state = "generating" if average_net > 0 else "burning" if average_net < 0 else "break_even"
     return {
         "average_operating_inflow": inflow,
         "average_operating_outflow": outflow,

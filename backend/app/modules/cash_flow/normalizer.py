@@ -21,7 +21,15 @@ def normalize_amount(value: Any) -> Decimal:
     return amount
 
 
-def legacy_periods_to_dataset(current_cash: Any, periods: list[dict[str, Any]]) -> CashFlowDataset:
+def legacy_periods_to_dataset(
+    current_cash: Any,
+    periods: list[dict[str, Any]],
+    *,
+    opening_cash: Any = None,
+    reported_ending_cash: Any = None,
+    currency: str = "VND",
+    cash_as_of: Any = None,
+) -> CashFlowDataset:
     transactions: list[CashFlowTransaction] = []
     for item in periods:
         period = normalize_period(item["period"])
@@ -44,7 +52,12 @@ def legacy_periods_to_dataset(current_cash: Any, periods: list[dict[str, Any]]) 
             ]
         )
     return CashFlowDataset(
-        reported_ending_cash=normalize_amount(current_cash),
+        currency=currency or "VND",
+        opening_cash=normalize_amount(opening_cash) if opening_cash is not None else None,
+        reported_ending_cash=normalize_amount(
+            reported_ending_cash if reported_ending_cash is not None else current_cash
+        ),
+        cash_as_of=cash_as_of,
         transactions=transactions,
         source_type="legacy",
         warnings=["Legacy input does not separate financing and investing cash flow."],
@@ -78,5 +91,12 @@ def normalize_cash_flow_input(
         return extracted_dataset
     periods = startup_facts.get("financial_periods") or []
     if periods and startup_facts.get("current_cash") is not None:
-        return legacy_periods_to_dataset(startup_facts["current_cash"], periods)
+        return legacy_periods_to_dataset(
+            startup_facts["current_cash"],
+            periods,
+            opening_cash=startup_facts.get("opening_cash"),
+            reported_ending_cash=startup_facts.get("reported_ending_cash"),
+            currency=str(startup_facts.get("currency") or "VND"),
+            cash_as_of=startup_facts.get("cash_as_of"),
+        )
     return None

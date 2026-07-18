@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { industryOptions, quickCreateFields, stageOptions } from "@/lib/profileFields";
 
 import { useProfileDraft } from "./_components/ProfileDraftProvider";
+import { cashFlowSections } from "./cash-flow/fields";
 
 const moduleCards = [
   {
@@ -40,7 +41,7 @@ function hasValue(value: unknown) {
 
 export default function NewStartupOverviewPage() {
   const router = useRouter();
-  const { draft, ready, updateIdentity, clearDraft } = useProfileDraft();
+  const { draft, ready, cashFlowFiles, updateIdentity, clearDraft } = useProfileDraft();
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
 
@@ -59,8 +60,18 @@ export default function NewStartupOverviewPage() {
         primary_location: draft.identity.location || undefined,
         facts: draft.facts,
       });
+      for (const file of cashFlowFiles) {
+        await api.uploadDocument(startup.id, file);
+      }
+      if (cashFlowFiles.length > 0) {
+        await api.runAnalysis(startup.id, "cash_flow", {
+          use_gemini: true,
+          use_cash_flow_ingestion_agent: true,
+          use_cash_flow_mapping_ai: true,
+        });
+      }
       clearDraft();
-      router.push(`/startups/${startup.id}`);
+      router.push(`/startups/${startup.id}#analysis-modules`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không thể tạo hồ sơ startup");
       setCreating(false);
@@ -125,8 +136,8 @@ export default function NewStartupOverviewPage() {
 
       <section className="moduleDraftGrid" aria-label="Tiến độ dữ liệu theo module">
         {moduleCards.map((module) => {
-          const fields = quickCreateFields
-            .filter((section) => module.sectionIds.includes(section.id))
+          const fields = (module.id === "cash" ? cashFlowSections : quickCreateFields)
+            .filter((section) => module.id === "cash" || module.sectionIds.includes(section.id))
             .flatMap((section) => section.fields);
           const completed = fields.filter((field) => hasValue(draft.facts[field.key])).length;
           const progress = fields.length ? Math.round((completed / fields.length) * 100) : 0;
@@ -156,7 +167,13 @@ export default function NewStartupOverviewPage() {
             Hủy
           </Link>
           <button className="primaryButton" disabled={creating} onClick={createStartup}>
-            {creating ? "Đang tạo hồ sơ..." : "Tạo hồ sơ và tiếp tục"}
+            {creating
+              ? cashFlowFiles.length > 0
+                ? "Đang tạo và phân tích Excel..."
+                : "Đang tạo hồ sơ..."
+              : cashFlowFiles.length > 0
+                ? `Tạo hồ sơ và phân tích ${cashFlowFiles.length} file`
+                : "Tạo hồ sơ và tiếp tục"}
           </button>
         </div>
       </div>
