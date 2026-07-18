@@ -78,7 +78,9 @@ export default function LoginPage() {
       <section className="authFormPane">
         <div className="authForm">
           <div className="authFormHead">
-            <div className="authLogo">HĐ</div>
+            <div className="authLogo" aria-hidden="true">
+              <span className="authLogoImage" />
+            </div>
             <h1>{mode === "login" ? "Chào mừng trở lại" : "Tạo tài khoản"}</h1>
             <p>
               {mode === "login"

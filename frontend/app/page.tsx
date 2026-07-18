@@ -119,14 +119,6 @@ export default function DashboardPage() {
               : "Phân tích và đánh giá những hồ sơ startup đã chia sẻ với bạn, có dẫn chứng."}
           </p>
         </div>
-        {isStartup && (
-          <div className="hdHeadActions">
-            <Link className="hdBtn primary" href="/startups/new">
-              <MIcon name="add" />
-              Tạo hồ sơ mới
-            </Link>
-          </div>
-        )}
       </section>
 
       <section className="hdWorkflow" aria-label="Luồng xử lý hồ sơ">
@@ -179,12 +171,6 @@ export default function DashboardPage() {
         ) : startups.length === 0 ? (
           <div className="hdEmpty">
             <span>{isStartup ? "Bạn chưa có hồ sơ nào." : "Chưa có hồ sơ nào được chia sẻ với bạn."}</span>
-            {isStartup && (
-              <Link className="hdBtn primary" href="/startups/new">
-                <MIcon name="add" />
-                Tạo hồ sơ đầu tiên
-              </Link>
-            )}
           </div>
         ) : (
           <div className="hdRecordList">
