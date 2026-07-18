@@ -13,6 +13,75 @@ SAMPLE_STARTUP_EMAIL = "startup.demo@startuplens.vn"
 SAMPLE_INVESTOR_EMAIL = "investor.demo@startuplens.vn"
 SAMPLE_STARTUP_NAME = "Lotus Fresh Kitchen"
 
+DISCOVERY_SAMPLES = (
+    {
+        "name": "Góc Hồ Coffee",
+        "industry": "F&B",
+        "stage": "Seed",
+        "location": "Hà Nội",
+        "facts": {
+            "subsector": "Coffee",
+            "fundraising_amount": 5_000_000_000,
+            "monthly_revenue": 720_000_000,
+            "revenue_growth": 18,
+            "runway_months": 8,
+            "gross_margin": 64,
+            "traction_summary": "Ba cửa hàng, tăng trưởng doanh thu 18% trong quý gần nhất.",
+            "fundraising_need": "Mở thêm 6 cửa hàng",
+            "scalability": "Mô hình kiosk tiêu chuẩn",
+            "needed_capabilities": ["mở rộng chuỗi", "vốn"],
+        },
+    },
+    {
+        "name": "Mây Retail Lab",
+        "industry": "Retail",
+        "stage": "Pre-seed",
+        "location": "TP.HCM",
+        "facts": {
+            "subsector": "Convenience Store",
+            "fundraising_amount": 3_500_000_000,
+            "monthly_revenue": 410_000_000,
+            "revenue_growth": 25,
+            "runway_months": 6,
+            "traction_summary": "Hai điểm bán thử nghiệm tại khu dân cư.",
+            "fundraising_need": "Chuẩn hóa vận hành và mở 5 điểm",
+            "needed_capabilities": ["phân phối"],
+        },
+    },
+    {
+        "name": "Bếp Nhanh 24",
+        "industry": "FoodTech",
+        "stage": "Seed",
+        "location": "Đà Nẵng",
+        "facts": {
+            "subsector": "Cloud Kitchen",
+            "fundraising_amount": 8_000_000_000,
+            "monthly_revenue": 950_000_000,
+            "runway_months": 14,
+            "gross_margin": 42,
+            "traction_summary": "Phục vụ 280 đơn mỗi ngày qua ba thương hiệu ảo.",
+            "fundraising_need": "Tự động hóa bếp trung tâm",
+            "scalability": "Nhân bản theo cụm quận",
+        },
+    },
+    {
+        "name": "An Nhiên Market",
+        "industry": "Retail",
+        "stage": "Seed",
+        "location": "Hà Nội",
+        "facts": {
+            "subsector": "Organic Retail",
+            "fundraising_amount": 12_000_000_000,
+            "monthly_revenue": 1_200_000_000,
+            "revenue_growth": 9,
+            "gross_margin": 31,
+            "traction_summary": "Bốn cửa hàng và 6.000 khách hàng thành viên.",
+            "fundraising_need": "Mở rộng chuỗi và kho lạnh",
+            "needed_capabilities": ["phân phối"],
+        },
+    },
+)
+
 SAMPLE_FACTS = {
     "problem": "Nhân viên văn phòng cần bữa trưa lành mạnh, giao nhanh và có mức giá ổn định.",
     "solution": "Suất ăn theo thực đơn tuần, đặt trước trên web và giao theo khung giờ cố định.",
@@ -110,9 +179,12 @@ async def seed_sample_data(session: AsyncSession, password: str) -> None:
             facts=SAMPLE_FACTS,
             status="submitted",
             current_version=1,
+            discoverable=True,
         )
         session.add(startup)
         await session.flush()
+    elif not startup.discoverable:
+        startup.discoverable = True
 
     version = await session.scalar(
         select(StartupVersion).where(
@@ -136,6 +208,47 @@ async def seed_sample_data(session: AsyncSession, password: str) -> None:
                 created_by_id=owner.id,
             )
         )
+
+    for item in DISCOVERY_SAMPLES:
+        sample = await session.scalar(select(Startup).where(Startup.owner_id == owner.id, Startup.name == item["name"]))
+        if sample is None:
+            sample = Startup(
+                owner_id=owner.id,
+                name=item["name"],
+                industry=item["industry"],
+                stage=item["stage"],
+                primary_location=item["location"],
+                facts=item["facts"],
+                status="submitted",
+                current_version=1,
+                discoverable=True,
+            )
+            session.add(sample)
+            await session.flush()
+        if not sample.discoverable:
+            sample.discoverable = True
+        sample_version = await session.scalar(
+            select(StartupVersion).where(
+                StartupVersion.startup_id == sample.id,
+                StartupVersion.version_number == 1,
+            )
+        )
+        if sample_version is None:
+            session.add(
+                StartupVersion(
+                    startup_id=sample.id,
+                    version_number=1,
+                    snapshot={
+                        "name": sample.name,
+                        "industry": sample.industry,
+                        "stage": sample.stage,
+                        "primary_location": sample.primary_location,
+                        "facts": sample.facts,
+                    },
+                    document_ids=[],
+                    created_by_id=owner.id,
+                )
+            )
 
     access = await session.scalar(
         select(StartupAccess).where(

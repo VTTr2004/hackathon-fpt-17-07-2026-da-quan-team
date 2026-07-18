@@ -10,6 +10,9 @@ import type {
   AuthResponse,
   Completeness,
   InvestorAccess,
+  InvestorPreference,
+  Candidate,
+  PipelineItem,
   ProfileExtractionJob,
   StartupVersion,
   User,
@@ -92,6 +95,11 @@ export const api = {
       facts: Record<string, unknown>;
     }>,
   ) => request<Startup>(`/startups/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  updateDiscovery: (id: string, discoverable: boolean, publicSummary?: Record<string, boolean>) =>
+    request<Startup>(`/startups/${id}/discovery`, {
+      method: "PATCH",
+      body: JSON.stringify({ discoverable, public_summary: publicSummary }),
+    }),
   completeness: (id: string) => request<Completeness>(`/startups/${id}/completeness`),
   submitStartup: (id: string) => request<StartupVersion>(`/startups/${id}/submit`, { method: "POST" }),
   createNextDraft: (id: string) => request<Startup>(`/startups/${id}/draft`, { method: "POST" }),
@@ -106,6 +114,30 @@ export const api = {
     }),
   revokeAccess: (id: string, investorId: string) =>
     request<void>(`/startups/${id}/access/${investorId}`, { method: "DELETE" }),
+  approveAccess: (id: string, investorId: string) =>
+    request<InvestorAccess>(`/startups/${id}/access/${investorId}/approve`, { method: "POST" }),
+  rejectAccess: (id: string, investorId: string) =>
+    request<InvestorAccess>(`/startups/${id}/access/${investorId}/reject`, { method: "POST" }),
+  requestAccess: (id: string, reason?: string) =>
+    request<InvestorAccess>(`/startups/${id}/access-request`, {
+      method: "POST",
+      body: JSON.stringify({ reason: reason || null }),
+    }),
+  getInvestorPreferences: () => request<InvestorPreference>("/investor/preferences"),
+  updateInvestorPreferences: (payload: Partial<InvestorPreference>) =>
+    request<InvestorPreference>("/investor/preferences", { method: "PATCH", body: JSON.stringify(payload) }),
+  generateMatches: () => request<Candidate[]>("/investor/matches", { method: "POST" }),
+  listCandidates: (params?: URLSearchParams) =>
+    request<Candidate[]>(`/investor/candidates${params?.size ? `?${params.toString()}` : ""}`),
+  compareCandidates: (startupIds: string[]) =>
+    request<Candidate[]>("/investor/compare", { method: "POST", body: JSON.stringify({ startup_ids: startupIds }) }),
+  shortlistCandidate: (id: string) =>
+    request<PipelineItem>(`/investor/candidates/${id}/shortlist`, { method: "POST" }),
+  listPipeline: () => request<PipelineItem[]>("/investor/pipeline"),
+  updatePipeline: (id: string, status: PipelineItem["status"], note?: string | null) =>
+    request<PipelineItem>(`/investor/pipeline/${id}`, {
+      method: "PATCH", body: JSON.stringify({ status, note: note ?? null }),
+    }),
   listDocuments: (id: string) => request<DocumentItem[]>(`/startups/${id}/documents`),
   uploadDocument: (id: string, file: File) => {
     const formData = new FormData();

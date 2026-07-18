@@ -1,7 +1,7 @@
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -22,6 +22,8 @@ class Startup(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     facts: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, nullable=False)
     status: Mapped[str] = mapped_column(String(30), default="draft", nullable=False)
     current_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    discoverable: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    public_summary: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, nullable=False)
 
     documents: Mapped[list["Document"]] = relationship(  # noqa: F821
         back_populates="startup", cascade="all, delete-orphan"

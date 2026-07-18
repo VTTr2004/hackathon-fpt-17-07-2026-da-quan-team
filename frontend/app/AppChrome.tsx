@@ -191,6 +191,11 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   } else {
     nav = [
       { kind: "route", href: "/", label: isInvestor ? "Bàn thẩm định" : "Hồ sơ của tôi", icon: "dashboard", active: pathname === "/" },
+      ...(isInvestor ? [
+        { kind: "route" as const, href: "/investor/candidates", label: "Khám phá startup", icon: "travel_explore", active: pathname === "/investor/candidates" },
+        { kind: "route" as const, href: "/investor/pipeline", label: "Pipeline", icon: "view_kanban", active: pathname === "/investor/pipeline" },
+        { kind: "route" as const, href: "/investor/preferences", label: "Investment thesis", icon: "tune", active: pathname === "/investor/preferences" },
+      ] : []),
       ...workspaceItems.map((s) => ({
         kind: "route" as const,
         href: `/startups/${s.id}`,

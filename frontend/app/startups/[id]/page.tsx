@@ -301,6 +301,23 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     catch (err) { setError(err instanceof Error ? err.message : "Không thể thu hồi quyền"); }
   }
 
+  async function toggleDiscovery(discoverable: boolean) {
+    setBusy("discovery");
+    try { setStartup(await api.updateDiscovery(id, discoverable)); }
+    catch (err) { setError(err instanceof Error ? err.message : "Không thể cập nhật discovery"); }
+    finally { setBusy(null); }
+  }
+
+  async function decideAccess(investorId: string, decision: "approve" | "reject") {
+    setBusy(`${decision}-${investorId}`);
+    try {
+      if (decision === "approve") await api.approveAccess(id, investorId);
+      else await api.rejectAccess(id, investorId);
+      setAccess(await api.listAccess(id));
+    } catch (err) { setError(err instanceof Error ? err.message : "Không thể xử lý yêu cầu"); }
+    finally { setBusy(null); }
+  }
+
   if (!startup) {
     return (
       <div className="hdShell">
@@ -640,8 +657,12 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
               {isStartup && (
                 <section className="hdCard accessPanel">
                   <div className="hdSectionHead"><h2><MIcon name="group_add" />Chia sẻ với nhà đầu tư</h2></div>
+                  <div className="discoverySetting">
+                    <div><strong>Cho phép nhà đầu tư tìm thấy hồ sơ</strong><small>Chỉ snapshot đã nộp và các trường public xuất hiện trong discovery.</small></div>
+                    <label className="toggle"><input type="checkbox" checked={startup.discoverable} disabled={startup.current_version < 1 || busy === "discovery"} onChange={(event) => void toggleDiscovery(event.target.checked)} /><span /></label>
+                  </div>
                   <form className="inlineForm" onSubmit={grant}><select name="investor_id" required><option value="">Chọn nhà đầu tư</option>{investors.map((item) => <option value={item.id} key={item.id}>{item.full_name} · {item.email}</option>)}</select><button className="hdBtn primary" disabled={busy === "grant"}><MIcon name="add" />Cấp quyền</button></form>
-                  <div className="accessList">{access.map((item) => <div className="accessRow" key={item.investor_id}><span><strong>{item.investor_name}</strong><small>{item.investor_email}</small></span><div className="headerActions"><span className="status">{item.status}</span>{item.status === "active" && <button className="hdBtn compactButton" onClick={() => void revoke(item.investor_id)} type="button">Thu hồi</button>}</div></div>)}
+                  <div className="accessList">{access.map((item) => <div className="accessRow" key={item.investor_id}><span><strong>{item.investor_name}</strong><small>{item.investor_email}</small>{item.request_reason && <small className="requestReason">Lý do: {item.request_reason}</small>}</span><div className="headerActions"><span className="status">{item.status}</span>{item.status === "pending" && <><button className="hdBtn compactButton" onClick={() => void decideAccess(item.investor_id, "approve")} type="button">Chấp nhận</button><button className="hdBtn compactButton" onClick={() => void decideAccess(item.investor_id, "reject")} type="button">Từ chối</button></>}{item.status === "active" && <button className="hdBtn compactButton" onClick={() => void revoke(item.investor_id)} type="button">Thu hồi</button>}</div></div>)}
                     {!access.length && <p className="muted">Chưa chia sẻ với nhà đầu tư nào.</p>}
                   </div>
                 </section>

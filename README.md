@@ -419,6 +419,18 @@ Hoặc dùng helper script:
 | `NEXT_PUBLIC_API_URL` | Có ở frontend | URL backend API, ví dụ `http://localhost:8000/api/v1` |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Không | Hiển thị Google Maps ở frontend; thiếu key sẽ fallback map khác |
 
+## Investor discovery và access workflow
+
+Hệ thống giữ đúng hai role `startup` và `investor`. Startup nộp snapshot rồi bật
+`discoverable`; investor cấu hình investment thesis, nhận candidate card công khai,
+shortlist và gửi yêu cầu kết nối. `StartupAccess` dùng state machine
+`pending -> active/rejected`, và `active -> revoked`; chỉ `active` được mở data room,
+chạy analysis và document chat. Pipeline đầu tư được lưu độc lập với quyền dữ liệu.
+
+Các màn hình chính: `/investor/preferences`, `/investor/candidates` và
+`/investor/pipeline`. API tương ứng nằm dưới `/api/v1/investor`, còn request và phê
+duyệt access nằm dưới `/api/v1/startups/{id}`.
+
 ## API chính
 
 Tất cả endpoint backend có prefix `/api/v1`. Một số luồng API chính:

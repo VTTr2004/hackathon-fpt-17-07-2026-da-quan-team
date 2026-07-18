@@ -21,6 +21,11 @@ class StartupUpdate(BaseModel):
     facts: dict[str, Any] | None = None
 
 
+class DiscoveryUpdate(BaseModel):
+    discoverable: bool
+    public_summary: dict[str, bool] | None = None
+
+
 class StartupRead(StartupCreate):
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,6 +33,8 @@ class StartupRead(StartupCreate):
     owner_id: UUID | None
     status: str
     current_version: int
+    discoverable: bool
+    public_summary: dict[str, Any]
     created_at: datetime
     updated_at: datetime
 
@@ -70,4 +77,5 @@ class AccessRead(BaseModel):
     investor_id: UUID
     investor_name: str
     investor_email: str
-    status: Literal["active", "revoked"]
+    status: Literal["pending", "active", "rejected", "revoked"]
+    request_reason: str | None = None

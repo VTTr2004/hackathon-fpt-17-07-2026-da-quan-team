@@ -10,14 +10,17 @@ from app.core.auth import get_accessible_startup, get_current_user, get_owned_st
 from app.db.session import get_db
 from app.models.audit_log import AuditLog
 from app.models.document import Document
+from app.models.investor_pipeline import InvestorPipelineItem
 from app.models.startup import Startup
 from app.models.startup_access import StartupAccess
 from app.models.startup_version import StartupVersion
 from app.models.user import User
+from app.schemas.investor import AccessRequestCreate
 from app.schemas.startup import (
     AccessGrantRequest,
     AccessRead,
     CompletenessRead,
+    DiscoveryUpdate,
     StartupCreate,
     StartupRead,
     StartupUpdate,
@@ -69,6 +72,8 @@ def _read_from_snapshot(startup: Startup, version: StartupVersion) -> StartupRea
         facts=data.get("facts") or {},
         status=version.status,
         current_version=version.version_number,
+        discoverable=startup.discoverable,
+        public_summary=startup.public_summary or {},
         created_at=startup.created_at,
         updated_at=version.submitted_at,
     )
@@ -94,9 +99,7 @@ async def _completeness(startup: Startup, db: AsyncSession) -> CompletenessRead:
     }
     missing_fields = [label for key, label in REQUIRED_FIELDS if not _has_value(values.get(key))]
     document_count = await db.scalar(
-        select(Document.id)
-        .where(Document.startup_id == startup.id, Document.visibility == "shared")
-        .limit(1)
+        select(Document.id).where(Document.startup_id == startup.id, Document.visibility == "shared").limit(1)
     )
     missing_documents = [] if document_count else ["Ít nhất một tài liệu nền (PDF, DOCX, PPTX hoặc XLSX)"]
     format_errors: list[str] = []
@@ -192,6 +195,27 @@ async def update_startup(
             resource_id=startup.id,
             details={"fields": list(changed)},
         )
+    )
+    await db.commit()
+    await db.refresh(startup)
+    return startup
+
+
+@router.patch("/{startup_id}/discovery", response_model=StartupRead)
+async def update_discovery(
+    startup_id: UUID,
+    payload: DiscoveryUpdate,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Startup:
+    startup = await get_owned_startup(startup_id, user, db)
+    if payload.discoverable and startup.current_version < 1:
+        raise HTTPException(status_code=409, detail="Hồ sơ phải được nộp ít nhất một phiên bản trước khi bật khám phá")
+    startup.discoverable = payload.discoverable
+    if payload.public_summary is not None:
+        startup.public_summary = payload.public_summary
+    db.add(
+        AuditLog(actor_id=user.id, action="startup.discovery_updated", resource_type="startup", resource_id=startup.id)
     )
     await db.commit()
     await db.refresh(startup)
@@ -331,6 +355,7 @@ async def list_access(
             investor_name=investor.full_name,
             investor_email=investor.email,
             status=access.status,
+            request_reason=access.request_reason,
         )
         for access, investor in rows.all()
     ]
@@ -348,16 +373,20 @@ async def grant_access(
     if investor is None or investor.role != "investor":
         raise HTTPException(status_code=404, detail="Nhà đầu tư không tồn tại")
     access = await db.scalar(
-        select(StartupAccess).where(
-            StartupAccess.startup_id == startup_id, StartupAccess.investor_id == investor.id
-        )
+        select(StartupAccess).where(StartupAccess.startup_id == startup_id, StartupAccess.investor_id == investor.id)
     )
     if access:
         access.status = "active"
         access.revoked_at = None
+        access.granted_at = datetime.now(UTC)
+        access.granted_by_id = user.id
     else:
         access = StartupAccess(
-            startup_id=startup_id, investor_id=investor.id, granted_by_id=user.id, status="active"
+            startup_id=startup_id,
+            investor_id=investor.id,
+            granted_by_id=user.id,
+            status="active",
+            granted_at=datetime.now(UTC),
         )
         db.add(access)
     db.add(
@@ -375,7 +404,134 @@ async def grant_access(
         investor_name=investor.full_name,
         investor_email=investor.email,
         status="active",
+        request_reason=access.request_reason,
     )
+
+
+@router.post("/{startup_id}/access-request", response_model=AccessRead, status_code=status.HTTP_201_CREATED)
+async def request_access(
+    startup_id: UUID,
+    payload: AccessRequestCreate,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> AccessRead:
+    if user.role != "investor":
+        raise HTTPException(status_code=403, detail="Chỉ nhà đầu tư được gửi yêu cầu kết nối")
+    startup = await db.get(Startup, startup_id)
+    if startup is None or startup.status != "submitted" or not startup.discoverable or startup.current_version < 1:
+        raise HTTPException(status_code=404, detail="Startup không khả dụng trong discovery")
+    access = await db.scalar(
+        select(StartupAccess).where(StartupAccess.startup_id == startup_id, StartupAccess.investor_id == user.id)
+    )
+    if access and access.status == "active":
+        raise HTTPException(status_code=409, detail="Bạn đã có quyền truy cập startup này")
+    if access:
+        access.status = "pending"
+        access.request_reason = payload.reason
+        access.granted_by_id = None
+        access.granted_at = None
+        access.revoked_at = None
+    else:
+        access = StartupAccess(
+            startup_id=startup_id,
+            investor_id=user.id,
+            granted_by_id=None,
+            status="pending",
+            request_reason=payload.reason,
+            granted_at=None,
+        )
+        db.add(access)
+    pipeline = await db.scalar(
+        select(InvestorPipelineItem).where(
+            InvestorPipelineItem.investor_id == user.id, InvestorPipelineItem.startup_id == startup_id
+        )
+    )
+    if pipeline is None:
+        pipeline = InvestorPipelineItem(investor_id=user.id, startup_id=startup_id)
+        db.add(pipeline)
+    pipeline.status = "access_requested"
+    db.add(
+        AuditLog(
+            actor_id=user.id,
+            action="startup.access_requested",
+            resource_type="startup",
+            resource_id=startup_id,
+            details={"reason": payload.reason},
+        )
+    )
+    await db.commit()
+    return AccessRead(
+        investor_id=user.id,
+        investor_name=user.full_name,
+        investor_email=user.email,
+        status="pending",
+        request_reason=payload.reason,
+    )
+
+
+async def _decide_access(
+    startup_id: UUID,
+    investor_id: UUID,
+    decision: str,
+    user: User,
+    db: AsyncSession,
+) -> AccessRead:
+    await get_owned_startup(startup_id, user, db)
+    row = await db.execute(
+        select(StartupAccess, User)
+        .join(User, User.id == StartupAccess.investor_id)
+        .where(StartupAccess.startup_id == startup_id, StartupAccess.investor_id == investor_id)
+    )
+    record = row.first()
+    if record is None:
+        raise HTTPException(status_code=404, detail="Yêu cầu truy cập không tồn tại")
+    access, investor = record
+    if access.status != "pending":
+        raise HTTPException(status_code=409, detail="Yêu cầu này không còn ở trạng thái chờ")
+    access.status = decision
+    if decision == "active":
+        access.granted_by_id = user.id
+        access.granted_at = datetime.now(UTC)
+        access.revoked_at = None
+        pipeline = await db.scalar(
+            select(InvestorPipelineItem).where(
+                InvestorPipelineItem.investor_id == investor_id,
+                InvestorPipelineItem.startup_id == startup_id,
+            )
+        )
+        if pipeline:
+            pipeline.status = "reviewing"
+    db.add(
+        AuditLog(
+            actor_id=user.id,
+            action=f"startup.access_{'approved' if decision == 'active' else 'rejected'}",
+            resource_type="startup",
+            resource_id=startup_id,
+            details={"investor_id": str(investor_id)},
+        )
+    )
+    await db.commit()
+    return AccessRead(
+        investor_id=investor.id,
+        investor_name=investor.full_name,
+        investor_email=investor.email,
+        status=access.status,
+        request_reason=access.request_reason,
+    )
+
+
+@router.post("/{startup_id}/access/{investor_id}/approve", response_model=AccessRead)
+async def approve_access(
+    startup_id: UUID, investor_id: UUID, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+) -> AccessRead:
+    return await _decide_access(startup_id, investor_id, "active", user, db)
+
+
+@router.post("/{startup_id}/access/{investor_id}/reject", response_model=AccessRead)
+async def reject_access(
+    startup_id: UUID, investor_id: UUID, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+) -> AccessRead:
+    return await _decide_access(startup_id, investor_id, "rejected", user, db)
 
 
 @router.delete("/{startup_id}/access/{investor_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -387,9 +543,7 @@ async def revoke_access(
 ) -> None:
     await get_owned_startup(startup_id, user, db)
     access = await db.scalar(
-        select(StartupAccess).where(
-            StartupAccess.startup_id == startup_id, StartupAccess.investor_id == investor_id
-        )
+        select(StartupAccess).where(StartupAccess.startup_id == startup_id, StartupAccess.investor_id == investor_id)
     )
     if access is None:
         raise HTTPException(status_code=404, detail="Quyền truy cập không tồn tại")

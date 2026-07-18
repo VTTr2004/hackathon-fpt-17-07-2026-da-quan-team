@@ -118,6 +118,7 @@ export default function DashboardPage() {
               : "Phân tích và đánh giá những hồ sơ startup đã chia sẻ với bạn, có dẫn chứng."}
           </p>
         </div>
+        {!isStartup && <div className="headerActions"><Link className="hdBtn" href="/investor/preferences">Investment thesis</Link><Link className="hdBtn primary" href="/investor/candidates">Khám phá startup</Link></div>}
       </section>
 
       <section className="hdWorkflow" aria-label="Luồng xử lý hồ sơ">

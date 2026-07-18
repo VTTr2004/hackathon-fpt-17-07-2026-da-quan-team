@@ -8,6 +8,8 @@ export type Startup = {
   facts: Record<string, unknown>;
   status: string;
   current_version: number;
+  discoverable: boolean;
+  public_summary: Record<string, boolean>;
   created_at: string;
   updated_at: string;
 };
@@ -126,7 +128,59 @@ export type InvestorAccess = {
   investor_id: string;
   investor_name: string;
   investor_email: string;
-  status: "active" | "revoked";
+  status: "pending" | "active" | "rejected" | "revoked";
+  request_reason: string | null;
+};
+
+export type InvestorPreference = {
+  preferred_industries: string[];
+  preferred_subsectors: string[];
+  preferred_stages: string[];
+  preferred_locations: string[];
+  ticket_min: number | null;
+  ticket_max: number | null;
+  minimum_monthly_revenue: number | null;
+  minimum_revenue_growth: number | null;
+  maximum_runway_months: number | null;
+  required_capabilities: string[];
+  strategic_capabilities: string[];
+  exclusion_rules: Record<string, unknown>;
+  weights: Record<string, number>;
+};
+
+export type Candidate = {
+  startup_id: string;
+  name: string;
+  industry: string | null;
+  subsector: string | null;
+  stage: string | null;
+  location: string | null;
+  traction_summary: string | null;
+  fundraising_need: string | null;
+  runway_months: number | null;
+  revenue_growth: number | null;
+  fit_score: number;
+  confidence_score: number;
+  score_breakdown: Record<string, number>;
+  matched_reasons: string[];
+  mismatched_reasons: string[];
+  missing_evidence: string[];
+  recommended_action: string;
+  access_status: "none" | "pending" | "active" | "rejected" | "revoked";
+  pipeline_status: string;
+};
+
+export type PipelineItem = {
+  id: string;
+  startup_id: string;
+  startup_name: string;
+  status: "discovered" | "shortlisted" | "access_requested" | "reviewing" | "interested" | "passed";
+  note: string | null;
+  fit_score: number | null;
+  confidence_score: number | null;
+  access_status: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type VersionDiff = {
