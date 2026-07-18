@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "AI Log Watcher",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\scripts\\collect-ai-collaboration-history.ps1",
+        "-Watch",
+        "-ProjectPath",
+        "${workspaceFolder}",
+        "-OutputDir",
+        "${workspaceFolder}\\ai-collaboration-evidence\\live",
+        "-NoZip",
+        "-WatchIntervalSeconds",
+        "30"
+      ],
+      "isBackground": true,
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -16,6 +16,16 @@ uploads/
 .runtime-logs/
 .DS_Store
 
+# Build scratch workspace: generated demo outputs + data-generation scripts.
+# Rebuild sample data from these locally; the committed copies live in sample-data/.
+bins/
+
+# AI collaboration evidence dump: raw AI session transcripts/state may contain
+# secrets (API keys pasted into terminals/logs). Keep local; submit to organizers
+# via a private zip, never through this shared repo. The collector code lives in
+# scripts/collect-ai-collaboration-history.ps1 and docs/AI_LOG_*.md.
+ai-collaboration-evidence/
+
 # Surrounding-area OSM data — do NOT commit (310MB pbf + 44MB db).
 # Rebuild locally: python -m app.modules.surrounding_area.scripts.download_osm && ... extract_poi
 backend/data/*.pbf
