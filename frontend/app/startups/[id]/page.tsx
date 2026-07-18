@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, use, useCallback, useEffect, useMemo, useState } from "react";
 
 import { api } from "@/lib/api";
@@ -315,8 +314,17 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
         return moduleMetrics(analysisMap.business_model, "Mô hình KD");
       case "cashflow":
         return moduleMetrics(analysisMap.cash_flow, "Dòng tiền");
-      case "area":
-        return moduleMetrics(analysisMap.surrounding_area, "Khu vực");
+      case "area": {
+        if (!isStartup) return moduleMetrics(analysisMap.surrounding_area, "Khu vực");
+        const areaClaims = facts.area_claims ?? facts.location_claims;
+        const exactLocation = facts.exact_location ?? facts.headquarters_address ?? startup?.primary_location;
+        return [
+          { label: "Địa điểm", value: exactLocation ? "Có" : "Thiếu", icon: "location_on", hint: "địa chỉ phân tích" },
+          { label: "Tuyên bố", value: String(countArr(areaClaims)), icon: "gavel", hint: "cần kiểm chứng" },
+          { label: "Trạng thái", value: statusLabel(analysisMap.surrounding_area?.status), icon: "flag", hint: "kết quả draft" },
+          { label: "Thiếu dữ liệu", value: String(countArr(analysisMap.surrounding_area?.report?.missing_data)), icon: "help", hint: "cần bổ sung" },
+        ];
+      }
       case "evidence":
         return [
           { label: "Tổng tài liệu", value: String(documents.length), icon: "description", hint: "đã tải" },
@@ -343,20 +351,15 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     }
   }
   const sectionMetrics = metricsFor(activeTab);
-  const hideRail = isStartup && activeTab === "assistant";
+  const hideRail = isStartup && (activeTab === "assistant" || activeTab === "area");
 
   return (
     <div className="hdShell">
       <div className="desk">
-        <Link href="/" className="hdBtn" style={{ width: "fit-content" }}>
-          <MIcon name="arrow_back" />
-          {isStartup ? "Danh sách hồ sơ" : "Deal room"}
-        </Link>
-
         {error && <div className="hdAlert" role="alert"><MIcon name="error" /><span>{error}</span></div>}
 
         {/* Hero */}
-        <section className="hdCard deskHero">
+        {activeTab === "overview" && <section className="hdCard deskHero">
           <div className="deskId">
             <div className="deskAvatar">{startup.name.slice(0, 2).toUpperCase()}</div>
             <div className="deskIdText">
@@ -379,7 +382,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
             </div>
             <small>{isStartup ? "Độ đầy đủ dữ liệu, không phải điểm thành công" : "Trung bình độ đầy đủ của các module đã chạy"}</small>
           </div>
-        </section>
+        </section>}
 
         {/* Tiêu đề mục đang xem + chỉ số liên quan; điều hướng chính nằm ở sidebar. */}
         <section className="deskContext" id="desk-context">
@@ -393,17 +396,15 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
               <p>{tabLeads[activeTab] ?? tabLeads.overview}</p>
             </div>
           </div>
-          <div className="hdBento" style={{ marginBottom: 0 }} aria-label="Chỉ số theo mục">
+          <div className="deskContextStats" aria-label="Chỉ số theo mục">
             {sectionMetrics.map((metric) => (
-              <div className="hdMetric" key={metric.label}>
-                <div className="hdMetricTop">
-                  <span>{metric.label}</span>
-                  <MIcon name={metric.icon} />
-                </div>
-                <div>
+              <div className="deskContextStat" key={metric.label}>
+                <MIcon name={metric.icon} />
+                <span>
+                  <small>{metric.label}</small>
                   <strong>{metric.value}</strong>
-                  <small>{metric.hint}</small>
-                </div>
+                  <em>{metric.hint}</em>
+                </span>
               </div>
             ))}
           </div>
@@ -535,7 +536,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
 
             {/* ---- Area ---- */}
             <div className="deskPanel" hidden={activeTab !== "area"}>
-              <SurroundingArea startupId={id} industry={startup.industry} initialAddress={startup.primary_location ?? ""} facts={facts} initialAnalysis={analysisMap.surrounding_area} onAnalysisComplete={(result) => setAnalyses((current) => [result, ...current])} />
+              <SurroundingArea startupId={id} industry={startup.industry} initialAddress={startup.primary_location ?? ""} facts={facts} initialAnalysis={analysisMap.surrounding_area} compactHeader onAnalysisComplete={(result) => setAnalyses((current) => [result, ...current])} />
             </div>
 
             {/* ---- Evidence / Documents ---- */}

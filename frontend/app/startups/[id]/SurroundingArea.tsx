@@ -63,6 +63,7 @@ type Props = {
   initialAddress?: string;
   facts?: Record<string, unknown>;
   initialAnalysis?: Analysis;
+  compactHeader?: boolean;
   onAnalysisComplete?: (analysis: Analysis) => void;
 };
 
@@ -587,6 +588,7 @@ export default function SurroundingArea({
   initialAddress = "",
   facts,
   initialAnalysis,
+  compactHeader = false,
   onAnalysisComplete,
 }: Props) {
   const defaultAddress = initialAddress || factString(facts, "exact_location") || factString(facts, "headquarters_address");
@@ -1077,14 +1079,16 @@ export default function SurroundingArea({
     : "Esri/OSM fallback · thêm Google Maps key để bật Google";
 
   return (
-    <section className="surface surroundingSurface" id="surrounding-area">
-      <div className="sectionHeader">
-        <div>
-          <p className="eyebrow">SURROUNDING AREA</p>
-          <h2>Khu vực xung quanh</h2>
+    <section className={`surface surroundingSurface${compactHeader ? " compactHeader" : ""}`} id="surrounding-area">
+      {!compactHeader && (
+        <div className="sectionHeader">
+          <div>
+            <p className="eyebrow">SURROUNDING AREA</p>
+            <h2>Khu vực xung quanh</h2>
+          </div>
+          <span className="muted">{mapModeLabel}</span>
         </div>
-        <span className="muted">{mapModeLabel}</span>
-      </div>
+      )}
 
       <div className="stepGrid">
         <div className="stepCard">

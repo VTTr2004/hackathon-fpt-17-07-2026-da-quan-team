@@ -40,24 +40,24 @@
 /* --- Dark mode: bật bằng data-theme="dark" trên <html> --- */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --ink: #fff8f5;
-  --muted: #d6c4bf;
-  --faint: #a98f8a;
-  --subtle: #211619;
-  --paper: #130f11;
-  --surface: #1d1518;
-  --line: #4a3237;
-  --line-strong: #7e5961;
-  --primary: #ff8f87;
-  --primary-dark: #ffdad7;
-  --blue: #93c5fd;
-  --amber: #f8c471;
-  --rose: #fb7185;
-  --violet: #c4b5fd;
-  --graphite: #eadbd5;
+  --ink: #fffaf7;
+  --muted: #eadbd7;
+  --faint: #cdb6af;
+  --subtle: #2a1f23;
+  --paper: #100c0f;
+  --surface: #1c1519;
+  --line: #704b54;
+  --line-strong: #a8737e;
+  --primary: #ff9b94;
+  --primary-dark: #ffd6d2;
+  --blue: #9ecbff;
+  --amber: #ffd08a;
+  --rose: #ff8fa3;
+  --violet: #cab9ff;
+  --graphite: #f0e1dc;
   --shadow: 0 20px 46px rgba(0, 0, 0, 0.34);
   --shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.28);
-  --red: #fb7185;
+  --red: #ff8fa3;
 }
 
 * {
@@ -5381,10 +5381,10 @@ html {
   scroll-margin-top: 80px;
 }
 
-/* Thanh ngang theo mục: tiêu đề phần + chỉ số liên quan */
 .deskContext {
   display: grid;
-  gap: 12px;
+  gap: 10px;
+  width: 100%;
   scroll-margin-top: 80px;
 }
 
@@ -5419,6 +5419,53 @@ html {
   line-height: 1.5;
 }
 
+.deskContextStats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  align-self: stretch;
+}
+
+.deskContextStat {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.deskContextStat > .material-symbols-outlined {
+  color: var(--primary-dark);
+  font-size: 18px;
+}
+
+.deskContextStat span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.deskContextStat small,
+.deskContextStat em {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.2;
+}
+
+.deskContextStat strong {
+  font-size: 15px;
+  line-height: 1.1;
+}
+
 .deskContextIcon {
   display: grid;
   place-items: center;
@@ -5436,11 +5483,6 @@ html {
 
 .deskContextIcon .material-symbols-outlined {
   font-size: 20px;
-}
-
-.deskContext .hdMetric {
-  min-height: 92px;
-  padding: 14px;
 }
 
 .deskTab {
@@ -5571,6 +5613,278 @@ html {
   line-height: 1.5;
 }
 
+/* Dark contrast pass for legacy screens and module-specific widgets. */
+:root[data-theme="dark"] .topbar {
+  border-bottom-color: var(--line);
+  background: rgba(16, 12, 15, 0.92);
+}
+
+:root[data-theme="dark"] label,
+:root[data-theme="dark"] .checklistItems span,
+:root[data-theme="dark"] .cashFlowStep,
+:root[data-theme="dark"] .cashFlowMappingCard span,
+:root[data-theme="dark"] .pageQuickNav a,
+:root[data-theme="dark"] .questionChips button,
+:root[data-theme="dark"] .appLogoutItem {
+  color: var(--muted);
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] .dcForm textarea {
+  border-color: var(--line);
+  background: #241b20;
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: #bfa8a2;
+}
+
+:root[data-theme="dark"] input:focus,
+:root[data-theme="dark"] select:focus,
+:root[data-theme="dark"] textarea:focus,
+:root[data-theme="dark"] .dcForm textarea:focus {
+  border-color: #ffb4ad;
+  box-shadow: 0 0 0 3px rgba(255, 180, 173, 0.18);
+}
+
+:root[data-theme="dark"] .providerBadge,
+:root[data-theme="dark"] .systemBadge,
+:root[data-theme="dark"] .roleBadge,
+:root[data-theme="dark"] .appRoleBadge,
+:root[data-theme="dark"] .secondaryButton,
+:root[data-theme="dark"] .recordChatButton,
+:root[data-theme="dark"] .hdChip,
+:root[data-theme="dark"] .hdPill.neutral {
+  border-color: var(--line);
+  background: rgba(255, 180, 173, 0.13);
+  color: var(--primary-dark);
+}
+
+:root[data-theme="dark"] .primaryButton,
+:root[data-theme="dark"] .chatBubble,
+:root[data-theme="dark"] .dcTurn-user .dcBubble,
+:root[data-theme="dark"] .segmentedControl button.active,
+:root[data-theme="dark"] .stepIndex,
+:root[data-theme="dark"] .brandMark,
+:root[data-theme="dark"] .avatar,
+:root[data-theme="dark"] .moduleCode,
+:root[data-theme="dark"] .fileIcon {
+  background: #ffb4ad;
+  color: #341012;
+}
+
+:root[data-theme="dark"] .primaryButton:hover,
+:root[data-theme="dark"] .chatBubble:hover {
+  background: #ffd6d2;
+  color: #341012;
+}
+
+:root[data-theme="dark"] .factSection,
+:root[data-theme="dark"] .topicGroup,
+:root[data-theme="dark"] .moduleDraftCard,
+:root[data-theme="dark"] .moduleFormNote,
+:root[data-theme="dark"] .formDisclosure summary,
+:root[data-theme="dark"] .formDisclosureBody,
+:root[data-theme="dark"] .lockedNotice,
+:root[data-theme="dark"] .completenessPanel,
+:root[data-theme="dark"] .versionPanel,
+:root[data-theme="dark"] .accessPanel,
+:root[data-theme="dark"] .readOnlyFact,
+:root[data-theme="dark"] .diffRow,
+:root[data-theme="dark"] .stepCard,
+:root[data-theme="dark"] .candidateRow,
+:root[data-theme="dark"] .scanMetric,
+:root[data-theme="dark"] .mapLegend,
+:root[data-theme="dark"] .satellitePanel,
+:root[data-theme="dark"] .satelliteMeta div,
+:root[data-theme="dark"] .locationProfile,
+:root[data-theme="dark"] .claimBox,
+:root[data-theme="dark"] .metricStrip div,
+:root[data-theme="dark"] .demandGrid div,
+:root[data-theme="dark"] .verdictItem,
+:root[data-theme="dark"] .placesSurvey,
+:root[data-theme="dark"] .poiPreview,
+:root[data-theme="dark"] .mapActionBar,
+:root[data-theme="dark"] .cashFlowPanel,
+:root[data-theme="dark"] .kpiCardPremium,
+:root[data-theme="dark"] .cashFlowFileItem,
+:root[data-theme="dark"] .cashFlowMappingCard,
+:root[data-theme="dark"] .cashFlowProposal,
+:root[data-theme="dark"] .cashFlowDraftPipeline span,
+:root[data-theme="dark"] .cashFlowDraftNotice,
+:root[data-theme="dark"] .cashFlowChartContainer,
+:root[data-theme="dark"] .reconciliationLedger,
+:root[data-theme="dark"] .reconciliationTerm,
+:root[data-theme="dark"] .matchingItem,
+:root[data-theme="dark"] .checklistGroup,
+:root[data-theme="dark"] .pageQuickNav a,
+:root[data-theme="dark"] .questionChips button,
+:root[data-theme="dark"] .segmentedControl button,
+:root[data-theme="dark"] .templateChips button {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .profileSubmitBar,
+:root[data-theme="dark"] .cashFlowApplyBar,
+:root[data-theme="dark"] .pageQuickNav {
+  border-color: var(--line);
+  background: rgba(31, 23, 28, 0.94);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.34);
+}
+
+:root[data-theme="dark"] .createSubmit {
+  box-shadow: 0 -8px 18px rgba(0, 0, 0, 0.34);
+}
+
+:root[data-theme="dark"] .cashFlowIntake {
+  border-color: var(--line);
+  background: linear-gradient(180deg, #21181d 0%, #181216 100%);
+}
+
+:root[data-theme="dark"] .candidateRow.active,
+:root[data-theme="dark"] .cashFlowProposal:has(input:checked),
+:root[data-theme="dark"] .profileBuilderNav a:hover,
+:root[data-theme="dark"] .profileBuilderNav a.active,
+:root[data-theme="dark"] .recordRow:hover,
+:root[data-theme="dark"] .moduleRow:hover,
+:root[data-theme="dark"] .documentRow:hover,
+:root[data-theme="dark"] .candidateRow:hover,
+:root[data-theme="dark"] .poiPreviewItem a:hover,
+:root[data-theme="dark"] .placesSurveyList a:hover,
+:root[data-theme="dark"] .pageQuickNav a:hover,
+:root[data-theme="dark"] .questionChips button:hover,
+:root[data-theme="dark"] .segmentedControl button:hover,
+:root[data-theme="dark"] .templateChips button:hover {
+  border-color: var(--line-strong);
+  background: var(--subtle);
+  color: var(--primary-dark);
+}
+
+:root[data-theme="dark"] .cashFlowProposal:has(input:checked) {
+  box-shadow: inset 3px 0 #ffb4ad;
+}
+
+:root[data-theme="dark"] .cashFlowProposal.conflict {
+  border-color: #b75161;
+  background: rgba(255, 143, 163, 0.12);
+  color: var(--faint);
+}
+
+:root[data-theme="dark"] .readinessPill.strong,
+:root[data-theme="dark"] .status.completed,
+:root[data-theme="dark"] .tag.success,
+:root[data-theme="dark"] .badgeCF.success,
+:root[data-theme="dark"] .hdPill.strong,
+:root[data-theme="dark"] .providerPill.goong,
+:root[data-theme="dark"] .cashFlowAlert.info {
+  border-color: rgba(126, 231, 177, 0.32);
+  background: rgba(126, 231, 177, 0.15);
+  color: #b9f6d3;
+}
+
+:root[data-theme="dark"] .readinessPill.medium,
+:root[data-theme="dark"] .status.partial,
+:root[data-theme="dark"] .status.insufficient_data,
+:root[data-theme="dark"] .tag.warn,
+:root[data-theme="dark"] .badgeCF.warning,
+:root[data-theme="dark"] .hdPill.medium,
+:root[data-theme="dark"] .cashFlowAlert.warning,
+:root[data-theme="dark"] .confirmState,
+:root[data-theme="dark"] .notice.warning {
+  border-color: rgba(255, 208, 138, 0.34);
+  background: rgba(255, 208, 138, 0.14);
+  color: #ffe0a9;
+}
+
+:root[data-theme="dark"] .readinessPill.weak,
+:root[data-theme="dark"] .status.failed,
+:root[data-theme="dark"] .tag.risk,
+:root[data-theme="dark"] .badgeCF.danger,
+:root[data-theme="dark"] .hdPill.weak,
+:root[data-theme="dark"] .cashFlowAlert.error,
+:root[data-theme="dark"] .alert,
+:root[data-theme="dark"] .hdAlert {
+  border-color: rgba(255, 143, 163, 0.36);
+  background: rgba(255, 143, 163, 0.13);
+  color: #ffc9d2;
+}
+
+:root[data-theme="dark"] .status,
+:root[data-theme="dark"] .badgeCF.neutral,
+:root[data-theme="dark"] .providerPill {
+  background: rgba(234, 219, 215, 0.1);
+  color: var(--muted);
+}
+
+:root[data-theme="dark"] .status.not_applicable,
+:root[data-theme="dark"] .notice.subtle,
+:root[data-theme="dark"] .providerPill.google_geocoding,
+:root[data-theme="dark"] .providerPill.nominatim {
+  border-color: rgba(158, 203, 255, 0.34);
+  background: rgba(158, 203, 255, 0.14);
+  color: #cfe6ff;
+}
+
+:root[data-theme="dark"] .profileBuilderNav a.active span,
+:root[data-theme="dark"] .profileBuilderNav a:hover span {
+  background: #ffb4ad;
+  color: #341012;
+}
+
+:root[data-theme="dark"] .confirmState.confirmed {
+  border-color: rgba(255, 180, 173, 0.34);
+  background: rgba(255, 180, 173, 0.13);
+  color: var(--primary-dark);
+}
+
+:root[data-theme="dark"] .ledgerTable th,
+:root[data-theme="dark"] .ledgerTable tr:hover {
+  background: var(--subtle);
+}
+
+:root[data-theme="dark"] .chartGridLine {
+  stroke: #392b30;
+}
+
+:root[data-theme="dark"] .chartAxis {
+  stroke: var(--line-strong);
+}
+
+:root[data-theme="dark"] .mapCanvas {
+  border-color: var(--line-strong);
+  background: #211f1e;
+  box-shadow: inset 0 0 0 1px rgba(255, 214, 210, 0.12);
+}
+
+:root[data-theme="dark"] .mapCanvas::after {
+  box-shadow: inset 0 0 0 1px rgba(255, 214, 210, 0.16);
+}
+
+:root[data-theme="dark"] .mapCanvas .leaflet-control-attribution,
+:root[data-theme="dark"] .mapCanvas .leaflet-control-layers,
+:root[data-theme="dark"] .mapCanvas .leaflet-popup-content-wrapper {
+  border: 1px solid var(--line);
+  background: #241b20;
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .dcMarkdown code {
+  background: rgba(255, 250, 247, 0.1);
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .dcTurn-assistant .dcBubble,
+:root[data-theme="dark"] .dcCitation {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
 @media (max-width: 1100px) {
   .deskBody {
     grid-template-columns: 1fr;
@@ -5596,7 +5910,17 @@ html {
     grid-template-columns: 1fr;
   }
 
+  .deskContextStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .deskScore {
     justify-self: start;
+  }
+}
+
+@media (max-width: 480px) {
+  .deskContextStats {
+    grid-template-columns: 1fr;
   }
 }
