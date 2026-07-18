@@ -7,6 +7,7 @@ import app.models  # noqa: F401
 from app.api.router import api_router
 from app.core.config import get_settings
 from app.db.base import Base
+from app.db.migrations import migrate_legacy_schema
 from app.db.session import engine
 
 settings = get_settings()
@@ -17,6 +18,7 @@ async def lifespan(_: FastAPI):
     if settings.auto_create_tables:
         async with engine.begin() as connection:
             await connection.run_sync(Base.metadata.create_all)
+            await migrate_legacy_schema(connection)
     yield
     await engine.dispose()
 

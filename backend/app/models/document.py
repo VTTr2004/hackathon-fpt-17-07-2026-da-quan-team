@@ -17,6 +17,10 @@ class Document(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     content_type: Mapped[str | None] = mapped_column(String(150))
     storage_path: Mapped[str] = mapped_column(String(1000), nullable=False)
     status: Mapped[str] = mapped_column(String(30), default="processed", nullable=False)
+    visibility: Mapped[str] = mapped_column(String(30), default="shared", nullable=False)
+    uploaded_by_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), index=True, nullable=True
+    )
     extracted_text: Mapped[str] = mapped_column(Text, default="", nullable=False)
 
     startup: Mapped["Startup"] = relationship(back_populates="documents")  # noqa: F821

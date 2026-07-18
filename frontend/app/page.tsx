@@ -4,14 +4,23 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import type { Startup } from "@/types";
 
-const workflowSteps = [
+const investorWorkflowSteps = [
   { title: "Intake", detail: "Hồ sơ & dữ kiện nền" },
   { title: "Evidence", detail: "Tài liệu và trích xuất" },
   { title: "Analyze", detail: "Business, cash flow, area" },
   { title: "Review", detail: "Rủi ro & dữ liệu thiếu" },
   { title: "Decision", detail: "Câu hỏi đầu tư tiếp theo" },
+];
+
+const startupWorkflowSteps = [
+  { title: "Draft", detail: "Nhập dữ liệu hồ sơ" },
+  { title: "Evidence", detail: "Tải tài liệu" },
+  { title: "Check", detail: "Kiểm tra độ đầy đủ" },
+  { title: "Submit", detail: "Nộp và khóa phiên bản" },
+  { title: "Update", detail: "Bổ sung bằng phiên bản mới" },
 ];
 
 function readiness(startup: Startup) {
@@ -44,12 +53,14 @@ function readinessTone(progress: number) {
 }
 
 function readinessLabel(progress: number) {
-  if (progress >= 75) return "Sẵn sàng phân tích";
+  if (progress >= 75) return "Gần đủ trường bắt buộc";
   if (progress >= 45) return "Cần bổ sung";
   return "Thiếu dữ kiện";
 }
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const workflowSteps = user?.role === "startup" ? startupWorkflowSteps : investorWorkflowSteps;
   const [startups, setStartups] = useState<Startup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -89,20 +100,22 @@ export default function DashboardPage() {
       <section className="pageHeader">
         <div>
           <p className="eyebrow">STARTUP LENS</p>
-          <h1>Phòng thẩm định startup</h1>
+          <h1>{user?.role === "startup" ? "Hồ sơ gọi vốn của tôi" : "Phòng thẩm định startup"}</h1>
           <p className="pageLead">
-            Quản lý hồ sơ, tài liệu, dữ kiện phân tích và các module kiểm chứng trong cùng một không gian làm việc.
+            {user?.role === "startup"
+              ? "Chuẩn bị dữ liệu, kiểm tra độ đầy đủ và nộp phiên bản hồ sơ cho Nhà đầu tư."
+              : "Phân tích và đánh giá những hồ sơ Startup đã chia sẻ với bạn."}
           </p>
         </div>
         <div className="headerActions">
           <span className="systemBadge">Gemini ready</span>
-          <Link className="primaryButton headerCreateButton" href="/startups/new">
-            Tạo hồ sơ mới
-          </Link>
+          {user?.role === "startup" && (
+            <Link className="primaryButton headerCreateButton" href="/startups/new">Tạo hồ sơ mới</Link>
+          )}
         </div>
       </section>
 
-      <section className="workflowStrip" aria-label="Luồng thẩm định">
+      <section className="workflowStrip" aria-label="Luồng xử lý hồ sơ">
         {workflowSteps.map((step, index) => (
           <div className="workflowStep" key={step.title}>
             <span>{String(index + 1).padStart(2, "0")}</span>
@@ -151,10 +164,10 @@ export default function DashboardPage() {
             </div>
           ) : startups.length === 0 ? (
             <div className="emptyState emptyStateWithAction">
-              <span>Chưa có hồ sơ startup nào.</span>
-              <Link className="primaryButton fitButton" href="/startups/new">
-                Tạo hồ sơ đầu tiên
-              </Link>
+              <span>{user?.role === "startup" ? "Bạn chưa có hồ sơ nào." : "Chưa có hồ sơ nào được chia sẻ với bạn."}</span>
+              {user?.role === "startup" && (
+                <Link className="primaryButton fitButton" href="/startups/new">Tạo hồ sơ đầu tiên</Link>
+              )}
             </div>
           ) : (
             <div className="recordList">
@@ -170,7 +183,9 @@ export default function DashboardPage() {
                           {[startup.industry, startup.stage, startup.primary_location].filter(Boolean).join(" · ") ||
                             "Chưa có phân loại"}
                         </span>
-                        <em className={`readinessPill ${readinessTone(progress)}`}>{readinessLabel(progress)}</em>
+                        <em className={`readinessPill ${readinessTone(progress)}`}>
+                          {user?.role === "startup" ? readinessLabel(progress) : `Phiên bản V${startup.current_version}`}
+                        </em>
                       </div>
                       <div className="progressCell" aria-label={`Mức sẵn sàng ${progress}%`}>
                         <div className="progressTrack">
@@ -179,9 +194,7 @@ export default function DashboardPage() {
                         <small>{progress}%</small>
                       </div>
                     </Link>
-                    <Link className="recordChatButton" href={`/startups/${startup.id}/chat`}>
-                      💬 Chat
-                    </Link>
+                    <Link className="recordChatButton" href={`/startups/${startup.id}/chat`}>💬 Copilot</Link>
                   </div>
                 );
               })}

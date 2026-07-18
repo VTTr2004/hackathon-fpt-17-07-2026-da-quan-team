@@ -12,4 +12,9 @@ class DocumentRead(BaseModel):
     filename: str
     content_type: str | None
     status: str
+    visibility: str
     created_at: datetime
+
+
+class DocumentVisibilityUpdate(BaseModel):
+    visibility: str
