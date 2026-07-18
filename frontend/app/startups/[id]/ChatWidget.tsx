@@ -30,6 +30,11 @@ export default function ChatWidget({ startupId }: { startupId: string }) {
           </div>
         </div>
       ) : null}
+      {!open ? (
+        <button type="button" className="chatBubbleHint" onClick={() => setOpen(true)}>
+          Hỏi AI về tài liệu trong hồ sơ này
+        </button>
+      ) : null}
       <button
         type="button"
         className="chatBubble"

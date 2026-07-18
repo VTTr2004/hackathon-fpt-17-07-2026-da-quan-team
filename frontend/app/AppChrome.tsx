@@ -143,7 +143,10 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
               <span className="appBrandMarkImage" />
             </span>
             <span className="appBrandText">
-              <strong>Hải Đăng Khởi Nghiệp</strong>
+              <strong>
+                <span className="brandWordA">Hải Đăng</span>{" "}
+                <span className="brandWordB">Khởi Nghiệp</span>
+              </strong>
               <span>Venture Due Diligence</span>
             </span>
           </Link>

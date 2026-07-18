@@ -51,7 +51,16 @@ export default function LoginPage() {
       <section className="authBrandPane" aria-hidden="true">
         <div className="authGlow" />
         <div className="authBrandTop">
-          <p className="authEyebrow">Venture Due Diligence</p>
+          <div className="authBrandLockup">
+            <span className="authBrandLockupMark" />
+            <span className="authBrandLockupText">
+              <span className="authBrandLockupName">
+                <span className="brandWordA">Hải Đăng</span>{" "}
+                <span className="brandWordB">Khởi Nghiệp</span>
+              </span>
+              <span className="authBrandLockupTag">Venture Due Diligence</span>
+            </span>
+          </div>
           <h1 className="authHeadline">Thắp sáng con đường khởi nghiệp của bạn.</h1>
           <p className="authSub">
             Hệ thống thẩm định chuyên sâu, dẫn chứng minh bạch dành cho nhà đầu tư và doanh nhân chiến lược.
