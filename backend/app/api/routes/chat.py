@@ -14,6 +14,17 @@ from app.services.chat_service import answer_question
 router = APIRouter()
 
 
+def startup_profile(startup: Startup) -> dict:
+    """Profile fields fed into the RAG index so chat can answer about the startup itself."""
+    return {
+        "name": startup.name,
+        "industry": startup.industry,
+        "stage": startup.stage,
+        "primary_location": startup.primary_location,
+        "facts": startup.facts or {},
+    }
+
+
 @router.get("/{startup_id}/chat/history", response_model=list[ChatMessageRead])
 async def chat_history(startup_id: UUID, db: AsyncSession = Depends(get_db)) -> list[ChatMessage]:
     if await db.get(Startup, startup_id) is None:
@@ -31,7 +42,8 @@ async def chat_history(startup_id: UUID, db: AsyncSession = Depends(get_db)) -> 
 async def chat_with_documents(
     startup_id: UUID, payload: ChatRequest, db: AsyncSession = Depends(get_db)
 ) -> ChatResponse:
-    if await db.get(Startup, startup_id) is None:
+    startup = await db.get(Startup, startup_id)
+    if startup is None:
         raise HTTPException(status_code=404, detail="Startup không tồn tại")
     docs = list(await db.scalars(select(Document).where(Document.startup_id == startup_id)))
     prior = list(
@@ -56,6 +68,7 @@ async def chat_with_documents(
         ],
         payload.question,
         history,
+        startup_profile(startup),
     )
     db.add_all(
         [

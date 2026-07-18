@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { api } from "@/lib/api";
 import type { ChatMessageItem, Citation } from "@/types";
@@ -154,6 +156,10 @@ export default function DocumentChat({ startupId }: { startupId: string }) {
                   <i />
                   <i />
                 </span>
+              ) : turn.role === "assistant" && !turn.error ? (
+                <div className="dcText dcMarkdown">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{turn.content}</ReactMarkdown>
+                </div>
               ) : (
                 <p className="dcText">{turn.content}</p>
               )}

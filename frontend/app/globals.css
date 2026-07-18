@@ -2658,6 +2658,61 @@ html {
   line-height: 1.5;
 }
 
+/* Markdown-rendered assistant answers (block elements, so no pre-wrap). */
+.dcMarkdown {
+  white-space: normal;
+}
+
+.dcMarkdown > :first-child {
+  margin-top: 0;
+}
+
+.dcMarkdown > :last-child {
+  margin-bottom: 0;
+}
+
+.dcMarkdown p {
+  margin: 0 0 0.5rem;
+}
+
+.dcMarkdown ul,
+.dcMarkdown ol {
+  margin: 0.3rem 0 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.dcMarkdown li {
+  margin: 0.15rem 0;
+}
+
+.dcMarkdown strong {
+  font-weight: 700;
+}
+
+.dcMarkdown code {
+  background: rgba(20, 32, 26, 0.07);
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.dcMarkdown table {
+  border-collapse: collapse;
+  margin: 0.4rem 0;
+  font-size: 0.9em;
+}
+
+.dcMarkdown th,
+.dcMarkdown td {
+  border: 1px solid var(--line);
+  padding: 3px 7px;
+  text-align: left;
+}
+
+.dcMarkdown th {
+  background: var(--subtle);
+}
+
 .dcCitations {
   margin-top: 0.6rem;
   display: flex;

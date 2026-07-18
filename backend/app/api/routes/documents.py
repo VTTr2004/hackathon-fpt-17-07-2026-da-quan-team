@@ -5,11 +5,13 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.routes.chat import startup_profile
 from app.core.config import get_settings
 from app.db.session import get_db
 from app.models.document import Document
 from app.models.startup import Startup
 from app.schemas.document import DocumentRead
+from app.services.chat_service import ensure_startup_index
 from app.services.document_parser import extract_text
 
 router = APIRouter()
@@ -30,7 +32,8 @@ async def upload_document(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
 ) -> Document:
-    if await db.get(Startup, startup_id) is None:
+    startup = await db.get(Startup, startup_id)
+    if startup is None:
         raise HTTPException(status_code=404, detail="Startup không tồn tại")
     settings = get_settings()
     original_name = Path(file.filename or "document").name
@@ -60,4 +63,19 @@ async def upload_document(
     db.add(document)
     await db.commit()
     await db.refresh(document)
+
+    # Prebuild the RAG index (profile + all docs) so the first chat is instant. Best-effort:
+    # an indexing failure must not fail the upload — chat will lazily rebuild if needed.
+    try:
+        all_docs = list(await db.scalars(select(Document).where(Document.startup_id == startup_id)))
+        await ensure_startup_index(
+            str(startup_id),
+            startup_profile(startup),
+            [
+                {"id": str(d.id), "filename": d.filename, "text": d.extracted_text, "storage_path": d.storage_path}
+                for d in all_docs
+            ],
+        )
+    except Exception:
+        pass
     return document

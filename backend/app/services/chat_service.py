@@ -83,21 +83,86 @@ def _citation(chunk: dict[str, Any]) -> Citation:
     )
 
 
+_PROFILE_FACT_LABELS = {
+    "business_type": "Loại hình kinh doanh",
+    "problem": "Vấn đề giải quyết",
+    "solution": "Giải pháp",
+    "target_customers": "Khách hàng mục tiêu",
+    "core_products": "Sản phẩm/dịch vụ chính",
+    "revenue_model": "Mô hình doanh thu",
+    "current_cash": "Tiền mặt hiện có",
+    "monthly_revenue": "Doanh thu mỗi tháng",
+    "monthly_expense": "Chi phí mỗi tháng",
+}
+
+
+def _profile_document(profile: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Turn the startup's own profile fields into a synthetic 'Hồ sơ startup' document, so chat can
+    answer questions about the startup itself — not only uploaded files. None if there's nothing
+    beyond the name (keeps seeded/empty startups on their prebuilt index)."""
+    if not profile:
+        return None
+    parts: list[str] = []
+    for label, value in (
+        ("Tên", profile.get("name")),
+        ("Ngành", profile.get("industry")),
+        ("Giai đoạn", profile.get("stage")),
+        ("Địa điểm", profile.get("primary_location")),
+    ):
+        if value:
+            parts.append(f"{label}: {value}")
+    facts = profile.get("facts") or {}
+    ordered = list(_PROFILE_FACT_LABELS.items()) + [(k, k) for k in facts if k not in _PROFILE_FACT_LABELS]
+    for key, label in ordered:
+        value = facts.get(key)
+        if value in (None, "", [], {}):
+            continue
+        if isinstance(value, list):
+            value = ", ".join(str(item) for item in value)
+        parts.append(f"{label}: {value}")
+    if len(parts) <= 1:
+        return None
+    return {
+        "id": "profile",
+        "filename": "Hồ sơ startup",
+        "text": "Hồ sơ startup — " + " | ".join(parts),
+        "storage_path": None,
+    }
+
+
+async def ensure_startup_index(
+    startup_id: str, profile: dict[str, Any] | None, documents: list[dict[str, Any]]
+):
+    """Load or (re)build the startup's index from its profile + uploaded documents.
+
+    Used at upload time (prebuild for a fast first chat) and at chat time. With no profile content
+    and no uploaded document, any prebuilt/seeded index is used as-is.
+    """
+    payload: list[dict[str, Any]] = []
+    profile_doc = _profile_document(profile)
+    if profile_doc:
+        payload.append(profile_doc)
+    payload.extend(documents)
+
+    index = load_index(startup_id)
+    if not payload:
+        return index
+    signature = documents_signature(payload)
+    if index is None or stored_signature(startup_id) != signature:
+        chunks = _document_chunks(payload)
+        index = await build_index(startup_id, chunks, signature=signature) if chunks else None
+    return index
+
+
 async def answer_question(
     startup_id: str,
     documents: list[dict[str, Any]],
     question: str,
     history: list[dict[str, Any]] | None = None,
+    profile: dict[str, Any] | None = None,
 ) -> ChatResponse:
     settings = get_settings()
-    index = load_index(startup_id)
-    # Documents present -> keep the index in sync with their content (rebuild on change).
-    # No documents -> trust a prebuilt/seeded index (e.g. the VC-dataset demo).
-    if documents:
-        signature = documents_signature(documents)
-        if index is None or stored_signature(startup_id) != signature:
-            chunks = _document_chunks(documents)
-            index = await build_index(startup_id, chunks, signature=signature) if chunks else None
+    index = await ensure_startup_index(startup_id, profile, documents)
 
     if index is None or not index.chunks:
         return ChatResponse(
