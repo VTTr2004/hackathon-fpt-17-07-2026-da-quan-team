@@ -20,11 +20,16 @@ class Settings(BaseSettings):
     upload_dir: str = "./uploads"
     max_upload_mb: int = 25
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-flash-latest"
+    gemini_embed_model: str = "gemini-embedding-001"
+    gemini_embed_dim: int = 1024
     gemini_timeout_seconds: float = 60
+    goong_api_key: str | None = None
+    google_geocoding_api_key: str | None = None
+    google_places_api_key: str | None = None
 
-    # LLM provider for RAG chat: "nvidia" (GPT-OSS-120B) or "gemini".
-    llm_provider: str = "nvidia"
+    # LLM provider for RAG chat: "gemini" (default) or "nvidia" (GPT-OSS-120B).
+    llm_provider: str = "gemini"
     nvidia_api_key: str | None = None
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
     nvidia_chat_model: str = "openai/gpt-oss-120b"

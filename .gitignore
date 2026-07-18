@@ -3,13 +3,21 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.pytest-tmp/
 .mypy_cache/
 .ruff_cache/
 node_modules/
 .next/
+*.tsbuildinfo
 out/
 coverage/
 uploads/
 *.log
 .DS_Store
+
+# Surrounding-area OSM data — do NOT commit (310MB pbf + 44MB db).
+# Rebuild locally: python -m app.modules.surrounding_area.scripts.download_osm && ... extract_poi
+backend/data/*.pbf
+backend/data/*.db
+backend/data/*.part
 

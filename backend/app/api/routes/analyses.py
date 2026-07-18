@@ -47,7 +47,16 @@ async def create_analysis(
             "primary_location": startup.primary_location,
             **startup.facts,
         },
-        documents=[{"id": str(doc.id), "filename": doc.filename, "text": doc.extracted_text} for doc in docs],
+        documents=[
+            {
+                "id": str(doc.id),
+                "filename": doc.filename,
+                "text": doc.extracted_text,
+                "storage_path": doc.storage_path,
+                "content_type": doc.content_type,
+            }
+            for doc in docs
+        ],
         options=payload.options,
     )
     analysis = Analysis(

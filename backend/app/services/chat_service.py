@@ -2,14 +2,15 @@
 
 Pipeline: load/build a startup-scoped hybrid index -> embed the query -> hybrid retrieve
 -> optional LLM rerank -> generate an answer constrained to retrieved context, with citations.
-Every step degrades gracefully when NVIDIA is not configured.
+The LLM provider (Gemini or NVIDIA) is selected by LLM_PROVIDER. Every step degrades gracefully
+when the provider is not configured.
 """
 from typing import Any
 
 import numpy as np
 
 from app.core.config import get_settings
-from app.llm.nvidia import NvidiaNotConfiguredError, get_nvidia_client
+from app.llm.rag_client import LLMNotConfiguredError, active_provider, get_rag_client
 from app.modules.document_chatbot.index_store import (
     build_index,
     documents_signature,
@@ -74,7 +75,7 @@ async def answer_question(
             metadata={"retrieval": "empty"},
         )
 
-    client = get_nvidia_client()
+    client = get_rag_client()
     query_embedding: np.ndarray | None = None
     try:
         vector = await client.embed_texts([question], input_type="query")
@@ -116,9 +117,9 @@ async def answer_question(
             citations=citations,
             grounded=True,
             model=client.model,
-            metadata={"provider": "nvidia", "retrieval": retrieval_mode, "rerank": reranked},
+            metadata={"provider": active_provider(), "retrieval": retrieval_mode, "rerank": reranked},
         )
-    except NvidiaNotConfiguredError:
+    except LLMNotConfiguredError:
         return ChatResponse(
             answer="LLM chưa được cấu hình. Đoạn liên quan nhất: " + top[0]["text"][:700],
             citations=citations,

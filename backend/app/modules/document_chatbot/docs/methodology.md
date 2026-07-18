@@ -11,7 +11,10 @@ Source (CSV row | PDF/DOCX/PPTX/XLSX text)
   -> generation: GPT-OSS-120B constrained to retrieved SOURCEs, with [SOURCE n] citations
 ```
 
-- **Provider:** NVIDIA NIM (OpenAI-compatible), chat `openai/gpt-oss-120b`, embeddings `nvidia/nv-embedqa-e5-v5` (1024-d).
+- **Provider:** selectable via `LLM_PROVIDER`. Default **Gemini** (chat `gemini-flash-latest`,
+  embeddings `gemini-embedding-001` @ 1024-d); alternative **NVIDIA NIM** (chat `openai/gpt-oss-120b`,
+  embeddings `nvidia/nv-embedqa-e5-v5` @ 1024-d). The retrieval eval below was run on NVIDIA; the
+  hybrid-vs-dense conclusion is provider-independent (it's about fusion, not the embedding vendor).
 - **Startup isolation:** the index key is the `startup_id`; retrieval never crosses startups.
 - **Graceful degradation:** if `NVIDIA_API_KEY` is unset or the API fails, the index is BM25-only and
   generation falls back to extractive (most relevant chunk). The pipeline never hard-fails.

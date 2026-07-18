@@ -45,7 +45,8 @@ class HybridIndex:
             self._unit = None
 
     def _dense_ranks(self, query_embedding: np.ndarray) -> list[int]:
-        if self._unit is None:
+        # Guard against a query embedded by a different provider/model than the index.
+        if self._unit is None or query_embedding.shape[-1] != self._unit.shape[1]:
             return []
         query = query_embedding / (np.linalg.norm(query_embedding) + 1e-9)
         sims = self._unit @ query

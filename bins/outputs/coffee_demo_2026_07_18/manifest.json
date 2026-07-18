@@ -1,0 +1,26 @@
+{
+  "dataset": "Góc Hồ Coffee - dữ liệu mô phỏng",
+  "generated_on": "2026-07-18",
+  "period": {
+    "start": "2026-04-01",
+    "end": "2026-06-30"
+  },
+  "currency": "VND",
+  "files": [
+    "01_ho_so_quan_ca_phe.json",
+    "03_du_lieu_ban_hang_3_thang.xlsx",
+    "04_mua_hang_va_chi_phi_3_thang.xlsx",
+    "05_so_thu_chi_3_thang.xlsx",
+    "06_thong_tin_dia_diem.json",
+    "06_dia_diem_va_van_hanh.xlsx"
+  ],
+  "reconciliation": {
+    "opening_cash": 380000000,
+    "total_sales": 671303450,
+    "total_purchases_and_expenses": 761931040,
+    "total_inflows": 821303450,
+    "total_outflows": 761931040,
+    "ending_cash": 439372410
+  },
+  "disclaimer": "DỮ LIỆU MÔ PHỎNG - KHÔNG CÓ GIÁ TRỊ PHÁP LÝ"
+}
