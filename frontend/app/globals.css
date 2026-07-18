@@ -3768,21 +3768,31 @@ html {
 }
 
 .appBrandMark {
+  position: relative;
   display: grid;
   place-items: center;
-  flex: 0 0 38px;
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius);
-  background: var(--primary-dark);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 900;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border: 1px solid rgba(144, 10, 26, 0.24);
+  border-radius: 11px;
+  background: #fdf9f4;
+  box-shadow: 0 8px 18px rgba(42, 26, 20, 0.12);
+}
+
+.appBrandMarkImage {
+  display: block;
+  width: 82%;
+  height: 82%;
+  background: url("/brand-mark.png?v=20260718") center / contain no-repeat;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
 }
 
 :root[data-theme="dark"] .appBrandMark {
-  background: #ffb4ad;
-  color: #341012;
+  border-color: rgba(255, 180, 173, 0.5);
+  background: #fdf9f4;
+  box-shadow: 0 0 0 2px rgba(255, 180, 173, 0.16), 0 12px 26px rgba(0, 0, 0, 0.36);
 }
 
 .appBrandText {
@@ -4534,19 +4544,27 @@ html {
 .authLogo {
   display: grid;
   place-items: center;
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
-  background: var(--primary-dark);
-  color: #fff;
-  font-size: 20px;
-  font-weight: 900;
+  width: 76px;
+  height: 76px;
+  overflow: hidden;
+  border: 1px solid rgba(144, 10, 26, 0.26);
+  border-radius: 18px;
+  background: #fdf9f4;
   box-shadow: var(--shadow-soft);
 }
 
+.authLogoImage {
+  display: block;
+  width: 84%;
+  height: 84%;
+  background: url("/brand-mark.png?v=20260718") center / contain no-repeat;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
+}
+
 :root[data-theme="dark"] .authLogo {
-  background: #ffb4ad;
-  color: #341012;
+  border-color: rgba(255, 180, 173, 0.56);
+  background: #fdf9f4;
+  box-shadow: 0 0 0 2px rgba(255, 180, 173, 0.18), 0 18px 38px rgba(0, 0, 0, 0.42);
 }
 
 .authFormHead h1 {
@@ -5954,5 +5972,178 @@ html {
 @media (max-width: 480px) {
   .deskContextStats {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Auth dark mode needs a clearer, standalone treatment than generic controls. */
+:root[data-theme="dark"] .authShell {
+  background: #100c0f;
+}
+
+:root[data-theme="dark"] .authFormPane {
+  background:
+    radial-gradient(520px 360px at 50% 0%, rgba(255, 180, 173, 0.06), transparent 62%),
+    #100c0f;
+}
+
+:root[data-theme="dark"] .authFormHead h1,
+:root[data-theme="dark"] .authField > label,
+:root[data-theme="dark"] .authRemember,
+:root[data-theme="dark"] .authSwitch span {
+  color: #fffaf7;
+}
+
+:root[data-theme="dark"] .authFormHead p {
+  color: #eadbd7;
+}
+
+:root[data-theme="dark"] .authMode {
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid #704b54;
+  border-radius: 12px;
+  background: #181216;
+}
+
+:root[data-theme="dark"] .authMode.segmentedControl button {
+  border-color: transparent;
+  background: transparent;
+  color: #eadbd7;
+}
+
+:root[data-theme="dark"] .authMode.segmentedControl button:hover {
+  border-color: #704b54;
+  background: #2a1f23;
+  color: #ffd6d2;
+}
+
+:root[data-theme="dark"] .authMode.segmentedControl button.active {
+  border-color: #ffb4ad;
+  background: #ffb4ad;
+  color: #341012;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
+}
+
+:root[data-theme="dark"] .authInputWrap input,
+:root[data-theme="dark"] .authInputWrap select {
+  border-color: #704b54;
+  background: #21181d;
+  color: #fffaf7;
+}
+
+:root[data-theme="dark"] .authInputWrap input::placeholder {
+  color: #bea6a0;
+}
+
+:root[data-theme="dark"] .authInputWrap .lead,
+:root[data-theme="dark"] .authReveal {
+  color: #d7c1bb;
+}
+
+:root[data-theme="dark"] .authReveal:hover {
+  background: rgba(255, 180, 173, 0.12);
+  color: #ffd6d2;
+}
+
+:root[data-theme="dark"] .authSubmit.primaryButton {
+  background: #ffb4ad;
+  color: #341012;
+}
+
+:root[data-theme="dark"] .authSubmit.primaryButton:hover {
+  background: #ffd6d2;
+}
+
+:root[data-theme="dark"] .authSwitchBtn {
+  border-color: #ffb4ad;
+  color: #ffd6d2;
+}
+
+.profileExtraction {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 22px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 18px;
+  background: var(--surface, #fff);
+}
+
+.extractionCandidateList {
+  display: grid;
+  gap: 12px;
+}
+
+.extractionCandidate {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-left: 4px solid #f59e0b;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface, #fff) 96%, #f8fafc);
+}
+
+.extractionCandidate.found {
+  border-left-color: #16a34a;
+}
+
+.extractionCandidate.not_found {
+  border-left-color: #94a3b8;
+  opacity: 0.82;
+}
+
+.extractionCandidateHead,
+.extractionCandidateHead label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.extractionCandidateHead {
+  justify-content: space-between;
+}
+
+.extractionCandidate textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.extractionEvidenceList {
+  display: grid;
+  gap: 7px;
+}
+
+.extractionEvidenceList details {
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--surface, #fff) 86%, #e0f2fe);
+}
+
+.extractionEvidenceList summary {
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.extractionEvidenceList blockquote {
+  margin: 9px 0 0;
+  padding-left: 12px;
+  border-left: 3px solid #38bdf8;
+  color: var(--muted, #475569);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 720px) {
+  .extractionCandidateHead,
+  .cashFlowApplyBar {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

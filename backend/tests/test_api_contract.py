@@ -9,6 +9,9 @@ def test_required_api_paths_are_registered() -> None:
     assert "/api/v1/auth/me" in paths
     assert "/api/v1/startups" in paths
     assert "/api/v1/startups/{startup_id}/completeness" in paths
+    assert "/api/v1/startups/{startup_id}/extractions" in paths
+    assert "/api/v1/startups/{startup_id}/extractions/{extraction_id}" in paths
+    assert "/api/v1/startups/{startup_id}/extractions/{extraction_id}/confirm" in paths
     assert "/api/v1/startups/{startup_id}/submit" in paths
     assert "/api/v1/startups/{startup_id}/versions" in paths
     assert "/api/v1/startups/{startup_id}/documents" in paths

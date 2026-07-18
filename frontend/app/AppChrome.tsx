@@ -132,9 +132,6 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         active: pathname === `/startups/${s.id}`,
       })),
     ];
-    if (!isInvestor) {
-      nav.push({ kind: "route", href: "/startups/new", label: "Tạo hồ sơ mới", icon: "note_add", active: pathname.startsWith("/startups/new") });
-    }
   }
 
   return (
@@ -142,7 +139,9 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
       <aside className="appSidebar" aria-label="Không gian làm việc">
         <div className="appSidebarHead">
           <Link href="/" className="appBrand" title="Hải Đăng Khởi Nghiệp" onClick={closeMobile}>
-            <span className="appBrandMark">HĐ</span>
+            <span className="appBrandMark" aria-hidden="true">
+              <span className="appBrandMarkImage" />
+            </span>
             <span className="appBrandText">
               <strong>Hải Đăng Khởi Nghiệp</strong>
               <span>Venture Due Diligence</span>

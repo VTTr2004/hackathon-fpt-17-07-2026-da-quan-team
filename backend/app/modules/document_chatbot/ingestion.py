@@ -20,7 +20,7 @@ from typing import Any
 
 from openpyxl import load_workbook
 
-_MARKER = re.compile(r"\[(PAGE|SLIDE|SHEET)\s+([^\]]+)\]", re.IGNORECASE)
+_MARKER = re.compile(r"\[(PAGE|SLIDE|SHEET|TABLE)\s+([^\]]+)\]", re.IGNORECASE)
 
 
 def _clean(value: str | None) -> str:
@@ -83,28 +83,34 @@ def text_to_chunks(
         return []
     step = max(chunk_size - overlap, 1)
     chunks: list[dict[str, Any]] = []
-    for offset in range(0, len(text), step):
-        window = text[offset : offset + chunk_size]
-        if not window.strip():
-            continue
-        preceding = text[:offset]
-        marker = None
-        for match in _MARKER.finditer(preceding + window):
-            marker = (match.group(1).upper(), match.group(2).strip())
-        location: dict[str, Any] = {}
-        if marker:
-            key = {"PAGE": "page", "SLIDE": "slide", "SHEET": "sheet"}[marker[0]]
-            value = marker[1]
-            location[key] = int(value) if value.isdigit() else value
-        chunks.append(
-            {
-                "chunk_id": f"{document_id}:chunk:{len(chunks)}",
-                "document_id": document_id,
-                "filename": filename,
-                "text": window.strip(),
-                "metadata": location,
-            }
-        )
+    marker_matches = list(_MARKER.finditer(text))
+    segments: list[tuple[str, dict[str, Any]]] = []
+    if not marker_matches:
+        segments.append((text, {}))
+    else:
+        if text[: marker_matches[0].start()].strip():
+            segments.append((text[: marker_matches[0].start()], {}))
+        for index, match in enumerate(marker_matches):
+            marker_type = match.group(1).upper()
+            key = {"PAGE": "page", "SLIDE": "slide", "SHEET": "sheet", "TABLE": "table"}[marker_type]
+            value = match.group(2).strip()
+            end = marker_matches[index + 1].start() if index + 1 < len(marker_matches) else len(text)
+            segments.append((text[match.end() : end], {key: int(value) if value.isdigit() else value}))
+
+    for segment, location in segments:
+        for offset in range(0, len(segment), step):
+            window = segment[offset : offset + chunk_size]
+            if not window.strip():
+                continue
+            chunks.append(
+                {
+                    "chunk_id": f"{document_id}:chunk:{len(chunks)}",
+                    "document_id": document_id,
+                    "filename": filename,
+                    "text": window.strip(),
+                    "metadata": location,
+                }
+            )
     return chunks
 
 

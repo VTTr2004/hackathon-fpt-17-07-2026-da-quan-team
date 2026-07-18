@@ -15,12 +15,22 @@ def extract_text(path: Path) -> str:
         return "\n\n".join(f"[PAGE {index}]\n{page.extract_text() or ''}" for index, page in enumerate(reader.pages, 1))
     if suffix == ".docx":
         document = DocxDocument(str(path))
-        return "\n".join(paragraph.text for paragraph in document.paragraphs)
+        sections = [paragraph.text for paragraph in document.paragraphs if paragraph.text.strip()]
+        for index, table in enumerate(document.tables, 1):
+            rows = ["\t".join(cell.text.strip() for cell in row.cells) for row in table.rows]
+            sections.append(f"[TABLE {index}]\n" + "\n".join(rows))
+        return "\n\n".join(sections)
     if suffix == ".pptx":
         presentation = Presentation(str(path))
         slides = []
         for index, slide in enumerate(presentation.slides, 1):
-            text = "\n".join(shape.text for shape in slide.shapes if hasattr(shape, "text"))
+            parts: list[str] = []
+            for shape in slide.shapes:
+                if getattr(shape, "has_table", False):
+                    parts.extend("\t".join(cell.text.strip() for cell in row.cells) for row in shape.table.rows)
+                elif hasattr(shape, "text") and shape.text.strip():
+                    parts.append(shape.text)
+            text = "\n".join(parts)
             slides.append(f"[SLIDE {index}]\n{text}")
         return "\n\n".join(slides)
     if suffix == ".xlsx":

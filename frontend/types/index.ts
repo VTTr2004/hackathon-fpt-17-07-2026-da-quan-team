@@ -22,6 +22,49 @@ export type DocumentItem = {
   created_at: string;
 };
 
+export type ProfileExtractionEvidence = {
+  document_id: string;
+  block_id: string;
+  filename: string;
+  quote: string;
+  page?: number | null;
+  slide?: number | null;
+  sheet?: string | null;
+  table?: number | string | null;
+  row?: number | null;
+  cell_range?: string | null;
+};
+
+export type ProfileExtractionCandidate = {
+  id: string;
+  field_key: string;
+  label: string;
+  value_type: string;
+  proposed_value: unknown;
+  evidence: ProfileExtractionEvidence[];
+  confidence: number;
+  status: "found" | "not_found" | "ambiguous" | "conflicting";
+  warnings: string[];
+  user_decision: string | null;
+  confirmed_value: unknown;
+};
+
+export type ProfileExtractionJob = {
+  id: string;
+  startup_id: string;
+  status: "pending" | "running" | "completed" | "failed" | "applied";
+  document_ids: string[];
+  field_keys: string[];
+  schema_version: string;
+  based_on_startup_updated_at: string;
+  warnings: string[];
+  error: string | null;
+  completed_at: string | null;
+  applied_at: string | null;
+  created_at: string;
+  candidates: ProfileExtractionCandidate[];
+};
+
 export type AnalysisModule = "business_model" | "cash_flow" | "surrounding_area";
 
 export type Analysis = {

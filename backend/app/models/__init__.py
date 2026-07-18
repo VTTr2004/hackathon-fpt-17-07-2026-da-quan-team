@@ -2,6 +2,7 @@ from app.models.analysis import Analysis
 from app.models.audit_log import AuditLog
 from app.models.chat_message import ChatMessage
 from app.models.document import Document
+from app.models.extraction import ExtractionCandidate, ExtractionJob
 from app.models.startup import Startup
 from app.models.startup_access import StartupAccess
 from app.models.startup_version import StartupVersion
@@ -12,6 +13,8 @@ __all__ = [
     "AuditLog",
     "ChatMessage",
     "Document",
+    "ExtractionCandidate",
+    "ExtractionJob",
     "Startup",
     "StartupAccess",
     "StartupVersion",
