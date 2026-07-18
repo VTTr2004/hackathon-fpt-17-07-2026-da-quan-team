@@ -11,8 +11,8 @@ RUN apt-get update \
 COPY pyproject.toml ./
 COPY app ./app
 COPY scripts ./scripts
-# Retry/timeout make the install resilient to slow PyPI reads.
-RUN pip install --no-cache-dir --retries 10 --timeout 180 .
+# Retry/timeout make the install resilient to slow PyPI reads. [osm] adds osmium (Linux build ok).
+RUN pip install --no-cache-dir --retries 10 --timeout 180 ".[osm]"
 
 EXPOSE 10000
 CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
