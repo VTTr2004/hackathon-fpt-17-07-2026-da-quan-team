@@ -6,7 +6,8 @@ import { api } from "@/lib/api";
 import type { PipelineItem } from "@/types";
 
 const statuses: PipelineItem["status"][] = ["discovered", "shortlisted", "access_requested", "reviewing", "interested", "passed"];
-const labels: Record<PipelineItem["status"], string> = { discovered: "Discovered", shortlisted: "Shortlisted", access_requested: "Requested", reviewing: "Reviewing", interested: "Interested", passed: "Passed" };
+const labels: Record<PipelineItem["status"], string> = { discovered: "Đã khám phá", shortlisted: "Shortlist", access_requested: "Chờ duyệt Data Room", reviewing: "Đang thẩm định", interested: "Quan tâm", passed: "Bỏ qua" };
+const accessLabel = (status: string) => ({ none: "Chưa yêu cầu", pending: "Chờ Startup phê duyệt", active: "Đã mở Data Room", rejected: "Đã bị từ chối", revoked: "Đã bị thu hồi" })[status] ?? status;
 
 export default function PipelinePage() {
   const [items, setItems] = useState<PipelineItem[]>([]); const [error, setError] = useState("");
@@ -19,6 +20,6 @@ export default function PipelinePage() {
   return <div className="hdShell investorPage">
     <section className="hdPageHead"><div><h1>Investor pipeline</h1><p className="hdLead">Theo dõi quy trình đầu tư độc lập với quyền truy cập dữ liệu.</p></div></section>
     {error && <div className="hdAlert"><span>{error}</span></div>}
-    <section className="pipelineBoard">{statuses.map((status) => <div className="pipelineColumn" key={status}><header><strong>{labels[status]}</strong><span>{items.filter((item) => item.status === status).length}</span></header>{items.filter((item) => item.status === status).map((item) => <article className="pipelineCard" key={item.id}><strong>{item.startup_name}</strong><div><span>Fit {item.fit_score ?? "—"}</span><span>Confidence {item.confidence_score ?? "—"}</span></div><small>Quyền: {item.access_status}</small><select value={item.status} onChange={(event) => void move(item, event.target.value as PipelineItem["status"])}>{statuses.map((value) => <option value={value} key={value}>{labels[value]}</option>)}</select>{item.access_status === "active" && <Link href={`/startups/${item.startup_id}`}>Mở data room →</Link>}</article>)}</div>)}</section>
+    <section className="pipelineBoard">{statuses.map((status) => <div className="pipelineColumn" key={status}><header><strong>{labels[status]}</strong><span>{items.filter((item) => item.status === status).length}</span></header>{items.filter((item) => item.status === status).map((item) => <article className="pipelineCard" key={item.id}><strong>{item.startup_name}</strong><div><span>Fit {item.fit_score ?? "—"}</span><span>Confidence {item.confidence_score ?? "—"}</span></div><small>Data Room: {accessLabel(item.access_status)}</small><select value={item.status} onChange={(event) => void move(item, event.target.value as PipelineItem["status"])}>{statuses.map((value) => <option value={value} key={value}>{labels[value]}</option>)}</select>{item.access_status === "active" && <Link href={`/startups/${item.startup_id}`}>Mở Data Room →</Link>}</article>)}</div>)}</section>
   </div>;
 }

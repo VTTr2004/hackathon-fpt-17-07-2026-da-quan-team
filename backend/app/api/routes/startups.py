@@ -416,7 +416,7 @@ async def request_access(
     db: AsyncSession = Depends(get_db),
 ) -> AccessRead:
     if user.role != "investor":
-        raise HTTPException(status_code=403, detail="Chỉ nhà đầu tư được gửi yêu cầu kết nối")
+        raise HTTPException(status_code=403, detail="Chỉ nhà đầu tư được gửi yêu cầu mở Data Room")
     startup = await db.get(Startup, startup_id)
     if startup is None or startup.status != "submitted" or not startup.discoverable or startup.current_version < 1:
         raise HTTPException(status_code=404, detail="Startup không khả dụng trong discovery")

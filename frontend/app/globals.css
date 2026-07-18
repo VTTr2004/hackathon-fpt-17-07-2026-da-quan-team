@@ -6175,6 +6175,9 @@ html {
 .pipelineCard div { display: flex; justify-content: space-between; color: var(--muted); font-size: .76rem; }.pipelineCard a { color: #2563eb; font-weight: 700; }
 .discoverySetting { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; }
 .discoverySetting > div { display: grid; gap: 4px; }.discoverySetting small, .requestReason { color: var(--muted); }
+.dataRoomNotice { display: flex; align-items: flex-start; gap: 9px; margin: 0; padding: 12px 14px; border-radius: 10px; background: color-mix(in srgb, var(--surface) 78%, #dbeafe); color: var(--muted); font-size: .85rem; }
+.dataRoomNotice .material-symbols-outlined { color: #2563eb; }
+.accessStatus-pending { color: #92400e; }.accessStatus-active { color: #166534; }.accessStatus-rejected, .accessStatus-revoked { color: #991b1b; }
 .toggle input { position: absolute; opacity: 0; }.toggle span { display: block; width: 44px; height: 24px; padding: 3px; border-radius: 999px; background: #cbd5e1; cursor: pointer; }.toggle span::after { content: ""; display: block; width: 18px; height: 18px; border-radius: 50%; background: white; transition: .2s; }.toggle input:checked + span { background: #2563eb; }.toggle input:checked + span::after { transform: translateX(20px); }
 
 @media (max-width: 900px) {

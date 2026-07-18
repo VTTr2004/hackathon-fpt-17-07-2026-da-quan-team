@@ -23,7 +23,6 @@ import type {
   InvestorAccess,
   Startup,
   StartupVersion,
-  User,
   VersionDiff,
 } from "@/types";
 
@@ -124,7 +123,6 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [completeness, setCompleteness] = useState<Completeness | null>(null);
   const [versions, setVersions] = useState<StartupVersion[]>([]);
-  const [investors, setInvestors] = useState<User[]>([]);
   const [access, setAccess] = useState<InvestorAccess[]>([]);
   const [versionDiff, setVersionDiff] = useState<VersionDiff | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -139,15 +137,14 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     const common = [api.getStartup(id), api.listDocuments(id), api.listVersions(id)] as const;
     try {
       if (isStartup) {
-        const [profile, docs, history, check, investorUsers, grants, draftAnalyses] = await Promise.all([
+        const [profile, docs, history, check, grants, draftAnalyses] = await Promise.all([
           ...common,
           api.completeness(id),
-          api.listInvestors(),
           api.listAccess(id),
           api.listAnalyses(id),
         ]);
         setStartup(profile); setDocuments(docs); setVersions(history); setCompleteness(check);
-        setInvestors(investorUsers); setAccess(grants); setAnalyses(draftAnalyses);
+        setAccess(grants); setAnalyses(draftAnalyses);
         if (history.length >= 2) setVersionDiff(await api.compareVersions(id, history[1].version_number, history[0].version_number));
       } else {
         const [profile, docs, history, results] = await Promise.all([...common, api.listAnalyses(id)]);
@@ -279,16 +276,6 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     finally { setBusy(null); }
   }
 
-  async function grant(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const investorId = String(new FormData(event.currentTarget).get("investor_id") ?? "");
-    if (!investorId) return;
-    setBusy("grant");
-    try { await api.grantAccess(id, investorId); setAccess(await api.listAccess(id)); }
-    catch (err) { setError(err instanceof Error ? err.message : "Không thể cấp quyền"); }
-    finally { setBusy(null); }
-  }
-
   async function changeVisibility(documentId: string, visibility: string) {
     try {
       const updated = await api.updateDocumentVisibility(id, documentId, visibility);
@@ -394,7 +381,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
       case "review":
         return [
           { label: "Phiên bản", value: String(versions.length), icon: "history", hint: "đã khóa" },
-          { label: "Đã chia sẻ", value: String(access.filter((a) => a.status === "active").length), icon: "group", hint: "nhà đầu tư" },
+          { label: "Đã cấp Data Room", value: String(access.filter((a) => a.status === "active").length), icon: "lock_open", hint: "nhà đầu tư" },
           { label: "Rủi ro (tổng)", value: String(modules.reduce((n, m) => n + countArr(analysisMap[m.id]?.report?.risks), 0)), icon: "warning", hint: "các module" },
           { label: "Thiếu (tổng)", value: String(modules.reduce((n, m) => n + countArr(analysisMap[m.id]?.report?.missing_data), 0)), icon: "help", hint: "các module" },
         ];
@@ -656,14 +643,14 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
             <div className="deskPanel" hidden={activeTab !== "review"}>
               {isStartup && (
                 <section className="hdCard accessPanel">
-                  <div className="hdSectionHead"><h2><MIcon name="group_add" />Chia sẻ với nhà đầu tư</h2></div>
+                  <div className="hdSectionHead"><h2><MIcon name="folder_shared" />Quyền truy cập Data Room</h2><span className="hdCount">{access.filter((item) => item.status === "pending").length} yêu cầu chờ duyệt</span></div>
                   <div className="discoverySetting">
-                    <div><strong>Cho phép nhà đầu tư tìm thấy hồ sơ</strong><small>Chỉ snapshot đã nộp và các trường public xuất hiện trong discovery.</small></div>
+                    <div><strong>Cho phép nhà đầu tư tìm thấy hồ sơ công khai</strong><small>Không cần phê duyệt để investor xem candidate card, shortlist hoặc so sánh. Tài liệu và dữ liệu chi tiết vẫn được khóa.</small></div>
                     <label className="toggle"><input type="checkbox" checked={startup.discoverable} disabled={startup.current_version < 1 || busy === "discovery"} onChange={(event) => void toggleDiscovery(event.target.checked)} /><span /></label>
                   </div>
-                  <form className="inlineForm" onSubmit={grant}><select name="investor_id" required><option value="">Chọn nhà đầu tư</option>{investors.map((item) => <option value={item.id} key={item.id}>{item.full_name} · {item.email}</option>)}</select><button className="hdBtn primary" disabled={busy === "grant"}><MIcon name="add" />Cấp quyền</button></form>
-                  <div className="accessList">{access.map((item) => <div className="accessRow" key={item.investor_id}><span><strong>{item.investor_name}</strong><small>{item.investor_email}</small>{item.request_reason && <small className="requestReason">Lý do: {item.request_reason}</small>}</span><div className="headerActions"><span className="status">{item.status}</span>{item.status === "pending" && <><button className="hdBtn compactButton" onClick={() => void decideAccess(item.investor_id, "approve")} type="button">Chấp nhận</button><button className="hdBtn compactButton" onClick={() => void decideAccess(item.investor_id, "reject")} type="button">Từ chối</button></>}{item.status === "active" && <button className="hdBtn compactButton" onClick={() => void revoke(item.investor_id)} type="button">Thu hồi</button>}</div></div>)}
-                    {!access.length && <p className="muted">Chưa chia sẻ với nhà đầu tư nào.</p>}
+                  <p className="dataRoomNotice"><MIcon name="shield_lock" />Startup chỉ phê duyệt khi investor yêu cầu mở Data Room. Quyền này bao gồm tài liệu shared, phân tích và document chat.</p>
+                  <div className="accessList">{access.map((item) => <div className="accessRow" key={item.investor_id}><span><strong>{item.investor_name}</strong><small>{item.investor_email}</small>{item.request_reason && <small className="requestReason">Lý do mở Data Room: {item.request_reason}</small>}</span><div className="headerActions"><span className={`status accessStatus-${item.status}`}>{item.status === "pending" ? "Chờ phê duyệt" : item.status === "active" ? "Đã cấp Data Room" : item.status === "rejected" ? "Đã từ chối" : "Đã thu hồi"}</span>{item.status === "pending" && <><button className="hdBtn primary compactButton" onClick={() => void decideAccess(item.investor_id, "approve")} type="button">Cấp quyền Data Room</button><button className="hdBtn compactButton" onClick={() => void decideAccess(item.investor_id, "reject")} type="button">Từ chối</button></>}{item.status === "active" && <button className="hdBtn compactButton" onClick={() => void revoke(item.investor_id)} type="button">Thu hồi Data Room</button>}</div></div>)}
+                    {!access.length && <p className="muted">Chưa có nhà đầu tư nào yêu cầu mở Data Room.</p>}
                   </div>
                 </section>
               )}

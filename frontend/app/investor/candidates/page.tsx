@@ -5,6 +5,14 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { Candidate } from "@/types";
 
+const accessLabels: Record<Candidate["access_status"], string> = {
+  none: "Chưa yêu cầu",
+  pending: "Chờ Startup phê duyệt",
+  active: "Đã mở Data Room",
+  rejected: "Startup đã từ chối",
+  revoked: "Đã bị thu hồi",
+};
+
 export default function CandidatesPage() {
   const [items, setItems] = useState<Candidate[]>([]); const [selected, setSelected] = useState<string[]>([]);
   const [compare, setCompare] = useState<Candidate[]>([]); const [busy, setBusy] = useState(""); const [error, setError] = useState("");
@@ -26,7 +34,7 @@ export default function CandidatesPage() {
     setBusy(`${action}-${id}`);
     try {
       if (action === "shortlist") await api.shortlistCandidate(id);
-      else await api.requestAccess(id, "Phù hợp investment thesis và muốn tìm hiểu data room.");
+      else await api.requestAccess(id, "Startup phù hợp investment thesis; chúng tôi muốn xem tài liệu và dữ liệu thẩm định chi tiết.");
       await load();
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Thao tác thất bại"); }
     finally { setBusy(""); }
@@ -40,13 +48,13 @@ export default function CandidatesPage() {
     {selected.length >= 2 && <div className="compareBar"><span>Đã chọn {selected.length} startup</span><button className="hdBtn primary" onClick={() => void runCompare()}>So sánh</button></div>}
     {compare.length > 0 && <section className="hdCard"><div className="hdSectionHead"><h2>So sánh nhanh</h2><button className="hdBtn" onClick={() => setCompare([])}>Đóng</button></div><div className="compareGrid">{compare.map((item) => <div key={item.startup_id}><strong>{item.name}</strong><b>{item.fit_score} Fit</b><span>{item.confidence_score} Confidence</span></div>)}</div></section>}
     <section className="candidateGrid">{items.map((item) => <article className="hdCard candidateCard" key={item.startup_id}>
-      <div className="candidateHead"><label><input type="checkbox" checked={selected.includes(item.startup_id)} onChange={(event) => setSelected((old) => event.target.checked ? [...old, item.startup_id].slice(-5) : old.filter((id) => id !== item.startup_id))} /> So sánh</label><span className={`accessBadge ${item.access_status}`}>{item.access_status}</span></div>
+      <div className="candidateHead"><label><input type="checkbox" checked={selected.includes(item.startup_id)} onChange={(event) => setSelected((old) => event.target.checked ? [...old, item.startup_id].slice(-5) : old.filter((id) => id !== item.startup_id))} /> So sánh</label><span className={`accessBadge ${item.access_status}`}>{accessLabels[item.access_status]}</span></div>
       <h2>{item.name}</h2><div className="hdRecordTags">{[item.industry, item.subsector, item.stage, item.location].filter(Boolean).map((tag) => <span className="hdChip" key={tag}>{tag}</span>)}</div>
       <div className="scorePair"><div><strong>{item.fit_score}</strong><span>Fit score</span></div><div><strong>{item.confidence_score}</strong><span>Confidence</span></div></div>
       <div className="candidateFacts"><span>Runway: {item.runway_months ?? "Cần xác minh"} tháng</span><span>Growth: {item.revenue_growth ?? "Cần xác minh"}</span></div>
       <ul className="matchReasons">{item.matched_reasons.slice(0, 3).map((reason) => <li key={reason}>{reason}</li>)}</ul>
       <div className="verifyList">{item.missing_evidence.slice(0, 2).map((reason) => <span key={reason}>Cần xác minh: {reason}</span>)}</div>
-      <div className="candidateActions"><button className="hdBtn" disabled={item.pipeline_status === "shortlisted" || busy !== ""} onClick={() => void act(item.startup_id, "shortlist")}>Shortlist</button>{item.access_status === "active" ? <Link className="hdBtn primary" href={`/startups/${item.startup_id}`}>Mở data room</Link> : <button className="hdBtn primary" disabled={item.access_status === "pending" || busy !== ""} onClick={() => void act(item.startup_id, "request")}>Yêu cầu kết nối</button>}</div>
+      <div className="candidateActions"><button className="hdBtn" disabled={item.pipeline_status === "shortlisted" || busy !== ""} onClick={() => void act(item.startup_id, "shortlist")}>Shortlist</button>{item.access_status === "active" ? <Link className="hdBtn primary" href={`/startups/${item.startup_id}`}>Mở Data Room</Link> : <button className="hdBtn primary" disabled={item.access_status === "pending" || busy !== ""} onClick={() => void act(item.startup_id, "request")}>{item.access_status === "pending" ? "Đang chờ phê duyệt" : "Yêu cầu mở Data Room"}</button>}</div>
     </article>)}{!items.length && <div className="hdCard hdEmpty">Chưa có startup phù hợp. Hãy kiểm tra thesis hoặc dữ liệu discoverable.</div>}</section>
   </div>;
 }

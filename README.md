@@ -116,7 +116,7 @@ Dự án giải quyết vấn đề này bằng một data room có phân quyề
 | Xác thực và phân quyền | Đăng ký, đăng nhập, role `startup`/`investor`, Bearer token, route guard ở frontend |
 | Quản lý hồ sơ | Tạo hồ sơ draft, cập nhật profile/facts, kiểm tra độ đầy đủ, nộp snapshot, tạo draft mới |
 | Tài liệu | Upload `PDF`, `DOCX`, `PPTX`, `XLSX`, `TXT`, `MD`, `CSV`, `JSON`; trích xuất text; visibility `shared/private/restricted` |
-| Chia sẻ | Startup cấp hoặc thu hồi quyền truy cập cho investor theo từng hồ sơ |
+| Discovery và Data Room | Investor tự do xem candidate công khai; startup chỉ phê duyệt, từ chối hoặc thu hồi quyền Data Room |
 | Phiên bản | Lưu `StartupVersion`, xem lịch sử version, so sánh diff giữa hai phiên bản |
 | Phân tích | Business Model, Cash Flow, Surrounding Area, output chung theo `ModuleReport` |
 | Chat tài liệu | Hybrid RAG, BM25 fallback, embedding tùy provider, citations, lịch sử chat theo user và version |
@@ -133,17 +133,17 @@ Dự án giải quyết vấn đề này bằng một data room có phân quyề
 4. Upload tài liệu nền và chọn tài liệu được chia sẻ cho nhà đầu tư.
 5. Mở trang chi tiết hồ sơ `/startups/{id}` để kiểm tra completeness.
 6. Nộp hồ sơ. Backend tạo snapshot bất biến ở `StartupVersion`.
-7. Cấp quyền cho investor.
+7. Bật discovery; khi có yêu cầu, phê duyệt hoặc từ chối quyền mở Data Room.
 8. Sau khi cần cập nhật, tạo draft mới dựa trên phiên bản hiện tại.
 
 ### Investor
 
 1. Đăng ký tài khoản với vai trò `Investor`.
-2. Chỉ thấy các hồ sơ đã được startup cấp quyền.
-3. Mở hồ sơ để xem snapshot mới nhất và tài liệu `shared`.
-4. Chạy từng module phân tích trên phiên bản đã nộp.
-5. Xem điểm, findings, risks, missing data, methodology, evidence và tool calls.
-6. Hỏi chatbot tài liệu để tra cứu số liệu hoặc kiểm chứng claim.
+2. Cấu hình Investment Thesis và xem candidate card công khai của startup discoverable.
+3. Lọc, so sánh và shortlist mà không cần startup phê duyệt.
+4. Gửi yêu cầu mở Data Room khi muốn thẩm định sâu.
+5. Sau khi startup cấp quyền, mở snapshot mới nhất và tài liệu `shared`.
+6. Chạy module phân tích và hỏi chatbot tài liệu để kiểm chứng claim.
 
 ### Luồng end-to-end
 
@@ -423,13 +423,14 @@ Hoặc dùng helper script:
 
 Hệ thống giữ đúng hai role `startup` và `investor`. Startup nộp snapshot rồi bật
 `discoverable`; investor cấu hình investment thesis, nhận candidate card công khai,
-shortlist và gửi yêu cầu kết nối. `StartupAccess` dùng state machine
+shortlist và so sánh mà không cần phê duyệt. Chỉ khi investor yêu cầu mở Data Room
+thì startup mới quyết định cấp quyền. `StartupAccess` dùng state machine
 `pending -> active/rejected`, và `active -> revoked`; chỉ `active` được mở data room,
 chạy analysis và document chat. Pipeline đầu tư được lưu độc lập với quyền dữ liệu.
 
 Các màn hình chính: `/investor/preferences`, `/investor/candidates` và
 `/investor/pipeline`. API tương ứng nằm dưới `/api/v1/investor`, còn request và phê
-duyệt access nằm dưới `/api/v1/startups/{id}`.
+duyệt quyền Data Room nằm dưới `/api/v1/startups/{id}`.
 
 ## API chính
 
