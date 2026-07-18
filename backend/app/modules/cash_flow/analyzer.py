@@ -18,8 +18,33 @@ from .tools.calculators import (
     aggregate_cash_flow_by_period,
     calculate_break_even,
     calculate_burn_metrics,
+    calculate_derived_cash_inputs,
     calculate_working_capital,
 )
+
+
+def _derived_inputs_tool(startup_facts: dict[str, Any]) -> tuple[dict[str, Any], ToolCall]:
+    tool_input = {
+        "monthly_revenue": startup_facts.get("monthly_revenue"),
+        "fixed_monthly_costs": startup_facts.get("fixed_monthly_costs"),
+        "variable_costs": startup_facts.get("variable_costs"),
+    }
+    if None in tool_input.values():
+        output = {
+            "available": False,
+            "missing_data": [field for field, value in tool_input.items() if value is None],
+        }
+    else:
+        try:
+            output = {"available": True, **calculate_derived_cash_inputs(**tool_input)}
+        except (TypeError, ValueError) as exc:
+            output = {"available": False, "error": str(exc)}
+    return output, ToolCall(
+        name="cash_derived_inputs_calculator",
+        version="1.0.0",
+        input=tool_input,
+        output=output,
+    )
 
 
 def _break_even_tool(startup_facts: dict[str, Any]) -> tuple[dict[str, Any], ToolCall]:
@@ -87,6 +112,15 @@ class CashFlowAnalyzer:
     async def analyze(
         self, startup_facts: dict[str, Any], documents: list[dict[str, Any]], options: dict[str, Any]
     ) -> ModuleReport:
+        analysis_facts = dict(startup_facts)
+        derived_inputs, derived_inputs_call = _derived_inputs_tool(analysis_facts)
+        if derived_inputs.get("available"):
+            analysis_facts.update(
+                {
+                    "monthly_expense": derived_inputs["monthly_expense"],
+                    "variable_cost_ratio": derived_inputs["variable_cost_ratio"],
+                }
+            )
         ingestion: CashFlowIngestionResult | None = None
         if documents and options.get("use_cash_flow_ingestion_agent", True):
             llm_client = self._llm_client or get_llm_client()
@@ -100,7 +134,7 @@ class CashFlowAnalyzer:
             extraction_warnings = ingestion.warnings
         else:
             extracted, evidence, extraction_warnings = extract_cash_flow_documents(documents)
-        dataset = normalize_cash_flow_input(startup_facts, extracted)
+        dataset = normalize_cash_flow_input(analysis_facts, extracted)
         if dataset is None:
             return ModuleReport(
                 module=AnalysisModule.CASH_FLOW,
@@ -108,10 +142,16 @@ class CashFlowAnalyzer:
                 status=AnalysisStatus.INSUFFICIENT_DATA,
                 score=None,
                 summary="Chưa đủ dữ liệu dòng tiền để phân tích.",
-                missing_data=["cash_flow_dataset hoặc current_cash và financial_periods"],
-                recommended_questions=["Vui lòng bổ sung số dư tiền mặt và ít nhất hai kỳ dòng tiền."],
+                missing_data=[
+                    "cash_flow_dataset, hoặc current_cash + cash_as_of + monthly_revenue + fixed_monthly_costs + "
+                    "variable_costs"
+                ],
+                recommended_questions=[
+                    "Vui lòng nhập tiền mặt hiện có, ngày chốt số dư, doanh thu, chi phí cố định và chi phí biến đổi; "
+                    "hoặc tải dữ liệu dòng tiền theo kỳ."
+                ],
                 evidence=evidence,
-                tool_calls=ingestion.tool_calls if ingestion else [],
+                tool_calls=[*(ingestion.tool_calls if ingestion else []), derived_inputs_call],
                 details={"ingestion": _ingestion_details(ingestion)},
             )
 
@@ -139,15 +179,15 @@ class CashFlowAnalyzer:
                     "warnings": [*dataset.warnings, *extraction_warnings, *duplicate_warnings],
                     "ingestion": _ingestion_details(ingestion),
                 },
-                tool_calls=ingestion.tool_calls if ingestion else [],
+                tool_calls=[*(ingestion.tool_calls if ingestion else []), derived_inputs_call],
             )
 
         metrics = calculate_burn_metrics(periods, available_cash)
-        scenarios = run_scenarios(periods, available_cash, options, startup_facts) if periods else {}
+        scenarios = run_scenarios(periods, available_cash, options, analysis_facts) if periods else {}
         score_data = score_cash_flow(metrics, reconciliation, dataset.source_type)
         matching = build_matching_signals(metrics, scenarios, score_data) if scenarios else {}
-        break_even, break_even_call = _break_even_tool(startup_facts)
-        working_capital, working_capital_call = _working_capital_tool(startup_facts)
+        break_even, break_even_call = _break_even_tool(analysis_facts)
+        working_capital, working_capital_call = _working_capital_tool(analysis_facts)
         unclassified = sum(
             (item.amount for item in dataset.transactions if item.activity.value == "unclassified"),
             Decimal(0),
@@ -172,6 +212,7 @@ class CashFlowAnalyzer:
         )
         calls = [
             *(ingestion.tool_calls if ingestion else []),
+            derived_inputs_call,
             ToolCall(
                 name="cash_flow_normalizer",
                 version="1.0.0",

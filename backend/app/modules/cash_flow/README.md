@@ -4,7 +4,7 @@ Module đánh giá sức khỏe dòng tiền, burn, runway, working capital, bre
 
 ## Input
 
-- Facts nhập tay: `current_cash`, `minimum_cash_buffer`, `fixed_monthly_costs`, `variable_cost_ratio`, `accounts_receivable`, `accounts_payable`, `inventory`, `financial_periods` hoặc `cash_flow_dataset`.
+- Facts nhập tay tối thiểu: `currency`, `cash_as_of`, `current_cash`, `monthly_revenue`, `fixed_monthly_costs`, `variable_costs`. Tool tự tính `monthly_expense` và `variable_cost_ratio`, rồi bộ chuẩn hóa tạo một kỳ cơ sở; `financial_periods` hoặc `cash_flow_dataset` vẫn được ưu tiên khi có để phân tích xu hướng. Các facts bổ sung gồm `minimum_cash_buffer`, `accounts_receivable`, `accounts_payable` và `inventory`.
 - Workbook `.xlsx` đã được Document Intake lưu và truyền `storage_path` vào analyzer.
 - Options: `use_cash_flow_ingestion_agent`, `use_cash_flow_mapping_ai`, `scenario_months`, `scenario_assumptions`, `reconciliation_tolerance`.
 
@@ -18,6 +18,7 @@ Module đánh giá sức khỏe dòng tiền, burn, runway, working capital, bre
 6. Khi Gemini thiếu/lỗi, header alias fallback vẫn chạy deterministic.
 
 Core module không tự ghi vào `Startup.facts`. Hàm `build_cash_flow_facts_patch` chỉ tạo patch từ proposal người dùng đã chọn; persistence, upload folder và optimistic concurrency thuộc integration layer và cần phê duyệt riêng.
+Các trường dẫn xuất như `monthly_expense` và `variable_cost_ratio` không thuộc autofill; calculator luôn tạo lại chúng từ dữ liệu nguồn đã xác nhận.
 
 ## Output
 

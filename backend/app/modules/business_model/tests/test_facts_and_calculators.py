@@ -18,7 +18,7 @@ from app.modules.business_model.tools import (
 
 
 def test_business_fields_match_ui_contract_and_exclude_other_modules() -> None:
-    assert len(BUSINESS_FIELDS) == 24
+    assert len(BUSINESS_FIELDS) == 27
     assert set().union(*map(set, DOMAIN_FIELDS.values())) == set(BUSINESS_FIELDS)
     assert BUSINESS_FIELDS.isdisjoint(
         {"current_cash", "financial_periods", "exact_location", "area_claims", "primary_location"}
@@ -71,9 +71,28 @@ def test_missing_and_score_use_all_business_fields() -> None:
     missing = missing_business_fields(select_business_facts(facts))
     score = score_business_model(facts)
 
-    assert len(missing) == 22
+    assert len(missing) == 25
     assert score["present_fields"] == ["average_order_value", "problem"]
-    assert score["score"] == round(2 / 24 * 100, 2)
+    assert score["score"] == round(2 / 27 * 100, 2)
+
+
+def test_retired_order_cost_is_legacy_optional_not_a_missing_ui_field() -> None:
+    selected = select_business_facts({"variable_cost_per_order": 42_000})
+
+    assert selected["variable_cost_per_order"] == 42_000
+    assert "variable_cost_per_order" not in BUSINESS_FIELDS
+    assert "variable_cost_per_order" not in missing_business_fields(selected)
+
+
+def test_new_ui_business_fields_cross_the_module_boundary() -> None:
+    facts = {
+        "problem_owner": "Nhân viên văn phòng",
+        "users_and_payers": "Người dùng cũng là người trả tiền",
+        "acquisition_channels": ["Facebook"],
+        "fundraising_need": "Vốn mở rộng vận hành",
+    }
+
+    assert select_business_facts(facts) == facts
 
 
 def test_order_economics_for_positive_and_negative_contribution() -> None:

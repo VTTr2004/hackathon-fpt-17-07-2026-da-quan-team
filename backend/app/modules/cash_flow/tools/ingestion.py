@@ -2,6 +2,7 @@ from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+import re
 from typing import Any
 from unicodedata import normalize as unicode_normalize
 
@@ -253,6 +254,43 @@ def _financial_facts(
     proposals: list[FieldProposal] = []
     dataset = CashFlowDataset(source_type="ai_mapped_facts")
     normalized_field_map = {_normalized_text(label): field for label, field in request.field_map.items()}
+    header_values = worksheet.iter_rows(
+        min_row=1,
+        max_row=request.header_row,
+        max_col=worksheet.max_column,
+        values_only=True,
+    )
+    detected_currency = False
+    detected_as_of = False
+    for row_number, row in enumerate(header_values, 1):
+        for column_number, raw_value in enumerate(row, 1):
+            text = _plain_text(raw_value)
+            if not text:
+                continue
+            currency_match = re.search(r"\b(VND|USD)\b", text, re.IGNORECASE)
+            if currency_match and not detected_currency:
+                proposals.append(
+                    FieldProposal(
+                        field="currency",
+                        value=currency_match.group(1).upper(),
+                        confidence="high",
+                        sources=[_source(document, worksheet.title, row_number, column_number)],
+                        generated_by_tool=request.tool.value,
+                    )
+                )
+                detected_currency = True
+            dates = re.findall(r"\b\d{4}-\d{2}-\d{2}\b", text)
+            if len(dates) >= 2 and not detected_as_of:
+                proposals.append(
+                    FieldProposal(
+                        field="cash_as_of",
+                        value=dates[-1],
+                        confidence="high",
+                        sources=[_source(document, worksheet.title, row_number, column_number)],
+                        generated_by_tool=request.tool.value,
+                    )
+                )
+                detected_as_of = True
     rows = worksheet.iter_rows(
         min_row=request.header_row + 1,
         max_row=min(worksheet.max_row, MAX_DATA_ROWS),

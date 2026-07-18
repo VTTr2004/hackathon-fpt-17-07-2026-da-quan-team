@@ -5,6 +5,7 @@ from docx import Document as DocxDocument
 from app.modules.document_chatbot.ingestion import text_to_chunks
 from app.modules.profile_ingestion.extractor import select_relevant_blocks, validate_llm_result
 from app.modules.profile_ingestion.normalizers import normalize_profile_value
+from app.modules.profile_ingestion.service import _document_blocks
 from app.modules.profile_ingestion.schemas import (
     EvidenceBlock,
     LLMCandidate,
@@ -140,3 +141,16 @@ def test_docx_tables_become_locatable_evidence_blocks(tmp_path: Path) -> None:
 
     table_chunk = next(chunk for chunk in chunks if chunk["metadata"].get("table") == 1)
     assert "Giai đoạn\tSeed" in table_chunk["text"]
+
+
+def test_document_chunks_map_chunk_id_to_evidence_block_id(tmp_path: Path) -> None:
+    path = tmp_path / "profile.json"
+    path.write_text('{"name": "Góc Hồ Coffee"}', encoding="utf-8")
+
+    blocks = _document_blocks(
+        {"id": "doc-1", "filename": path.name, "storage_path": str(path), "text": ""}
+    )
+
+    assert blocks
+    assert blocks[0].block_id
+    assert blocks[0].document_id == "doc-1"

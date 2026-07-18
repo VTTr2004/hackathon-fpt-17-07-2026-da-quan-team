@@ -11,7 +11,7 @@ import type {
   Startup,
 } from "@/types";
 
-const SUPPORTED_FILE = /\.(pdf|docx|pptx|txt|md|png|jpe?g)$/i;
+const SUPPORTED_FILE = /\.(pdf|docx|pptx|txt|md|json|png|jpe?g)$/i;
 
 function editableValue(candidate: ProfileExtractionCandidate): string {
   if (Array.isArray(candidate.proposed_value)) return candidate.proposed_value.map(String).join("\n");
@@ -144,16 +144,16 @@ export default function ExtractionReview({ startup, documents, onStartupUpdated 
     <section className="profileExtraction" aria-label="Trích xuất hồ sơ từ tài liệu">
       <div className="cashFlowIntakeHeader">
         <div>
-          <span className="cashFlowStep">DOCUMENT-TO-PROFILE</span>
-          <h4>Đề xuất dữ liệu hồ sơ có bằng chứng</h4>
-          <p>AI chỉ tạo đề xuất. Dữ liệu chỉ được cập nhật sau khi bạn kiểm tra và xác nhận.</p>
+          <span className="cashFlowStep">AI AUTOFILL · HỒ SƠ</span>
+          <h4>Đề xuất điền Hồ sơ có dẫn chứng</h4>
+          <p>AI đọc nguồn tại Bằng chứng và chỉ cập nhật dữ liệu sau khi bạn kiểm tra, trả lời mục mơ hồ và xác nhận.</p>
         </div>
         <button className="hdBtn primary" type="button" disabled={busy !== null || !supportedDocuments.length} onClick={extract}>
           {busy === "extract" ? "Đang trích xuất..." : job ? "Trích xuất lại" : "Trích xuất từ tài liệu"}
         </button>
       </div>
 
-      <p className="muted">{supportedDocuments.length} tài liệu được chia sẻ và hỗ trợ · PDF, ảnh, DOCX, PPTX, TXT, Markdown</p>
+      <p className="muted">{supportedDocuments.length} tài liệu được chia sẻ và hỗ trợ · JSON, PDF, ảnh, DOCX, PPTX, TXT, Markdown</p>
       {needsOcrDocuments.length > 0 && (
         <div className="cashFlowAlert warning">
           {needsOcrDocuments.map((document) => document.filename).join(", ")}: chưa có text; hệ thống sẽ OCR bằng Gemini 3.1 Flash-Lite khi trích xuất.

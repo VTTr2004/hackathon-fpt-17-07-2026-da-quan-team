@@ -55,6 +55,18 @@ FIELD_REGISTRY: dict[str, ProfileFieldDefinition] = {
             keywords=("loại hình", "mô hình", "business type", "hộ kinh doanh", "công ty"),
         ),
         ProfileFieldDefinition(
+            "founded_date",
+            "Ngày bắt đầu hoạt động",
+            "Ngày doanh nghiệp bắt đầu hoạt động hoặc ngày khai trương.",
+            keywords=("ngày bắt đầu", "ngày khai trương", "opened_on", "founded date", "thành lập"),
+        ),
+        ProfileFieldDefinition(
+            "employee_count",
+            "Số lượng nhân sự",
+            "Tổng số nhân sự hoặc nhân viên đang làm việc.",
+            keywords=("nhân sự", "nhân viên", "employees", "employee count"),
+        ),
+        ProfileFieldDefinition(
             "problem",
             "Vấn đề khách hàng",
             "Vấn đề hoặc nhu cầu cụ thể của khách hàng mà startup giải quyết.",
@@ -67,6 +79,19 @@ FIELD_REGISTRY: dict[str, ProfileFieldDefinition] = {
             keywords=("giải pháp", "sản phẩm", "dịch vụ", "solution", "product", "service"),
         ),
         ProfileFieldDefinition(
+            "core_products",
+            "Sản phẩm/dịch vụ chính",
+            "Danh sách sản phẩm hoặc dịch vụ chính được startup cung cấp.",
+            value_type="list",
+            keywords=("sản phẩm", "dịch vụ", "đồ uống", "product", "service", "menu"),
+        ),
+        ProfileFieldDefinition(
+            "differentiation",
+            "Giá trị khác biệt",
+            "Điểm khác biệt khiến khách hàng chọn startup thay cho phương án khác.",
+            keywords=("khác biệt", "lợi thế", "unique", "differentiation", "advantage"),
+        ),
+        ProfileFieldDefinition(
             "target_customers",
             "Khách hàng mục tiêu",
             "Các nhóm khách hàng mục tiêu được nêu trong tài liệu.",
@@ -77,7 +102,15 @@ FIELD_REGISTRY: dict[str, ProfileFieldDefinition] = {
             "revenue_model",
             "Nguồn doanh thu",
             "Cách doanh nghiệp tạo doanh thu hoặc cơ chế thu tiền.",
-            keywords=("doanh thu", "nguồn thu", "revenue model", "monetization", "pricing"),
+            value_type="list",
+            keywords=("doanh thu", "nguồn thu", "revenue_channels", "revenue model", "monetization", "pricing"),
+        ),
+        ProfileFieldDefinition(
+            "sales_channels",
+            "Kênh bán hàng",
+            "Danh sách kênh mà startup sử dụng để bán sản phẩm hoặc dịch vụ.",
+            value_type="list",
+            keywords=("kênh bán", "tại quán", "mang đi", "giao hàng", "sales channel", "revenue_channels"),
         ),
         ProfileFieldDefinition(
             "traction",

@@ -12,10 +12,10 @@ export const deskTabs: DeskTab[] = [
   { id: "overview", label: "Tổng quan", icon: "dashboard" },
   { id: "business", label: "Kinh doanh", icon: "storefront", roles: ["investor"] },
   { id: "profile", label: "Hồ sơ", icon: "description", roles: ["startup"] },
+  { id: "development", label: "Kế hoạch phát triển", icon: "route" },
   { id: "cashflow", label: "Dòng tiền", icon: "monitoring" },
   { id: "area", label: "Khu vực", icon: "map" },
   { id: "evidence", label: "Bằng chứng", icon: "inventory_2" },
-  { id: "assistant", label: "Trợ lý", icon: "assistant", roles: ["startup"] },
   { id: "review", label: "Rà soát", icon: "rate_review" },
 ];
 

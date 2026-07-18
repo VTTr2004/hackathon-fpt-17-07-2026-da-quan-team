@@ -1,6 +1,6 @@
 # Business Model Analysis
 
-Module phân tích Business Model cho F&B và bán lẻ nhỏ. Module chỉ nhận 24 field Business Model/Development Plan từ UI; dữ liệu Cash Flow, vị trí và Surrounding Area bị loại tại boundary.
+Module phân tích Business Model cho F&B và bán lẻ nhỏ. Module chỉ nhận 27 field Business Model/Development Plan đang hoạt động trên UI; dữ liệu Cash Flow, vị trí và Surrounding Area bị loại tại boundary. `variable_cost_per_order` chỉ được đọc như dữ liệu legacy để tái lập báo cáo cũ và không tham gia điểm completeness.
 
 ## Flow
 

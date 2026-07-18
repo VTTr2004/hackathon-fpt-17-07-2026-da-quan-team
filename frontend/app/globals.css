@@ -473,6 +473,70 @@ button {
   gap: 14px;
 }
 
+.fieldPriority {
+  display: inline;
+  font-weight: 800;
+}
+
+.fieldLabelText {
+  display: inline;
+}
+
+.computedBadge {
+  display: inline-flex;
+  margin-left: 7px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+  vertical-align: middle;
+}
+
+.computedField input[readonly] {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+  color: #475569;
+  cursor: not-allowed;
+}
+
+.fieldHelper {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.fieldPriority.required {
+  color: #dc2626;
+}
+
+.fieldPriority.major {
+  color: #d97706;
+}
+
+.fieldPriorityLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.fieldPriorityLegend span {
+  white-space: nowrap;
+}
+
+.fieldPriorityLegend span:nth-child(1) b {
+  color: #dc2626;
+}
+
+.fieldPriorityLegend span:nth-child(2) b {
+  color: #d97706;
+}
+
 label {
   color: #435148;
   font-size: 13px;
@@ -6185,6 +6249,11 @@ html {
   .candidateFilters { grid-template-columns: 1fr 1fr; }
   .investorFormGrid .wideField { grid-column: auto; }
 }
+
+:root[data-theme="dark"] .computedField input[readonly] {
+  border-color: #475569;
+  background: #1e293b;
+  color: #94a3b8;
 
 @media (max-width: 480px) {
   .deskContextStats {

@@ -2,6 +2,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from .schemas import CashActivity, CashDirection, CashFlowDataset, CashFlowTransaction
+from .tools.calculators import calculate_derived_cash_inputs
 
 
 def normalize_period(period: str) -> str:
@@ -99,4 +100,43 @@ def normalize_cash_flow_input(
             currency=str(startup_facts.get("currency") or "VND"),
             cash_as_of=startup_facts.get("cash_as_of"),
         )
+    monthly_revenue = startup_facts.get("monthly_revenue")
+    monthly_expense = startup_facts.get("monthly_expense")
+    if (
+        monthly_expense is None
+        and monthly_revenue is not None
+        and startup_facts.get("fixed_monthly_costs") is not None
+        and startup_facts.get("variable_costs") is not None
+    ):
+        monthly_expense = calculate_derived_cash_inputs(
+            monthly_revenue=monthly_revenue,
+            fixed_monthly_costs=startup_facts["fixed_monthly_costs"],
+            variable_costs=startup_facts["variable_costs"],
+        )["monthly_expense"]
+    cash_as_of = startup_facts.get("cash_as_of")
+    if (
+        startup_facts.get("current_cash") is not None
+        and monthly_revenue is not None
+        and monthly_expense is not None
+        and cash_as_of is not None
+    ):
+        period = str(cash_as_of).strip()[:7]
+        try:
+            normalize_period(period)
+        except ValueError:
+            return None
+        dataset = legacy_periods_to_dataset(
+            startup_facts["current_cash"],
+            [{"period": period, "inflow": monthly_revenue, "outflow": monthly_expense}],
+            currency=str(startup_facts.get("currency") or "VND"),
+            cash_as_of=cash_as_of,
+        )
+        dataset.warnings.append(
+            "Cash flow was estimated from one month of average revenue and expense; "
+            "upload period data for trend analysis."
+        )
+        dataset.assumptions.append(
+            "monthly_revenue and monthly_expense are treated as operating cash inflow and outflow for cash_as_of month."
+        )
+        return dataset
     return None

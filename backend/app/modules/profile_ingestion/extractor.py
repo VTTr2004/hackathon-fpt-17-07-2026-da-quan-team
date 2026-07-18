@@ -16,7 +16,7 @@ Không dùng kiến thức bên ngoài, không suy đoán và không tự tính 
 Mỗi evidence phải tham chiếu block_id có thật và quote phải được sao chép từ block đó.
 Nếu không đủ bằng chứng, trả proposed_value=null, extraction_status=not_found và evidence rỗng.
 Nếu có nhiều cách hiểu, dùng ambiguous. Nếu các nguồn cho giá trị khác nhau, dùng conflicting.
-Giá trị target_customers phải là danh sách chuỗi; các trường còn lại là chuỗi."""
+Trường có value_type=list phải là danh sách chuỗi; các trường còn lại là chuỗi."""
 
 
 def _keyword_score(block: EvidenceBlock, field_key: str) -> int:

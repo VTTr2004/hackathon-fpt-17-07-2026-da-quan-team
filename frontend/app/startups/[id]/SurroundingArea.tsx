@@ -84,7 +84,6 @@ const claimTemplates = [
   "Chưa có đối thủ trực tiếp trong bán kính 500m",
   "Khu dân cư đông đúc",
   "Gần văn phòng nên lưu lượng khách ổn định",
-  "Giá thuê mặt bằng khu này rẻ",
 ];
 
 const verdictStyle: Record<string, { className: string; label: string }> = {
@@ -594,7 +593,7 @@ export default function SurroundingArea({
   onAnalysisComplete,
   onStartupUpdated,
 }: Props) {
-  const defaultAddress = initialAddress || factString(facts, "exact_location") || factString(facts, "headquarters_address");
+  const defaultAddress = initialAddress;
   const initialRadius = radiusFromAnalysis(initialAnalysis) ?? radiusFromFacts(facts) ?? 1000;
   const [address, setAddress] = useState(defaultAddress);
   const initialCenter = centerFromAnalysis(initialAnalysis);
@@ -650,7 +649,6 @@ export default function SurroundingArea({
     type: factString(facts, "location_type") || factString(facts, "type"),
     tenure: factString(facts, "tenure"),
     area_m2: factString(facts, "area_m2"),
-    rent_cost: factString(facts, "rent_cost"),
     operating_hours: factString(facts, "operating_hours"),
     logistics_requirements: factString(facts, "logistics_requirements"),
     known_competitors: factListString(facts, "known_nearby_competitors") || factListString(facts, "known_competitors"),
@@ -1030,7 +1028,6 @@ export default function SurroundingArea({
     const profileForm = profileFormRef.current ? new FormData(profileFormRef.current) : new FormData();
     const locationProfile: Record<string, unknown> = {};
     const areaM2 = Number(String(profileForm.get("area_m2") ?? "").replace(/[,. ]/g, ""));
-    const rentCost = Number(String(profileForm.get("rent_cost") ?? "").replace(/[,. ]/g, ""));
     const targetRadiusValues = profileForm
       .getAll("target_radius_m")
       .map((value) => String(value).trim())
@@ -1044,7 +1041,6 @@ export default function SurroundingArea({
       if (value) locationProfile[key] = value;
     }
     if (Number.isFinite(areaM2) && areaM2 > 0) locationProfile.area_m2 = areaM2;
-    if (Number.isFinite(rentCost) && rentCost > 0) locationProfile.rent_cost = rentCost;
     if (targetRadius !== null) locationProfile.target_radius_m = targetRadius;
     if (knownCompetitors.length) locationProfile.known_competitors = knownCompetitors;
     if (logisticsRequirements) locationProfile.logistics_requirements = logisticsRequirements;
@@ -1066,14 +1062,17 @@ export default function SurroundingArea({
     try {
       const nextFacts: Record<string, unknown> = {
         ...(facts ?? {}),
-        exact_location: address.trim(),
         location_dependency: dependency,
         area_claims: claimList,
       };
+      delete nextFacts.exact_location;
+      delete nextFacts.headquarters_address;
+      delete nextFacts.facility_address;
+      delete nextFacts.rent_cost;
       if (targetRadius !== null) nextFacts.target_customer_radius_m = targetRadius;
       if (knownCompetitors.length) nextFacts.known_nearby_competitors = knownCompetitors;
       if (locationProfile.type) nextFacts.location_type = locationProfile.type;
-      for (const key of ["tenure", "area_m2", "rent_cost", "operating_hours", "logistics_requirements"]) {
+      for (const key of ["tenure", "area_m2", "operating_hours", "logistics_requirements"]) {
         if (locationProfile[key] !== undefined) nextFacts[key] = locationProfile[key];
       }
       if (onStartupUpdated) {
@@ -1341,10 +1340,6 @@ export default function SurroundingArea({
           </div>
           <div className="formRow">
             <label>
-              Chi phí thuê
-              <input name="rent_cost" defaultValue={locationDefaults.rent_cost} inputMode="numeric" placeholder="VNĐ/tháng" />
-            </label>
-            <label>
               Giờ hoạt động
               <input name="operating_hours" defaultValue={locationDefaults.operating_hours} placeholder="08:00-22:00" />
             </label>
@@ -1361,7 +1356,7 @@ export default function SurroundingArea({
             />
           </label>
           <label>
-            Đối thủ đã biết
+            Đối thủ cạnh tranh tại khu vực
             <input
               name="known_competitors"
               defaultValue={locationDefaults.known_competitors}

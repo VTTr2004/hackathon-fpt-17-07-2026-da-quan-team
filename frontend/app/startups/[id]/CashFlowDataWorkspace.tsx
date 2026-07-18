@@ -14,8 +14,10 @@ import type {
 const FIELD_LABELS: Record<string, string> = {
   cash_flow_dataset: "Dữ liệu dòng tiền đã chuẩn hóa",
   current_cash: "Tiền mặt hiện có",
+  monthly_revenue: "Doanh thu trung bình tháng",
   minimum_cash_buffer: "Mức đệm tiền mặt tối thiểu",
-  fixed_monthly_costs: "Chi phí cố định hàng tháng",
+  fixed_monthly_costs: "Chi phí cố định",
+  variable_costs: "Chi phí biến đổi",
   variable_cost_ratio: "Tỷ lệ chi phí biến đổi",
   accounts_receivable: "Khoản phải thu",
   accounts_payable: "Khoản phải trả",
@@ -27,8 +29,6 @@ const FIELD_LABELS: Record<string, string> = {
   cash_flow_period_end: "Ngày kết thúc kỳ dòng tiền",
   cash_as_of: "Ngày chốt số dư tiền",
   currency: "Đơn vị tiền tệ",
-  opening_cash: "Số dư đầu kỳ",
-  reported_ending_cash: "Số dư cuối kỳ báo cáo",
   sales_support_metrics: "Chỉ số hỗ trợ bán hàng",
   purchase_cost_metrics: "Chỉ số chi phí mua hàng",
   monthly_rent: "Tiền thuê hàng tháng",
@@ -154,21 +154,21 @@ export default function CashFlowDataWorkspace({
   }
 
   return (
-    <section className="cashFlowIntake" aria-label="Nhập dữ liệu Excel cho Cash Flow">
+    <section className="cashFlowIntake" aria-label="Đề xuất Dòng tiền từ Bằng chứng">
       <div className="cashFlowIntakeHeader">
         <div>
-          <span className="cashFlowStep">BƯỚC 1 · DỮ LIỆU ĐẦU VÀO</span>
-          <h4>Phân tích file Excel đã tải</h4>
-          <p>Dòng tiền sử dụng các file `.xlsx` đã tải tại tab Bằng chứng.</p>
+          <span className="cashFlowStep">AI AUTOFILL · DÒNG TIỀN</span>
+          <h4>Đề xuất dữ liệu Dòng tiền có dẫn chứng</h4>
+          <p>Hệ thống đọc các workbook đã tải tại Bằng chứng, gọi công cụ tính toán và giữ nguồn sheet/range cho từng đề xuất.</p>
         </div>
         <span className="badgeCF neutral">{xlsxDocuments.length} file đã lưu</span>
       </div>
 
       <div className="cashFlowIntakeActions">
         <button className="primaryButton" type="button" disabled={busy !== null} onClick={analyzeSavedFiles}>
-          {busy ? "Đang xử lý..." : "Phân tích file Excel đã tải"}
+          {busy ? "Đang xử lý..." : "Phân tích Bằng chứng cho Dòng tiền"}
         </button>
-        <span>{progress || "Tải hoặc xóa tài liệu tại tab Bằng chứng; tab này không tạo bản sao upload."}</span>
+        <span>{progress || "Dữ liệu chỉ được cập nhật sau khi bạn duyệt các đề xuất bên dưới."}</span>
       </div>
 
       {error && <div className="cashFlowAlert error">{error}</div>}

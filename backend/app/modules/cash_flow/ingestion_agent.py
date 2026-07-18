@@ -217,6 +217,61 @@ def _dataset_proposals(dataset: CashFlowDataset | None, evidence: list[Evidence]
     return proposals
 
 
+def _monthly_operating_proposals(results: list[ToolExecutionResult]) -> list[FieldProposal]:
+    proposals: list[FieldProposal] = []
+    for result in results:
+        sales = result.metrics.get("sales")
+        if sales and sales.get("by_period"):
+            source = next((item.sources[0] for item in result.proposals if item.sources), None)
+            if source is not None:
+                periods = len(sales["by_period"])
+                proposals.append(
+                    FieldProposal(
+                        field="monthly_revenue",
+                        value=sales["net_sales"] / periods,
+                        confidence="high",
+                        sources=[source],
+                        generated_by_tool=IngestionToolName.SUMMARIZE_SALES.value,
+                        warnings=["Derived as net sales divided by the number of reported months."],
+                    )
+                )
+        purchases = result.metrics.get("purchases")
+        if purchases and purchases.get("by_period") and purchases.get("by_category"):
+            source = next((item.sources[0] for item in result.proposals if item.sources), None)
+            if source is None:
+                continue
+            periods = len(purchases["by_period"])
+            fixed_markers = {"tien thue", "tien luong", "phan mem"}
+            fixed_total = sum(
+                amount
+                for category, amount in purchases["by_category"].items()
+                if _normalized_text(category) in fixed_markers
+            )
+            total = purchases["total_purchases_and_expenses"]
+            variable_total = total - fixed_total
+            proposals.extend(
+                [
+                    FieldProposal(
+                        field="fixed_monthly_costs",
+                        value=fixed_total / periods,
+                        confidence="medium",
+                        sources=[source],
+                        generated_by_tool=IngestionToolName.SUMMARIZE_PURCHASES.value,
+                        warnings=["Derived from rent, payroll and software categories, averaged by reported month."],
+                    ),
+                    FieldProposal(
+                        field="variable_costs",
+                        value=variable_total / periods,
+                        confidence="medium",
+                        sources=[source],
+                        generated_by_tool=IngestionToolName.SUMMARIZE_PURCHASES.value,
+                        warnings=["Derived from remaining purchase and expense categories, averaged by reported month."],
+                    ),
+                ]
+            )
+    return proposals
+
+
 class CashFlowIngestionAgent:
     def __init__(self, llm_client: LLMClient | None = None) -> None:
         self.llm_client = llm_client
@@ -296,6 +351,7 @@ class CashFlowIngestionAgent:
         dataset = _merge_datasets(results, warnings)
         evidence = [item for result in results for item in result.evidence]
         proposals = [item for result in results for item in result.proposals]
+        proposals.extend(_monthly_operating_proposals(results))
         proposals.extend(_dataset_proposals(dataset, evidence))
         supporting_metrics: dict[str, Any] = defaultdict(list)
         for result in results:

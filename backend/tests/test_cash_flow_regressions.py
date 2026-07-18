@@ -16,6 +16,63 @@ from app.modules.cash_flow.scoring import score_cash_flow
 from app.modules.cash_flow.tools.calculators import calculate_burn_metrics
 
 
+def test_required_ui_monthly_summary_normalizes_to_one_period() -> None:
+    dataset = normalize_cash_flow_input(
+        {
+            "currency": "VND",
+            "cash_as_of": "2026-07-19",
+            "current_cash": 500_000_000,
+            "monthly_revenue": 200_000_000,
+            "fixed_monthly_costs": 100_000_000,
+            "variable_costs": 150_000_000,
+        }
+    )
+
+    assert dataset is not None
+    assert dataset.currency == "VND"
+    assert dataset.reported_ending_cash == Decimal(500_000_000)
+    assert [(item.period, item.direction, item.amount) for item in dataset.transactions] == [
+        ("2026-07", CashDirection.INFLOW, Decimal(200_000_000)),
+        ("2026-07", CashDirection.OUTFLOW, Decimal(250_000_000)),
+    ]
+    assert any("one month of average revenue and expense" in warning for warning in dataset.warnings)
+
+
+def test_required_ui_monthly_summary_rejects_invalid_cash_date() -> None:
+    dataset = normalize_cash_flow_input(
+        {
+            "cash_as_of": "not-a-date",
+            "current_cash": 500,
+            "monthly_revenue": 100,
+            "fixed_monthly_costs": 50,
+            "variable_costs": 100,
+        }
+    )
+
+    assert dataset is None
+
+
+def test_analyzer_records_derived_inputs_tool_call() -> None:
+    report = asyncio.run(
+        CashFlowAnalyzer().analyze(
+            {
+                "currency": "VND",
+                "cash_as_of": "2026-07-19",
+                "current_cash": 500,
+                "monthly_revenue": 200,
+                "fixed_monthly_costs": 100,
+                "variable_costs": 50,
+            },
+            [],
+            {"use_gemini": False},
+        )
+    )
+
+    call = next(item for item in report.tool_calls if item.name == "cash_derived_inputs_calculator")
+    assert call.output["monthly_expense"] == Decimal(150)
+    assert call.output["variable_cost_ratio"] == Decimal("0.25")
+
+
 def test_reported_zero_cash_is_used_for_runway_and_scenarios() -> None:
     facts = {
         "cash_flow_dataset": {

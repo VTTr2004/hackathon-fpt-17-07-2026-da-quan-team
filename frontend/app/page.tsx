@@ -209,9 +209,6 @@ export default function DashboardPage() {
                     <Link className="hdIconAction" href={`/startups/${startup.id}`} title="Mở hồ sơ" aria-label="Mở hồ sơ">
                       <MIcon name="arrow_forward" />
                     </Link>
-                    <Link className="hdIconAction" href={`/startups/${startup.id}/chat`} title="Trợ lý tài liệu" aria-label="Trợ lý tài liệu">
-                      <MIcon name="forum" />
-                    </Link>
                   </div>
                 </div>
               );
