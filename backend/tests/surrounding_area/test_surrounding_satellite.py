@@ -43,4 +43,3 @@ def test_satellite_context_degrades_on_fetch_error() -> None:
     assert context["status"] == "unavailable"
     assert context["scenes"] == []
     assert context["warnings"]
-

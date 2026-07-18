@@ -14,8 +14,8 @@ from app.modules.surrounding_area.verdict import (
 )
 
 # Coverage fixtures from the calibrated densities.
-GOOD_COVERAGE = assess_coverage(10.7725, 106.6980, 2797)   # District 1
-THIN_COVERAGE = assess_coverage(10.9450, 106.8240, 285)    # Bien Hoa
+GOOD_COVERAGE = assess_coverage(10.7725, 106.6980, 2797)  # District 1
+THIN_COVERAGE = assess_coverage(10.9450, 106.8240, 285)  # Bien Hoa
 
 
 def poi(distance_m, *, name=None, brand=None, value="cafe"):
@@ -28,14 +28,17 @@ def metrics_with(competitors=(), demand=None):
 
 
 class TestClaimClassification:
-    @pytest.mark.parametrize("text,expected", [
-        ("Chưa có đối thủ trong bán kính 500m", ClaimType.COMPETITOR_ABSENCE),
-        ("Khu vực chưa bão hòa", ClaimType.SATURATION),
-        ("Gần văn phòng nên lưu lượng khách ổn định", ClaimType.DEMAND),
-        ("Giá thuê mặt bằng rẻ", ClaimType.PRICE),
-        ("Giao thông thuận tiện, gần đường lớn", ClaimType.ACCESSIBILITY),
-        ("Sản phẩm của chúng tôi rất tốt", ClaimType.GENERIC),
-    ])
+    @pytest.mark.parametrize(
+        "text,expected",
+        [
+            ("Chưa có đối thủ trong bán kính 500m", ClaimType.COMPETITOR_ABSENCE),
+            ("Khu vực chưa bão hòa", ClaimType.SATURATION),
+            ("Gần văn phòng nên lưu lượng khách ổn định", ClaimType.DEMAND),
+            ("Giá thuê mặt bằng rẻ", ClaimType.PRICE),
+            ("Giao thông thuận tiện, gần đường lớn", ClaimType.ACCESSIBILITY),
+            ("Sản phẩm của chúng tôi rất tốt", ClaimType.GENERIC),
+        ],
+    )
     def test_classifies(self, text, expected) -> None:
         assert classify_claim(text) == expected
 
@@ -66,9 +69,7 @@ class TestCompetitorAbsence:
 
     def test_insufficient_when_thin_coverage_and_no_competitor(self) -> None:
         """Bien Hoa: no competitor found but map is thin -> cannot confirm absence."""
-        v = evaluate_claim_deterministic(
-            "Chưa có đối thủ trong 500m", metrics_with(competitors=[]), THIN_COVERAGE
-        )
+        v = evaluate_claim_deterministic("Chưa có đối thủ trong 500m", metrics_with(competitors=[]), THIN_COVERAGE)
         assert v.verdict == VerdictLabel.INSUFFICIENT
 
     def test_confirmed_when_good_coverage_and_no_competitor(self) -> None:
@@ -117,16 +118,12 @@ class TestDemand:
 
     def test_demand_insufficient_when_office_not_measured(self) -> None:
         demand = {"residential": 10, "office": None, "school": 2, "transport": 1}
-        v = evaluate_claim_deterministic(
-            "Gần văn phòng, đông khách", metrics_with(demand=demand), GOOD_COVERAGE
-        )
+        v = evaluate_claim_deterministic("Gần văn phòng, đông khách", metrics_with(demand=demand), GOOD_COVERAGE)
         assert v.verdict == VerdictLabel.INSUFFICIENT
 
     def test_residential_claim_confirmed_when_present(self) -> None:
         demand = {"residential": 9, "office": 1, "school": 2, "transport": 3}
-        v = evaluate_claim_deterministic(
-            "Nằm trong khu dân cư đông đúc", metrics_with(demand=demand), GOOD_COVERAGE
-        )
+        v = evaluate_claim_deterministic("Nằm trong khu dân cư đông đúc", metrics_with(demand=demand), GOOD_COVERAGE)
         assert v.verdict == VerdictLabel.CONFIRMED
 
 
@@ -147,9 +144,7 @@ class TestEvaluateClaimsReport:
 
     @pytest.mark.asyncio
     async def test_explanation_defaults_to_reason(self) -> None:
-        report = await evaluate_claims(
-            ["Giá thuê rẻ"], metrics_with(), THIN_COVERAGE, use_gemini=False
-        )
+        report = await evaluate_claims(["Giá thuê rẻ"], metrics_with(), THIN_COVERAGE, use_gemini=False)
         assert report.claims[0].explanation == report.claims[0].reason
 
     @pytest.mark.asyncio

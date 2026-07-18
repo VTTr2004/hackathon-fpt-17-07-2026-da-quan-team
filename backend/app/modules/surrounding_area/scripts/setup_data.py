@@ -28,8 +28,10 @@ def main() -> int:
 
     db_path: Path = DEFAULT_DB
     if db_path.exists() and not args.force:
-        print(f"[ok] {db_path} đã tồn tại ({db_path.stat().st_size / 1e6:.0f} MB). "
-              f"Dùng --force để build lại. Module đã sẵn sàng.")
+        print(
+            f"[ok] {db_path} đã tồn tại ({db_path.stat().st_size / 1e6:.0f} MB). "
+            f"Dùng --force để build lại. Module đã sẵn sàng."
+        )
         return 0
 
     print("[1/2] Tải bản trích OpenStreetMap Việt Nam từ Geofabrik...")

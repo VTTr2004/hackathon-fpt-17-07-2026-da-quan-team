@@ -59,12 +59,47 @@ _CLAIM_KEYWORDS: tuple[tuple[ClaimType, tuple[str, ...]], ...] = (
     # Price first: a claim mentioning rent is a price claim even if it also talks
     # about location, and price is always undecidable here.
     (ClaimType.PRICE, ("gia thue", "gia mat bang", "chi phi thue", "mat bang re", "gia re", "rent", "thue re")),
-    (ClaimType.COMPETITOR_ABSENCE, ("chua co doi thu", "khong co doi thu", "chua ai lam", "duy nhat",
-                                     "khong canh tranh", "no competitor", "chua co ai", "khong ai ban")),
-    (ClaimType.SATURATION, ("bao hoa", "thi truong trong", "it canh tranh", "it doi thu", "chua khai thac",
-                            "nhieu doi thu", "dong doi thu", "saturated")),
-    (ClaimType.DEMAND, ("dong dan", "khu dan cu", "gan van phong", "luu luong khach", "dong khach",
-                        "nhieu khach", "gan truong", "foot traffic", "dong duc", "khach on dinh")),
+    (
+        ClaimType.COMPETITOR_ABSENCE,
+        (
+            "chua co doi thu",
+            "khong co doi thu",
+            "chua ai lam",
+            "duy nhat",
+            "khong canh tranh",
+            "no competitor",
+            "chua co ai",
+            "khong ai ban",
+        ),
+    ),
+    (
+        ClaimType.SATURATION,
+        (
+            "bao hoa",
+            "thi truong trong",
+            "it canh tranh",
+            "it doi thu",
+            "chua khai thac",
+            "nhieu doi thu",
+            "dong doi thu",
+            "saturated",
+        ),
+    ),
+    (
+        ClaimType.DEMAND,
+        (
+            "dong dan",
+            "khu dan cu",
+            "gan van phong",
+            "luu luong khach",
+            "dong khach",
+            "nhieu khach",
+            "gan truong",
+            "foot traffic",
+            "dong duc",
+            "khach on dinh",
+        ),
+    ),
     (ClaimType.ACCESSIBILITY, ("giao thong", "de tiep can", "gan duong lon", "thuan tien", "de di")),
 )
 
@@ -178,22 +213,29 @@ def _verdict_competitor_absence(claim, metrics, coverage) -> ClaimVerdict:
             + (" — thương hiệu chuỗi." if nearest.is_chain else "."),
         ]
         return ClaimVerdict(
-            claim=claim, claim_type=ClaimType.COMPETITOR_ABSENCE, verdict=VerdictLabel.REFUTED,
+            claim=claim,
+            claim_type=ClaimType.COMPETITOR_ABSENCE,
+            verdict=VerdictLabel.REFUTED,
             reason=f"Có đối thủ thực tế trong {radius}m, bác bỏ tuyên bố 'chưa có đối thủ'.",
-            evidence=evidence, confidence=_confidence_from_coverage(coverage),
+            evidence=evidence,
+            confidence=_confidence_from_coverage(coverage),
         )
 
     # No competitor found within the radius.
     if not coverage.can_assess_saturation:
         return ClaimVerdict(
-            claim=claim, claim_type=ClaimType.COMPETITOR_ABSENCE, verdict=VerdictLabel.INSUFFICIENT,
+            claim=claim,
+            claim_type=ClaimType.COMPETITOR_ABSENCE,
+            verdict=VerdictLabel.INSUFFICIENT,
             reason="Không thấy đối thủ trong bán kính, NHƯNG mật độ bản đồ ở khu vực này mỏng "
             f"({coverage.tier.value}) nên không thể phân biệt 'thị trường trống' với 'lỗ hổng dữ liệu'.",
             evidence=[f"Mật độ POI chỉ {coverage.density_1km}/km² (~{coverage.coverage_ratio:.0%} baseline)."],
             confidence="low",
         )
     return ClaimVerdict(
-        claim=claim, claim_type=ClaimType.COMPETITOR_ABSENCE, verdict=VerdictLabel.CONFIRMED,
+        claim=claim,
+        claim_type=ClaimType.COMPETITOR_ABSENCE,
+        verdict=VerdictLabel.CONFIRMED,
         reason=f"Khu vực có dữ liệu bản đồ tốt và không ghi nhận đối thủ trực tiếp trong {radius}m.",
         evidence=[f"0 đối thủ trong {radius}m; mật độ bản đồ đủ dày ({coverage.density_1km}/km²) để tin cậy."],
         confidence=_confidence_from_coverage(coverage),
@@ -203,7 +245,9 @@ def _verdict_competitor_absence(claim, metrics, coverage) -> ClaimVerdict:
 def _verdict_saturation(claim, metrics, coverage) -> ClaimVerdict:
     if not coverage.can_assess_saturation:
         return ClaimVerdict(
-            claim=claim, claim_type=ClaimType.SATURATION, verdict=VerdictLabel.INSUFFICIENT,
+            claim=claim,
+            claim_type=ClaimType.SATURATION,
+            verdict=VerdictLabel.INSUFFICIENT,
             reason=f"Mật độ bản đồ mỏng ({coverage.tier.value}); không đủ căn cứ kết luận về mức độ bão hòa.",
             evidence=[f"Mật độ POI {coverage.density_1km}/km² (~{coverage.coverage_ratio:.0%} baseline)."],
             confidence="low",
@@ -218,15 +262,21 @@ def _verdict_saturation(claim, metrics, coverage) -> ClaimVerdict:
     dense = count_1km >= 50
     if claims_open_market and dense:
         return ClaimVerdict(
-            claim=claim, claim_type=ClaimType.SATURATION, verdict=VerdictLabel.REFUTED,
+            claim=claim,
+            claim_type=ClaimType.SATURATION,
+            verdict=VerdictLabel.REFUTED,
             reason=f"Khu vực có {count_1km} đối thủ trong 1km — không phù hợp với mô tả 'chưa bão hòa/ít cạnh tranh'.",
-            evidence=evidence, confidence=_confidence_from_coverage(coverage),
+            evidence=evidence,
+            confidence=_confidence_from_coverage(coverage),
         )
     verdict = VerdictLabel.CONFIRMED if not dense else VerdictLabel.INSUFFICIENT
     return ClaimVerdict(
-        claim=claim, claim_type=ClaimType.SATURATION, verdict=verdict,
+        claim=claim,
+        claim_type=ClaimType.SATURATION,
+        verdict=verdict,
         reason=f"Ghi nhận {count_1km} đối thủ trong 1km tại khu vực có dữ liệu tốt.",
-        evidence=evidence, confidence=_confidence_from_coverage(coverage),
+        evidence=evidence,
+        confidence=_confidence_from_coverage(coverage),
     )
 
 
@@ -234,10 +284,13 @@ def _verdict_demand(claim, metrics, coverage) -> ClaimVerdict:
     demand = metrics.demand
     if demand.missing:
         return ClaimVerdict(
-            claim=claim, claim_type=ClaimType.DEMAND, verdict=VerdictLabel.INSUFFICIENT,
+            claim=claim,
+            claim_type=ClaimType.DEMAND,
+            verdict=VerdictLabel.INSUFFICIENT,
             reason=f"Thiếu dữ liệu cầu ({', '.join(demand.missing)}); không thể xác nhận mức độ đông khách. "
             "Các thành phần thiếu KHÔNG được coi là bằng 0.",
-            evidence=[], confidence="low",
+            evidence=[],
+            confidence="low",
         )
     folded = fold(claim)
     parts = []
@@ -254,27 +307,39 @@ def _verdict_demand(claim, metrics, coverage) -> ClaimVerdict:
     wants_resident = "dan cu" in folded or "dong dan" in folded
     if wants_office and (demand.office or 0) == 0:
         return ClaimVerdict(
-            claim=claim, claim_type=ClaimType.DEMAND, verdict=VerdictLabel.REFUTED,
+            claim=claim,
+            claim_type=ClaimType.DEMAND,
+            verdict=VerdictLabel.REFUTED,
             reason="Tuyên bố dựa vào mật độ văn phòng, nhưng không ghi nhận văn phòng nào quanh vị trí.",
-            evidence=evidence, confidence=_confidence_from_coverage(coverage),
+            evidence=evidence,
+            confidence=_confidence_from_coverage(coverage),
         )
     if wants_resident and (demand.residential or 0) == 0:
         return ClaimVerdict(
-            claim=claim, claim_type=ClaimType.DEMAND, verdict=VerdictLabel.REFUTED,
+            claim=claim,
+            claim_type=ClaimType.DEMAND,
+            verdict=VerdictLabel.REFUTED,
             reason="Tuyên bố dựa vào khu dân cư, nhưng không ghi nhận khu dân cư nào quanh vị trí.",
-            evidence=evidence, confidence=_confidence_from_coverage(coverage),
+            evidence=evidence,
+            confidence=_confidence_from_coverage(coverage),
         )
     demand_score = demand.present_score() or 0
     if demand_score > 0:
         return ClaimVerdict(
-            claim=claim, claim_type=ClaimType.DEMAND, verdict=VerdictLabel.CONFIRMED,
+            claim=claim,
+            claim_type=ClaimType.DEMAND,
+            verdict=VerdictLabel.CONFIRMED,
             reason="Ghi nhận nguồn cầu thực tế quanh vị trí (dân cư/văn phòng/trường học).",
-            evidence=evidence, confidence=_confidence_from_coverage(coverage),
+            evidence=evidence,
+            confidence=_confidence_from_coverage(coverage),
         )
     return ClaimVerdict(
-        claim=claim, claim_type=ClaimType.DEMAND, verdict=VerdictLabel.REFUTED,
+        claim=claim,
+        claim_type=ClaimType.DEMAND,
+        verdict=VerdictLabel.REFUTED,
         reason="Không ghi nhận nguồn cầu (dân cư/văn phòng/trường) quanh vị trí.",
-        evidence=evidence, confidence=_confidence_from_coverage(coverage),
+        evidence=evidence,
+        confidence=_confidence_from_coverage(coverage),
     )
 
 
@@ -282,19 +347,25 @@ def _verdict_accessibility(claim, metrics, coverage) -> ClaimVerdict:
     transport = metrics.demand.transport
     if transport is None:
         return ClaimVerdict(
-            claim=claim, claim_type=ClaimType.ACCESSIBILITY, verdict=VerdictLabel.INSUFFICIENT,
+            claim=claim,
+            claim_type=ClaimType.ACCESSIBILITY,
+            verdict=VerdictLabel.INSUFFICIENT,
             reason="Không đo được dữ liệu giao thông công cộng quanh vị trí.",
             confidence="low",
         )
     if transport > 0:
         return ClaimVerdict(
-            claim=claim, claim_type=ClaimType.ACCESSIBILITY, verdict=VerdictLabel.CONFIRMED,
+            claim=claim,
+            claim_type=ClaimType.ACCESSIBILITY,
+            verdict=VerdictLabel.CONFIRMED,
             reason=f"Ghi nhận {transport} điểm giao thông công cộng quanh vị trí.",
             evidence=[f"{transport} điểm public_transport/bến xe trong bán kính phân tích."],
             confidence=_confidence_from_coverage(coverage, base="medium"),
         )
     return ClaimVerdict(
-        claim=claim, claim_type=ClaimType.ACCESSIBILITY, verdict=VerdictLabel.INSUFFICIENT,
+        claim=claim,
+        claim_type=ClaimType.ACCESSIBILITY,
+        verdict=VerdictLabel.INSUFFICIENT,
         reason="Không ghi nhận điểm giao thông công cộng; OSM có thể thiếu dữ liệu này, chưa đủ để kết luận.",
         confidence="low",
     )
@@ -407,7 +478,9 @@ async def evaluate_claims(
         return AreaVerdictReport(claims=verdicts, overall_summary=default_summary, llm_used=False)
     except Exception as exc:  # noqa: BLE001 - never let LLM failure break the report
         return AreaVerdictReport(
-            claims=verdicts, overall_summary=default_summary, llm_used=False,
+            claims=verdicts,
+            overall_summary=default_summary,
+            llm_used=False,
             warnings=[f"Gemini lỗi, dùng diễn giải deterministic: {exc}"],
         )
 

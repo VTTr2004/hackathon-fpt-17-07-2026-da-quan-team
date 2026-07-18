@@ -75,6 +75,7 @@ def clear_geocode_cache() -> None:
     with _cache_lock:
         _cache.clear()
 
+
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 GOOGLE_GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 GOONG_URL = "https://rsapi.goong.io/geocode"
@@ -334,8 +335,9 @@ async def geocode(
     INSUFFICIENT_DATA (missing coordinates is missing data, not "not applicable").
     """
     if not address or not address.strip():
-        return GeocodeResult(query=address, candidates=[], provider="none",
-                             warnings=["Địa chỉ trống, không thể geocode."])
+        return GeocodeResult(
+            query=address, candidates=[], provider="none", warnings=["Địa chỉ trống, không thể geocode."]
+        )
 
     # Serve a repeat address from cache — no upstream call, no rate-limit pressure.
     # Tests that inject a fetch bypass the cache so they always exercise parsing.

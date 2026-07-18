@@ -33,16 +33,16 @@ COVERAGE_VERSION = "1.0.0"
 
 
 class CoverageTier(StrEnum):
-    GOOD = "good"            # dense enough to trust a saturation assessment
-    THIN = "thin"            # abnormally sparse — likely map gaps, not empty market
+    GOOD = "good"  # dense enough to trust a saturation assessment
+    THIN = "thin"  # abnormally sparse — likely map gaps, not empty market
     VERY_THIN = "very_thin"  # severe gaps
-    RURAL = "rural"          # so few POIs the area is plausibly genuinely sparse
+    RURAL = "rural"  # so few POIs the area is plausibly genuinely sparse
 
 
 # Relative-density cut points (measured_density / baseline).
-_GOOD_RATIO = 0.5      # >= 500 POI/km at baseline 1000
-_THIN_RATIO = 0.15     # >= 150
-_RURAL_RATIO = 0.03    # < 30 -> rural
+_GOOD_RATIO = 0.5  # >= 500 POI/km at baseline 1000
+_THIN_RATIO = 0.15  # >= 150
+_RURAL_RATIO = 0.03  # < 30 -> rural
 
 
 @dataclass

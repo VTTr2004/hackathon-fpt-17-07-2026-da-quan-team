@@ -149,9 +149,7 @@ class TestGeocodeFacade:
     @pytest.mark.asyncio
     async def test_goong_preferred_when_key_present(self) -> None:
         goong_payload = {
-            "results": [
-                {"formatted_address": "Goong result", "geometry": {"location": {"lat": 10.77, "lng": 106.70}}}
-            ]
+            "results": [{"formatted_address": "Goong result", "geometry": {"location": {"lat": 10.77, "lng": 106.70}}}]
         }
         result = await geocode(
             "15 Nguyễn Huệ",
@@ -173,9 +171,7 @@ class TestGeocodeFacade:
             ],
         }
         goong_payload = {
-            "results": [
-                {"formatted_address": "Goong result", "geometry": {"location": {"lat": 10.77, "lng": 106.70}}}
-            ]
+            "results": [{"formatted_address": "Goong result", "geometry": {"location": {"lat": 10.77, "lng": 106.70}}}]
         }
         result = await geocode(
             "15 Nguyễn Huệ",
@@ -193,9 +189,7 @@ class TestGeocodeFacade:
             raise RuntimeError("google down")
 
         goong_payload = {
-            "results": [
-                {"formatted_address": "Goong result", "geometry": {"location": {"lat": 10.77, "lng": 106.70}}}
-            ]
+            "results": [{"formatted_address": "Goong result", "geometry": {"location": {"lat": 10.77, "lng": 106.70}}}]
         }
         result = await geocode(
             "15 Nguyễn Huệ",

@@ -28,11 +28,40 @@ RINGS_M = (250, 500, 1000)
 # always a LOWER BOUND — we augment it with name matching but never claim
 # completeness.
 KNOWN_CHAIN_NAMES = (
-    "highlands", "phuc long", "trung nguyen", "the coffee house", "starbucks", "cong caphe",
-    "katinat", "phe la", "laika", "aha", "milano", "circle k", "ministop", "family mart",
-    "gs25", "winmart", "vinmart", "bach hoa xanh", "co.op", "guardian", "pharmacity",
-    "long chau", "an khang", "kfc", "lotteria", "jollibee", "mcdonald", "pizza hut",
-    "the pizza company", "gong cha", "tocotoco", "ding tea", "royaltea", "phindeli",
+    "highlands",
+    "phuc long",
+    "trung nguyen",
+    "the coffee house",
+    "starbucks",
+    "cong caphe",
+    "katinat",
+    "phe la",
+    "laika",
+    "aha",
+    "milano",
+    "circle k",
+    "ministop",
+    "family mart",
+    "gs25",
+    "winmart",
+    "vinmart",
+    "bach hoa xanh",
+    "co.op",
+    "guardian",
+    "pharmacity",
+    "long chau",
+    "an khang",
+    "kfc",
+    "lotteria",
+    "jollibee",
+    "mcdonald",
+    "pizza hut",
+    "the pizza company",
+    "gong cha",
+    "tocotoco",
+    "ding tea",
+    "royaltea",
+    "phindeli",
 )
 
 
@@ -195,10 +224,7 @@ def build_area_metrics(
 
     warnings = list(extra_warnings or [])
     if demand.missing:
-        warnings.append(
-            f"Không đo được cầu: {', '.join(demand.missing)}. "
-            f"Các thành phần này bị loại, KHÔNG tính là 0."
-        )
+        warnings.append(f"Không đo được cầu: {', '.join(demand.missing)}. Các thành phần này bị loại, KHÔNG tính là 0.")
     return AreaMetrics(
         industry_profile=industry_profile,
         competitor_density=density,

@@ -29,8 +29,15 @@ class TestGeocodeEndpoint:
         assert resp.status_code == 422  # min_length=1
 
     async def test_geocode_returns_needs_confirmation(self, monkeypatch) -> None:
-        payload = [{"lat": "10.7725", "lon": "106.6980", "display_name": "Chợ Bến Thành",
-                    "class": "amenity", "type": "marketplace"}]
+        payload = [
+            {
+                "lat": "10.7725",
+                "lon": "106.6980",
+                "display_name": "Chợ Bến Thành",
+                "class": "amenity",
+                "type": "marketplace",
+            }
+        ]
 
         async def fake_geocode(address, **kwargs):
             from app.modules.surrounding_area.providers.geocoding import geocode as real

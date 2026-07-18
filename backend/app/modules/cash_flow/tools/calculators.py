@@ -12,7 +12,8 @@ def aggregate_cash_flow_by_period(dataset: CashFlowDataset) -> list[CashFlowPeri
         sign = Decimal(1) if item.direction == CashDirection.INFLOW else Decimal(-1)
         prefix = item.activity.value
         if item.activity != CashActivity.UNCLASSIFIED:
-            key = f"{prefix}_{item.direction.value}"; setattr(row, key, getattr(row, key) + item.amount)
+            key = f"{prefix}_{item.direction.value}"
+            setattr(row, key, getattr(row, key) + item.amount)
         row.net_cash_flow += sign * item.amount
     for row in rows.values():
         row.net_operating_cash_flow = row.operating_inflow - row.operating_outflow
@@ -22,11 +23,32 @@ def aggregate_cash_flow_by_period(dataset: CashFlowDataset) -> list[CashFlowPeri
 
 
 def calculate_burn_metrics(periods: list[CashFlowPeriodSummary], available_cash: Decimal) -> dict[str, Any]:
-    if not periods: return {"base_runway_months": None, "net_burn": None, "cash_generating": False}
-    count = Decimal(len(periods)); inflow = sum((x.operating_inflow for x in periods), Decimal(0)) / count; outflow = sum((x.operating_outflow for x in periods), Decimal(0)) / count
-    net = max(outflow - inflow, Decimal(0)); runway = available_cash / net if net else None
+    if not periods:
+        return {"base_runway_months": None, "net_burn": None, "cash_generating": False}
+    count = Decimal(len(periods))
+    inflow = sum((x.operating_inflow for x in periods), Decimal(0)) / count
+    outflow = sum((x.operating_outflow for x in periods), Decimal(0)) / count
+    net = max(outflow - inflow, Decimal(0))
+    runway = available_cash / net if net else None
     nets = [x.net_operating_cash_flow for x in periods]
-    return {"average_operating_inflow": inflow, "average_operating_outflow": outflow, "average_net_operating_cash_flow": sum(nets, Decimal(0)) / count, "gross_burn": outflow, "net_burn": net, "median_net_burn": max(-Decimal(str(median(nets))), Decimal(0)), "latest_period_burn": max(-nets[-1], Decimal(0)), "three_period_average_burn": net, "burn_trend": "improving" if len(nets) > 1 and nets[-1] > nets[0] else "deteriorating" if len(nets) > 1 and nets[-1] < nets[0] else "stable", "base_runway_months": runway, "latest_runway_months": available_cash / max(-nets[-1], Decimal(0)) if nets[-1] < 0 else None, "cash_generating": not bool(net)}
+    return {
+        "average_operating_inflow": inflow,
+        "average_operating_outflow": outflow,
+        "average_net_operating_cash_flow": sum(nets, Decimal(0)) / count,
+        "gross_burn": outflow,
+        "net_burn": net,
+        "median_net_burn": max(-Decimal(str(median(nets))), Decimal(0)),
+        "latest_period_burn": max(-nets[-1], Decimal(0)),
+        "three_period_average_burn": net,
+        "burn_trend": "improving"
+        if len(nets) > 1 and nets[-1] > nets[0]
+        else "deteriorating"
+        if len(nets) > 1 and nets[-1] < nets[0]
+        else "stable",
+        "base_runway_months": runway,
+        "latest_runway_months": available_cash / max(-nets[-1], Decimal(0)) if nets[-1] < 0 else None,
+        "cash_generating": not bool(net),
+    }
 
 
 def calculate_cash_metrics(periods: list[dict[str, Any]], current_cash: float) -> dict[str, Any]:
