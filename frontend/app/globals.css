@@ -2799,10 +2799,13 @@ html {
 .dcForm textarea {
   flex: 1;
   resize: none;
+  min-height: 68px;
+  max-height: 160px;
   border: 1px solid var(--line-strong);
   border-radius: 12px;
   padding: 0.6rem 0.75rem;
   font: inherit;
+  line-height: 1.45;
   background: var(--surface);
   color: var(--ink);
 }
@@ -2846,8 +2849,8 @@ html {
 
 .chatPanelBody {
   display: flex;
-  height: 540px;
-  max-height: calc(100dvh - 220px);
+  height: 720px;
+  max-height: calc(100dvh - 180px);
 }
 
 /* ---------------- Floating document-chat widget ---------------- */
@@ -2880,8 +2883,8 @@ html {
   position: fixed;
   right: 24px;
   bottom: 94px;
-  width: min(410px, calc(100vw - 32px));
-  height: min(620px, calc(100dvh - 140px));
+  width: min(560px, calc(100vw - 32px));
+  height: min(760px, calc(100dvh - 120px));
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
