@@ -301,10 +301,6 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
                 : "Tạo và cập nhật hồ sơ, tải tài liệu và nộp bản chính thức."}
             </span>
           </div>
-          <button type="button" className="appNavItem appLogoutItem" onClick={() => setConfirmLogout(true)} title="Đăng xuất">
-            <span className="appNavIcon"><MIcon name="logout" /></span>
-            <span className="appNavLabel">Đăng xuất</span>
-          </button>
         </div>
       </aside>
 
