@@ -1,0 +1,24 @@
+{
+  "business": "Góc Hồ Coffee",
+  "disclaimer": "DỮ LIỆU MÔ PHỎNG - KHÔNG CÓ GIÁ TRỊ PHÁP LÝ",
+  "pdf_count": 17,
+  "files": [
+    "output/pdf/goc_ho_coffee_demo/02_phap_ly/giay_chung_nhan_an_toan_thuc_pham.pdf",
+    "output/pdf/goc_ho_coffee_demo/02_phap_ly/giay_chung_nhan_dang_ky_ho_kinh_doanh.pdf",
+    "output/pdf/goc_ho_coffee_demo/02_phap_ly/thong_tin_dang_ky_thue.pdf",
+    "output/pdf/goc_ho_coffee_demo/03_hoa_don_ban_hang_mau/HDBH-MAU-001.pdf",
+    "output/pdf/goc_ho_coffee_demo/03_hoa_don_ban_hang_mau/HDBH-MAU-002.pdf",
+    "output/pdf/goc_ho_coffee_demo/03_hoa_don_ban_hang_mau/HDBH-MAU-003.pdf",
+    "output/pdf/goc_ho_coffee_demo/03_hoa_don_ban_hang_mau/HDBH-MAU-004.pdf",
+    "output/pdf/goc_ho_coffee_demo/03_hoa_don_ban_hang_mau/HDBH-MAU-005.pdf",
+    "output/pdf/goc_ho_coffee_demo/03_hoa_don_ban_hang_mau/HDBH-MAU-006.pdf",
+    "output/pdf/goc_ho_coffee_demo/04_hoa_don_mua_hang_mau/CP-THUE-202604.pdf",
+    "output/pdf/goc_ho_coffee_demo/04_hoa_don_mua_hang_mau/HDMH-MAU-001.pdf",
+    "output/pdf/goc_ho_coffee_demo/04_hoa_don_mua_hang_mau/HDMH-MAU-002.pdf",
+    "output/pdf/goc_ho_coffee_demo/04_hoa_don_mua_hang_mau/HDMH-MAU-003.pdf",
+    "output/pdf/goc_ho_coffee_demo/04_hoa_don_mua_hang_mau/HDMH-MAU-004.pdf",
+    "output/pdf/goc_ho_coffee_demo/04_hoa_don_mua_hang_mau/HDMH-MAU-005.pdf",
+    "output/pdf/goc_ho_coffee_demo/06_dia_diem_va_van_hanh/hoa_don_dien_nuoc_mau.pdf",
+    "output/pdf/goc_ho_coffee_demo/06_dia_diem_va_van_hanh/hop_dong_thue_mat_bang_mo_phong.pdf"
+  ]
+}

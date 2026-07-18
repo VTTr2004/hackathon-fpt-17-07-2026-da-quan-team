@@ -1,11 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { api } from "@/lib/api";
-import { quickCreateFields, readProfileField, stageOptions, textValue } from "@/lib/profileFields";
-import type { ProfileField } from "@/lib/profileFields";
 import type { Startup } from "@/types";
 
 const workflowSteps = [
@@ -51,36 +49,10 @@ function readinessLabel(progress: number) {
   return "Thiếu dữ kiện";
 }
 
-function FactFieldInput({ field }: { field: ProfileField }) {
-  return (
-    <label className={field.type === "textarea" ? "wideField" : undefined}>
-      {field.label}
-      {field.type === "textarea" ? (
-        <textarea name={field.key} rows={field.rows ?? 3} placeholder={field.placeholder} />
-      ) : field.type === "select" ? (
-        <select name={field.key} defaultValue="">
-          <option value="">Chọn</option>
-          {field.options?.map((option) => (
-            <option key={option}>{option}</option>
-          ))}
-        </select>
-      ) : (
-        <input
-          name={field.key}
-          inputMode={field.type === "number" ? "numeric" : undefined}
-          type={field.type === "date" ? "date" : "text"}
-          placeholder={field.placeholder}
-        />
-      )}
-    </label>
-  );
-}
-
 export default function DashboardPage() {
   const [startups, setStartups] = useState<Startup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -112,38 +84,6 @@ export default function DashboardPage() {
     return { withIndustry, withLocation, averageReadiness };
   }, [startups]);
 
-  async function createStartup(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setCreating(true);
-    setError("");
-    const formElement = event.currentTarget;
-    const form = new FormData(formElement);
-    const facts: Record<string, unknown> = {};
-
-    for (const section of quickCreateFields) {
-      for (const field of section.fields) {
-        const value = readProfileField(form, field);
-        if (value !== undefined) facts[field.key] = value;
-      }
-    }
-
-    try {
-      const startup = await api.createStartup({
-        name: textValue(form, "name"),
-        industry: textValue(form, "industry"),
-        stage: textValue(form, "stage"),
-        primary_location: textValue(form, "location"),
-        facts,
-      });
-      setStartups((current) => [startup, ...current]);
-      formElement.reset();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Không thể tạo startup");
-    } finally {
-      setCreating(false);
-    }
-  }
-
   return (
     <div className="pageShell dashboardShell">
       <section className="pageHeader">
@@ -156,6 +96,9 @@ export default function DashboardPage() {
         </div>
         <div className="headerActions">
           <span className="systemBadge">Gemini ready</span>
+          <Link className="primaryButton headerCreateButton" href="/startups/new">
+            Tạo hồ sơ mới
+          </Link>
         </div>
       </section>
 
@@ -190,7 +133,7 @@ export default function DashboardPage() {
 
       {error && <div className="alert">{error}</div>}
 
-      <section className="dashboardGrid">
+      <section className="dashboardGrid dashboardGridSingle">
         <div className="surface">
           <div className="sectionHeader">
             <div>
@@ -207,7 +150,12 @@ export default function DashboardPage() {
               <span />
             </div>
           ) : startups.length === 0 ? (
-            <div className="emptyState">Chưa có hồ sơ. Tạo startup đầu tiên ở biểu mẫu bên cạnh.</div>
+            <div className="emptyState emptyStateWithAction">
+              <span>Chưa có hồ sơ startup nào.</span>
+              <Link className="primaryButton fitButton" href="/startups/new">
+                Tạo hồ sơ đầu tiên
+              </Link>
+            </div>
           ) : (
             <div className="recordList">
               {startups.map((startup) => {
@@ -235,59 +183,6 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-
-        <aside className="surface createSurface">
-          <div className="sectionHeader compact">
-            <div>
-              <p className="eyebrow">NEW PROFILE</p>
-              <h2>Tạo hồ sơ</h2>
-            </div>
-          </div>
-          <p className="sideIntro">
-            Nhập dữ kiện tối thiểu để tạo deal room. Có thể bổ sung sâu hơn ở màn chi tiết.
-          </p>
-          <form className="stackForm" onSubmit={createStartup}>
-            <label>
-              Tên startup
-              <input name="name" required placeholder="GreenFlow" />
-            </label>
-            <label>
-              Lĩnh vực
-              <input name="industry" placeholder="F&B, SaaS, logistics..." />
-            </label>
-            <div className="formRow">
-              <label>
-                Giai đoạn
-                <select name="stage" defaultValue="">
-                  <option value="">Chọn</option>
-                  {stageOptions.map((stage) => (
-                    <option key={stage}>{stage}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Địa điểm chính
-                <input name="location" placeholder="Quận 1, TP.HCM" />
-              </label>
-            </div>
-            {quickCreateFields.map((section) => (
-              <div className="factSection compact" key={section.id}>
-                <div className="factSectionHeader">
-                  <p className="eyebrow">{section.eyebrow}</p>
-                  <h3>{section.title}</h3>
-                </div>
-                <div className="factGrid">
-                  {section.fields.map((field) => (
-                    <FactFieldInput field={field} key={field.key} />
-                  ))}
-                </div>
-              </div>
-            ))}
-            <button className="primaryButton" disabled={creating}>
-              {creating ? "Đang tạo..." : "Tạo hồ sơ"}
-            </button>
-          </form>
-        </aside>
       </section>
     </div>
   );
