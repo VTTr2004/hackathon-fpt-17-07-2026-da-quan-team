@@ -1876,6 +1876,20 @@ textarea:focus {
   line-height: 1.45;
 }
 
+.cashFlowDashboard { display: grid; gap: 12px; margin-top: 14px; }
+.cashFlowCards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.cashFlowCards > div, .cashFlowPanel { padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfa; }
+.cashFlowCards span { display: block; color: var(--muted); font-size: 11px; }
+.cashFlowCards strong { display: block; margin-top: 5px; color: var(--green-dark); font-size: 15px; }
+.cashFlowPanel h4 { margin: 0 0 8px; font-size: 13px; }
+.cashFlowPanel p { margin: 6px 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.scenarioRows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.scenarioRows div { display: grid; gap: 4px; font-size: 12px; }
+.scenarioRows span { color: var(--muted); }
+.cashFlowTable { display: grid; gap: 4px; overflow-x: auto; font-size: 11px; }
+.cashFlowHead { color: var(--green-dark); font-weight: 800; }
+.cashFlowRow { min-width: 640px; color: var(--muted); }
+
 html {
   scroll-behavior: smooth;
 }
