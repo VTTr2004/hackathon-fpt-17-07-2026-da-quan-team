@@ -23,15 +23,19 @@ export default function StartupChatPage({ params }: { params: Promise<{ id: stri
   }, [id]);
 
   return (
-    <div className="pageShell">
-      <header className="chatPageHeader">
-        <Link href={`/startups/${id}`} className="muted">
-          ← Về hồ sơ
-        </Link>
-        <h1>Chat tra cứu tài liệu</h1>
-        <p className="muted">{startup ? startup.name : "Đang tải..."}</p>
+    <div className="hdShell">
+      <Link href={`/startups/${id}`} className="hdBtn" style={{ width: "fit-content", marginBottom: 18 }}>
+        <span className="material-symbols-outlined">arrow_back</span>
+        Về hồ sơ
+      </Link>
+      <header className="hdPageHead">
+        <div>
+          <p className="hdEyebrow">Trợ lý tài liệu</p>
+          <h1>Hỏi đáp tài liệu</h1>
+          <p className="hdLead">{startup ? startup.name : "Đang tải..."} · Trả lời chỉ dựa trên tài liệu đã tải lên, có trích dẫn nguồn.</p>
+        </div>
       </header>
-      <section className="surface chatPagePanel">
+      <section className="hdCard chatPagePanel">
         <DocumentChat startupId={id} />
       </section>
     </div>

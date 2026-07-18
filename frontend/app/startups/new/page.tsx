@@ -71,19 +71,19 @@ export default function NewStartupOverviewPage() {
         });
       }
       clearDraft();
-      router.push(`/startups/${startup.id}#analysis-modules`);
+      router.push(`/startups/${startup.id}${cashFlowFiles.length > 0 ? "#tab-cashflow" : "#tab-overview"}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không thể tạo hồ sơ startup");
       setCreating(false);
     }
   }
 
-  if (!ready) return <div className="surface emptyState">Đang tải bản nháp hồ sơ...</div>;
+  if (!ready) return <div className="hdCard"><p className="muted">Đang tải bản nháp hồ sơ...</p></div>;
 
   return (
     <div className="profileOverviewPage">
-      {error && <div className="alert">{error}</div>}
-      <section className="surface profileIdentitySection">
+      {error && <div className="hdAlert"><span className="material-symbols-outlined">error</span><span>{error}</span></div>}
+      <section className="hdCard profileIdentitySection">
         <div className="factSectionHeader">
           <div>
             <p className="eyebrow">THÔNG TIN CHUNG</p>

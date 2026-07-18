@@ -112,12 +112,12 @@ export function ModuleFormPage({
     router.push(nextHref);
   }
 
-  if (!ready) return <div className="surface emptyState">Đang tải bản nháp hồ sơ...</div>;
+  if (!ready) return <div className="hdCard"><p className="muted">Đang tải bản nháp hồ sơ...</p></div>;
 
   return (
     <form className="moduleProfilePage" onSubmit={save}>
-      <section className="surface moduleProfileIntro">
-        <p className="eyebrow">{eyebrow}</p>
+      <section className="hdCard moduleProfileIntro">
+        <p className="hdEyebrow">{eyebrow}</p>
         <h2>{title}</h2>
         <p>{description}</p>
       </section>
@@ -125,7 +125,7 @@ export function ModuleFormPage({
       {beforeSections}
 
       {sections.map((section) => (
-        <section className="surface moduleOwnedSection" key={section.id}>
+        <section className="hdCard moduleOwnedSection" key={section.id}>
           <div className="factSectionHeader">
             <div>
               <p className="eyebrow">{section.eyebrow}</p>

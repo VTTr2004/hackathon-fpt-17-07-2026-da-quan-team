@@ -58,9 +58,14 @@ function readinessLabel(progress: number) {
   return "Thiếu dữ kiện";
 }
 
+function MIcon({ name }: { name: string }) {
+  return <span className="material-symbols-outlined" aria-hidden="true">{name}</span>;
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
-  const workflowSteps = user?.role === "startup" ? startupWorkflowSteps : investorWorkflowSteps;
+  const isStartup = user?.role === "startup";
+  const workflowSteps = isStartup ? startupWorkflowSteps : investorWorkflowSteps;
   const [startups, setStartups] = useState<Startup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -95,112 +100,138 @@ export default function DashboardPage() {
     return { withIndustry, withLocation, averageReadiness };
   }, [startups]);
 
+  const metrics = [
+    { label: "Hồ sơ", value: String(startups.length), icon: "folder_open", hint: isStartup ? "Của bạn" : "Được chia sẻ" },
+    { label: "Có ngành", value: String(stats.withIndustry), icon: "category", hint: "Đã phân loại" },
+    { label: "Có địa điểm", value: String(stats.withLocation), icon: "location_on", hint: "Cho phân tích khu vực" },
+    { label: "Sẵn sàng TB", value: `${stats.averageReadiness}%`, icon: "verified", hint: "Độ đầy đủ dữ liệu" },
+  ];
+
   return (
-    <div className="pageShell dashboardShell">
-      <section className="pageHeader">
+    <div className="hdShell">
+      <section className="hdPageHead">
         <div>
-          <p className="eyebrow">STARTUP LENS</p>
-          <h1>{user?.role === "startup" ? "Hồ sơ gọi vốn của tôi" : "Phòng thẩm định startup"}</h1>
-          <p className="pageLead">
-            {user?.role === "startup"
-              ? "Chuẩn bị dữ liệu, kiểm tra độ đầy đủ và nộp phiên bản hồ sơ cho Nhà đầu tư."
-              : "Phân tích và đánh giá những hồ sơ Startup đã chia sẻ với bạn."}
+          <p className="hdEyebrow">Hải Đăng Khởi Nghiệp</p>
+          <h1>{isStartup ? "Hồ sơ gọi vốn của tôi" : "Bàn thẩm định startup"}</h1>
+          <p className="hdLead">
+            {isStartup
+              ? "Chuẩn bị dữ liệu, kiểm tra độ đầy đủ và nộp phiên bản hồ sơ cho nhà đầu tư."
+              : "Phân tích và đánh giá những hồ sơ startup đã chia sẻ với bạn, có dẫn chứng."}
           </p>
         </div>
-        <div className="headerActions">
-          <span className="systemBadge">Gemini ready</span>
-          {user?.role === "startup" && (
-            <Link className="primaryButton headerCreateButton" href="/startups/new">Tạo hồ sơ mới</Link>
-          )}
-        </div>
+        {isStartup && (
+          <div className="hdHeadActions">
+            <Link className="hdBtn primary" href="/startups/new">
+              <MIcon name="add" />
+              Tạo hồ sơ mới
+            </Link>
+          </div>
+        )}
       </section>
 
-      <section className="workflowStrip" aria-label="Luồng xử lý hồ sơ">
+      <section className="hdWorkflow" aria-label="Luồng xử lý hồ sơ">
         {workflowSteps.map((step, index) => (
-          <div className="workflowStep" key={step.title}>
-            <span>{String(index + 1).padStart(2, "0")}</span>
+          <div className="hdStep" key={step.title}>
+            <b>{String(index + 1).padStart(2, "0")}</b>
             <strong>{step.title}</strong>
             <small>{step.detail}</small>
           </div>
         ))}
       </section>
 
-      <section className="metricGrid" aria-label="Tổng quan hồ sơ">
-        <div className="metricTile">
-          <span>Hồ sơ</span>
-          <strong>{startups.length}</strong>
-        </div>
-        <div className="metricTile">
-          <span>Có ngành</span>
-          <strong>{stats.withIndustry}</strong>
-        </div>
-        <div className="metricTile">
-          <span>Có địa điểm</span>
-          <strong>{stats.withLocation}</strong>
-        </div>
-        <div className="metricTile">
-          <span>Sẵn sàng TB</span>
-          <strong>{stats.averageReadiness}%</strong>
-        </div>
+      <section className="hdBento" aria-label="Tổng quan hồ sơ">
+        {metrics.map((metric) => (
+          <div className="hdMetric" key={metric.label}>
+            <div className="hdMetricTop">
+              <span>{metric.label}</span>
+              <MIcon name={metric.icon} />
+            </div>
+            <div>
+              <strong>{metric.value}</strong>
+              <small>{metric.hint}</small>
+            </div>
+          </div>
+        ))}
       </section>
 
-      {error && <div className="alert">{error}</div>}
+      {error && (
+        <div className="hdAlert" role="alert">
+          <MIcon name="error" />
+          <span>{error}</span>
+        </div>
+      )}
 
-      <section className="dashboardGrid dashboardGridSingle">
-        <div className="surface">
-          <div className="sectionHeader">
-            <div>
-              <p className="eyebrow">DEAL ROOM</p>
-              <h2>Hồ sơ startup</h2>
-            </div>
-            <span className="muted">{loading ? "Đang tải" : `${startups.length} hồ sơ`}</span>
+      <section className="hdCard">
+        <div className="hdSectionHead">
+          <h2>
+            <MIcon name="deployed_code" />
+            {isStartup ? "Hồ sơ của tôi" : "Deal room"}
+          </h2>
+          <span className="hdCount">{loading ? "Đang tải…" : `${startups.length} hồ sơ`}</span>
+        </div>
+
+        {loading ? (
+          <div className="hdSkeleton">
+            <i />
+            <i />
+            <i />
           </div>
-
-          {loading ? (
-            <div className="skeletonList">
-              <span />
-              <span />
-              <span />
-            </div>
-          ) : startups.length === 0 ? (
-            <div className="emptyState emptyStateWithAction">
-              <span>{user?.role === "startup" ? "Bạn chưa có hồ sơ nào." : "Chưa có hồ sơ nào được chia sẻ với bạn."}</span>
-              {user?.role === "startup" && (
-                <Link className="primaryButton fitButton" href="/startups/new">Tạo hồ sơ đầu tiên</Link>
-              )}
-            </div>
-          ) : (
-            <div className="recordList">
-              {startups.map((startup) => {
-                const progress = readiness(startup);
-                return (
-                  <div className="recordRow" key={startup.id}>
-                    <Link className="recordRowLink" href={`/startups/${startup.id}`}>
-                      <div className="avatar">{startup.name.slice(0, 2).toUpperCase()}</div>
-                      <div className="recordMain">
-                        <strong>{startup.name}</strong>
-                        <span>
-                          {[startup.industry, startup.stage, startup.primary_location].filter(Boolean).join(" · ") ||
-                            "Chưa có phân loại"}
+        ) : startups.length === 0 ? (
+          <div className="hdEmpty">
+            <span>{isStartup ? "Bạn chưa có hồ sơ nào." : "Chưa có hồ sơ nào được chia sẻ với bạn."}</span>
+            {isStartup && (
+              <Link className="hdBtn primary" href="/startups/new">
+                <MIcon name="add" />
+                Tạo hồ sơ đầu tiên
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className="hdRecordList">
+            {startups.map((startup) => {
+              const progress = readiness(startup);
+              const tags = [startup.industry, startup.stage, startup.primary_location].filter(Boolean) as string[];
+              return (
+                <div className="hdRecord" key={startup.id}>
+                  <div className="hdRecordAvatar">{startup.name.slice(0, 2).toUpperCase()}</div>
+                  <div className="hdRecordMain">
+                    <Link href={`/startups/${startup.id}`}>
+                      <strong>{startup.name}</strong>
+                      <div className="hdRecordTags">
+                        {tags.length ? (
+                          tags.map((tag) => (
+                            <span className="hdChip" key={tag}>
+                              {tag}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="hdChip">Chưa phân loại</span>
+                        )}
+                        <span className={`hdPill ${isStartup ? readinessTone(progress) : "neutral"}`}>
+                          {isStartup ? readinessLabel(progress) : `Phiên bản V${startup.current_version}`}
                         </span>
-                        <em className={`readinessPill ${readinessTone(progress)}`}>
-                          {user?.role === "startup" ? readinessLabel(progress) : `Phiên bản V${startup.current_version}`}
-                        </em>
-                      </div>
-                      <div className="progressCell" aria-label={`Mức sẵn sàng ${progress}%`}>
-                        <div className="progressTrack">
-                          <span style={{ width: `${progress}%` }} />
-                        </div>
-                        <small>{progress}%</small>
                       </div>
                     </Link>
-                    <Link className="recordChatButton" href={`/startups/${startup.id}/chat`}>💬 Copilot</Link>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                  <div className="hdReadiness" aria-label={`Mức sẵn sàng ${progress}%`}>
+                    <div className="track">
+                      <i style={{ width: `${progress}%` }} />
+                    </div>
+                    <small>{progress}%</small>
+                  </div>
+                  <div className="hdRecordActions">
+                    <Link className="hdIconAction" href={`/startups/${startup.id}`} title="Mở hồ sơ" aria-label="Mở hồ sơ">
+                      <MIcon name="arrow_forward" />
+                    </Link>
+                    <Link className="hdIconAction" href={`/startups/${startup.id}/chat`} title="Trợ lý tài liệu" aria-label="Trợ lý tài liệu">
+                      <MIcon name="forum" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );

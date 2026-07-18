@@ -2,21 +2,21 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import { api } from "@/lib/api";
+import { api, tokenStore } from "@/lib/api";
 import type { AuthResponse, User, UserRole } from "@/types";
 
 type AuthContextValue = {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (payload: { email: string; full_name: string; password: string; role: UserRole }) => Promise<void>;
+  login: (email: string, password: string, remember?: boolean) => Promise<void>;
+  register: (payload: { email: string; full_name: string; password: string; role: UserRole }, remember?: boolean) => Promise<void>;
   logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function saveSession(result: AuthResponse) {
-  window.localStorage.setItem("startup_lens_token", result.access_token);
+function saveSession(result: AuthResponse, remember: boolean) {
+  tokenStore.set(result.access_token, remember);
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -24,12 +24,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = window.localStorage.getItem("startup_lens_token");
+    const token = tokenStore.get();
     if (!token) {
       Promise.resolve().then(() => setLoading(false));
       return;
     }
-    api.me().then(setUser).catch(() => window.localStorage.removeItem("startup_lens_token")).finally(() => setLoading(false));
+    api.me().then(setUser).catch(() => tokenStore.clear()).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -42,18 +42,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       loading,
-      login: async (email, password) => {
+      login: async (email, password, remember = true) => {
         const result = await api.login(email, password);
-        saveSession(result);
+        saveSession(result, remember);
         setUser(result.user);
       },
-      register: async (payload) => {
+      register: async (payload, remember = true) => {
         const result = await api.register(payload);
-        saveSession(result);
+        saveSession(result, remember);
         setUser(result.user);
       },
       logout: () => {
-        window.localStorage.removeItem("startup_lens_token");
+        tokenStore.clear();
         setUser(null);
         window.location.href = "/login";
       },

@@ -18,21 +18,22 @@ export default function NewStartupLayout({ children }: { children: ReactNode }) 
   const pathname = usePathname();
   const { user } = useAuth();
   if (user?.role !== "startup") {
-    return <div className="pageShell"><div className="alert">Chỉ tài khoản Startup được tạo hồ sơ.</div></div>;
+    return <div className="hdShell"><div className="hdAlert"><span className="material-symbols-outlined">lock</span><span>Chỉ tài khoản Startup được tạo hồ sơ.</span></div></div>;
   }
   return (
     <ProfileDraftProvider>
-      <div className="pageShell profileBuilderShell">
-        <Link className="backLink" href="/">
-          ← Quay lại danh sách hồ sơ
+      <div className="hdShell profileBuilderShell">
+        <Link className="hdBtn" href="/" style={{ width: "fit-content", marginBottom: 18 }}>
+          <span className="material-symbols-outlined">arrow_back</span>
+          Danh sách hồ sơ
         </Link>
-        <section className="pageHeader profileBuilderHeader">
+        <section className="hdPageHead">
           <div>
-            <p className="eyebrow">NEW PROFILE</p>
+            <p className="hdEyebrow">Hồ sơ mới</p>
             <h1>Tạo hồ sơ startup</h1>
-            <p className="pageLead">Mỗi module sở hữu một trang nhập liệu riêng và cùng đóng góp vào một hồ sơ.</p>
+            <p className="hdLead">Mỗi module có một trang nhập liệu riêng và cùng đóng góp vào một hồ sơ.</p>
           </div>
-          <span className="systemBadge">Bản nháp lưu trong phiên làm việc</span>
+          <span className="hdChip"><span className="material-symbols-outlined" style={{ fontSize: 15, marginRight: 4, verticalAlign: "-3px" }}>save</span>Bản nháp lưu trong phiên</span>
         </section>
 
         <div className="profileBuilderLayout">

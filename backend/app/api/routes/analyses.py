@@ -16,6 +16,7 @@ from app.schemas.common import AnalysisModule
 from app.services.analysis_service import run_analysis
 
 router = APIRouter()
+STARTUP_DRAFT_MODULES = {AnalysisModule.CASH_FLOW, AnalysisModule.SURROUNDING_AREA}
 
 
 async def _investor_version(startup_id: UUID, user: User, db: AsyncSession) -> StartupVersion:
@@ -45,7 +46,7 @@ async def list_analyses(
             Analysis.startup_id == startup_id,
             Analysis.created_by_id == user.id,
             Analysis.startup_version_id.is_(None),
-            Analysis.module == AnalysisModule.CASH_FLOW.value,
+            Analysis.module.in_([module.value for module in STARTUP_DRAFT_MODULES]),
         )
     else:
         version = await _investor_version(startup_id, user, db)
@@ -70,10 +71,10 @@ async def create_analysis(
     db: AsyncSession = Depends(get_db),
 ) -> Analysis:
     if user.role == "startup":
-        if module is not AnalysisModule.CASH_FLOW:
+        if module not in STARTUP_DRAFT_MODULES:
             raise HTTPException(
                 status_code=403,
-                detail="Startup chỉ được phân tích Cash Flow trên bản nháp",
+                detail="Startup chỉ được phân tích Cash Flow hoặc Khu vực trên bản nháp",
             )
         startup = await get_owned_startup(startup_id, user, db, require_draft=True)
         version = None

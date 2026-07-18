@@ -18,8 +18,33 @@ import type {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
+const TOKEN_KEY = "startup_lens_token";
+
+// Lưu token ở localStorage (nhớ đăng nhập) hoặc sessionStorage (chỉ phiên này).
+export const tokenStore = {
+  get(): string | null {
+    if (typeof window === "undefined") return null;
+    return window.sessionStorage.getItem(TOKEN_KEY) ?? window.localStorage.getItem(TOKEN_KEY);
+  },
+  set(token: string, remember: boolean) {
+    if (typeof window === "undefined") return;
+    if (remember) {
+      window.localStorage.setItem(TOKEN_KEY, token);
+      window.sessionStorage.removeItem(TOKEN_KEY);
+    } else {
+      window.sessionStorage.setItem(TOKEN_KEY, token);
+      window.localStorage.removeItem(TOKEN_KEY);
+    }
+  },
+  clear() {
+    if (typeof window === "undefined") return;
+    window.localStorage.removeItem(TOKEN_KEY);
+    window.sessionStorage.removeItem(TOKEN_KEY);
+  },
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = typeof window !== "undefined" ? window.localStorage.getItem("startup_lens_token") : null;
+  const token = tokenStore.get();
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
