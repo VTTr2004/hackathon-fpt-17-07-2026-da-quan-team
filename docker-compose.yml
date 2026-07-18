@@ -23,15 +23,19 @@ services:
       CORS_ORIGINS: http://localhost:3000
       UPLOAD_DIR: /app/uploads
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
-      GOONG_API_KEY: ${GOONG_API_KEY:-}
-      GOOGLE_GEOCODING_API_KEY: ${GOOGLE_GEOCODING_API_KEY:-}
-      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-flash-latest}
+      GEMINI_EMBED_MODEL: ${GEMINI_EMBED_MODEL:-gemini-embedding-001}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      NVIDIA_API_KEY: ${NVIDIA_API_KEY:-}
+      NVIDIA_CHAT_MODEL: ${NVIDIA_CHAT_MODEL:-openai/gpt-oss-120b}
+      NVIDIA_EMBED_MODEL: ${NVIDIA_EMBED_MODEL:-nvidia/nv-embedqa-e5-v5}
+      RAG_USE_RERANK: ${RAG_USE_RERANK:-false}
     ports:
       - "8000:8000"
     volumes:
       - uploads_data:/app/uploads
       - ./backend/data:/app/data:ro
+      - ./sample-data:/app/sample-data:ro
     depends_on:
       postgres:
         condition: service_healthy

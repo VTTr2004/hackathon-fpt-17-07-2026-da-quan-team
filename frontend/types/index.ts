@@ -180,15 +180,26 @@ export type ClaimVerdict = {
   explanation: string | null;
 };
 
+export type Citation = {
+  document_id: string;
+  filename: string;
+  excerpt: string;
+  page: number | null;
+  locator?: string | null;
+};
+
 export type ChatResponse = {
   answer: string;
   grounded: boolean;
   model: string | null;
-  citations: Array<{
-    document_id: string;
-    filename: string;
-    excerpt: string;
-    page: number | null;
-  }>;
+  metadata?: Record<string, unknown>;
+  citations: Citation[];
+};
+
+export type ChatMessageItem = {
+  role: "user" | "assistant";
+  content: string;
+  citations: Citation[];
+  created_at: string;
 };
 

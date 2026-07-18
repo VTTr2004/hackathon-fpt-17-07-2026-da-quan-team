@@ -161,23 +161,28 @@ export default function DashboardPage() {
               {startups.map((startup) => {
                 const progress = readiness(startup);
                 return (
-                  <Link className="recordRow" href={`/startups/${startup.id}`} key={startup.id}>
-                    <div className="avatar">{startup.name.slice(0, 2).toUpperCase()}</div>
-                    <div className="recordMain">
-                      <strong>{startup.name}</strong>
-                      <span>
-                        {[startup.industry, startup.stage, startup.primary_location].filter(Boolean).join(" · ") ||
-                          "Chưa có phân loại"}
-                      </span>
-                      <em className={`readinessPill ${readinessTone(progress)}`}>{readinessLabel(progress)}</em>
-                    </div>
-                    <div className="progressCell" aria-label={`Mức sẵn sàng ${progress}%`}>
-                      <div className="progressTrack">
-                        <span style={{ width: `${progress}%` }} />
+                  <div className="recordRow" key={startup.id}>
+                    <Link className="recordRowLink" href={`/startups/${startup.id}`}>
+                      <div className="avatar">{startup.name.slice(0, 2).toUpperCase()}</div>
+                      <div className="recordMain">
+                        <strong>{startup.name}</strong>
+                        <span>
+                          {[startup.industry, startup.stage, startup.primary_location].filter(Boolean).join(" · ") ||
+                            "Chưa có phân loại"}
+                        </span>
+                        <em className={`readinessPill ${readinessTone(progress)}`}>{readinessLabel(progress)}</em>
                       </div>
-                      <small>{progress}%</small>
-                    </div>
-                  </Link>
+                      <div className="progressCell" aria-label={`Mức sẵn sàng ${progress}%`}>
+                        <div className="progressTrack">
+                          <span style={{ width: `${progress}%` }} />
+                        </div>
+                        <small>{progress}%</small>
+                      </div>
+                    </Link>
+                    <Link className="recordChatButton" href={`/startups/${startup.id}/chat`}>
+                      💬 Chat
+                    </Link>
+                  </div>
                 );
               })}
             </div>

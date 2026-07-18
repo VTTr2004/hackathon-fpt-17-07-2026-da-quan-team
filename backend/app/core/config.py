@@ -20,11 +20,26 @@ class Settings(BaseSettings):
     upload_dir: str = "./uploads"
     max_upload_mb: int = 25
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-flash-latest"
+    gemini_embed_model: str = "gemini-embedding-001"
+    gemini_embed_dim: int = 1024
     gemini_timeout_seconds: float = 60
     goong_api_key: str | None = None
     google_geocoding_api_key: str | None = None
     google_places_api_key: str | None = None
+
+    # LLM provider for RAG chat: "gemini" (default) or "nvidia" (GPT-OSS-120B).
+    llm_provider: str = "gemini"
+    nvidia_api_key: str | None = None
+    nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
+    nvidia_chat_model: str = "openai/gpt-oss-120b"
+    nvidia_embed_model: str = "nvidia/nv-embedqa-e5-v5"
+    nvidia_timeout_seconds: float = 60
+
+    # RAG retrieval knobs (validated by the retrieval eval, see docs/methodology.md).
+    rag_top_k: int = 5
+    rag_candidate_k: int = 10
+    rag_use_rerank: bool = False
 
     @property
     def gemini_api_keys(self) -> list[str]:

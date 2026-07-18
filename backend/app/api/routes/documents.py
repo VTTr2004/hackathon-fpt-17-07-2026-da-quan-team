@@ -13,7 +13,7 @@ from app.schemas.document import DocumentRead
 from app.services.document_parser import extract_text
 
 router = APIRouter()
-ALLOWED_SUFFIXES = {".pdf", ".docx", ".pptx", ".xlsx", ".txt", ".md", ".csv"}
+ALLOWED_SUFFIXES = {".pdf", ".docx", ".pptx", ".xlsx", ".txt", ".md", ".csv", ".json"}
 
 
 @router.get("/{startup_id}/documents", response_model=list[DocumentRead])

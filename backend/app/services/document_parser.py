@@ -8,7 +8,7 @@ from pypdf import PdfReader
 
 def extract_text(path: Path) -> str:
     suffix = path.suffix.lower()
-    if suffix in {".txt", ".md", ".csv"}:
+    if suffix in {".txt", ".md", ".csv", ".json"}:
         return path.read_text(encoding="utf-8", errors="replace")
     if suffix == ".pdf":
         reader = PdfReader(str(path))
