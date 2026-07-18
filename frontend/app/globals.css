@@ -1311,67 +1311,118 @@ textarea:focus {
   padding: 8px;
 }
 
-.documentChecklist {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.checklistGroup {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fbfcfa;
-}
-
-.checklistGroup summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 44px;
-  padding: 10px 12px;
-  cursor: pointer;
-  font-weight: 800;
-}
-
-.checklistGroup summary::marker {
-  color: var(--green);
-}
-
-.checklistGroup small {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.checklistItems {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 0 12px 12px;
-}
-
-.checklistItems span {
-  padding: 5px 8px;
-  border-radius: 999px;
-  background: var(--subtle);
-  color: #435148;
-  font-size: 12px;
-  line-height: 1.3;
-}
-
 .documentList {
   margin-top: 14px;
 }
 
+.documentCategoryList {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.documentCategory {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.documentCategory > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px 24px;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px 14px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 800;
+}
+
+.documentCategory > summary > .hdCount {
+  width: 96px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.documentCategory > summary::-webkit-details-marker {
+  display: none;
+}
+
+.documentCategory > summary::after {
+  content: "expand_more";
+  justify-self: center;
+  color: var(--muted);
+  font-family: "Material Symbols Outlined";
+  font-size: 22px;
+  transition: transform 160ms ease;
+}
+
+.documentCategory[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+.documentCategoryTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.documentCategoryTitle .material-symbols-outlined {
+  color: var(--green);
+  font-size: 21px;
+}
+
+.documentCategory .documentList {
+  margin: 0;
+  padding: 0 14px 6px;
+  border-top: 1px solid var(--line);
+}
+
+.documentCategoryEmpty {
+  padding: 14px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .documentRow {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-columns: 40px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   padding: 11px 0;
   border-top: 1px solid var(--line);
+}
+
+.documentActions {
+  display: flex !important;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 8px !important;
+}
+
+.documentDeleteButton {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid #e7c5c1;
+  border-radius: 8px;
+  color: #a33a32;
+  background: #fff;
+  cursor: pointer;
+}
+
+.documentDeleteButton:hover:not(:disabled) {
+  border-color: #c9665d;
+  background: #fff2f0;
+}
+
+.documentDeleteButton:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .documentRow:first-child {
@@ -2943,7 +2994,6 @@ html {
 .placesSurvey,
 .verdictItem,
 .candidateRow,
-.checklistGroup,
 .documentRow {
   transition:
     border-color 160ms ease,
@@ -3316,7 +3366,6 @@ html {
   .detailInsightGrid,
   .demandGrid,
   .scanMetricGrid,
-  .documentChecklist,
   .factGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3335,7 +3384,6 @@ html {
   .formRow,
   .formRow.three,
   .factGrid,
-  .documentChecklist,
   .scanMetricGrid,
   .inlineForm,
   .coordinateRow,
@@ -5296,6 +5344,21 @@ html {
   color: var(--primary-dark);
 }
 
+.hdIconAction.danger {
+  cursor: pointer;
+  color: #a33a32;
+}
+
+.hdIconAction.danger:hover:not(:disabled) {
+  border-color: #c9665d;
+  background: #fff2f0;
+}
+
+.hdIconAction:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .hdIconAction .material-symbols-outlined {
   font-size: 20px;
 }
@@ -5793,6 +5856,13 @@ html {
   isolation: isolate;
 }
 
+.comingSoonMaskContent {
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.14;
+  filter: blur(9px) saturate(0.35);
+}
+
 .comingSoonMask {
   position: absolute;
   z-index: 20;
@@ -5913,7 +5983,6 @@ html {
 }
 
 :root[data-theme="dark"] label,
-:root[data-theme="dark"] .checklistItems span,
 :root[data-theme="dark"] .cashFlowStep,
 :root[data-theme="dark"] .cashFlowMappingCard span,
 :root[data-theme="dark"] .pageQuickNav a,
@@ -6013,7 +6082,6 @@ html {
 :root[data-theme="dark"] .reconciliationLedger,
 :root[data-theme="dark"] .reconciliationTerm,
 :root[data-theme="dark"] .matchingItem,
-:root[data-theme="dark"] .checklistGroup,
 :root[data-theme="dark"] .pageQuickNav a,
 :root[data-theme="dark"] .questionChips button,
 :root[data-theme="dark"] .segmentedControl button,

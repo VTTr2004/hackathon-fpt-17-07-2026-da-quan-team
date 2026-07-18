@@ -68,6 +68,78 @@ async def test_submitted_document_visibility_is_immutable(monkeypatch: pytest.Mo
     db.commit.assert_not_awaited()
 
 
+@pytest.mark.asyncio
+async def test_unlocked_document_can_be_deleted(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    startup_id, document_id, user_id = uuid4(), uuid4(), uuid4()
+    stored_file = tmp_path / "document.pdf"
+    stored_file.write_bytes(b"file")
+    user = SimpleNamespace(id=user_id, role="startup")
+    document = SimpleNamespace(
+        id=document_id,
+        startup_id=startup_id,
+        filename="document.pdf",
+        storage_path=str(stored_file),
+    )
+    db = SimpleNamespace(
+        get=AsyncMock(return_value=document),
+        delete=AsyncMock(),
+        commit=AsyncMock(),
+        add=lambda _: None,
+    )
+    monkeypatch.setattr(documents, "get_owned_startup", AsyncMock(return_value=SimpleNamespace(id=startup_id)))
+    monkeypatch.setattr(documents, "_document_is_version_locked", AsyncMock(return_value=False))
+
+    await documents.delete_document(startup_id, document_id, user, db)
+
+    db.delete.assert_awaited_once_with(document)
+    db.commit.assert_awaited_once()
+    assert not stored_file.exists()
+
+
+@pytest.mark.asyncio
+async def test_submitted_document_cannot_be_deleted(monkeypatch: pytest.MonkeyPatch) -> None:
+    startup_id, document_id, user_id = uuid4(), uuid4(), uuid4()
+    user = SimpleNamespace(id=user_id, role="startup")
+    document = SimpleNamespace(id=document_id, startup_id=startup_id, storage_path="unused", filename="locked.pdf")
+    db = SimpleNamespace(get=AsyncMock(return_value=document), delete=AsyncMock(), commit=AsyncMock())
+    monkeypatch.setattr(documents, "get_owned_startup", AsyncMock(return_value=SimpleNamespace(id=startup_id)))
+    monkeypatch.setattr(documents, "_document_is_version_locked", AsyncMock(return_value=True))
+
+    with pytest.raises(HTTPException) as error:
+        await documents.delete_document(startup_id, document_id, user, db)
+
+    assert error.value.status_code == 409
+    db.delete.assert_not_awaited()
+    db.commit.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_startup_owner_can_delete_profile_and_uploaded_files(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    startup_id, user_id = uuid4(), uuid4()
+    user = SimpleNamespace(id=user_id, role="startup")
+    startup = SimpleNamespace(id=startup_id, owner_id=user_id, name="Demo")
+    stored_file = tmp_path / "startup" / "evidence.pdf"
+    stored_file.parent.mkdir()
+    stored_file.write_bytes(b"file")
+    document = SimpleNamespace(storage_path=str(stored_file))
+    db = SimpleNamespace(
+        scalars=AsyncMock(return_value=[document]),
+        delete=AsyncMock(),
+        commit=AsyncMock(),
+        add=lambda _: None,
+    )
+    monkeypatch.setattr(startups, "get_owned_startup", AsyncMock(return_value=startup))
+
+    await startups.delete_startup(startup_id, user, db)
+
+    db.delete.assert_awaited_once_with(startup)
+    db.commit.assert_awaited_once()
+    assert not stored_file.exists()
+    assert not stored_file.parent.exists()
+
+
 def test_rate_limit_key_is_per_user_even_behind_shared_proxy() -> None:
     request = Request({"type": "http", "method": "GET", "path": "/", "headers": [], "client": ("10.0.0.1", 1)})
     first = SimpleNamespace(id=uuid4())

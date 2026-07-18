@@ -160,6 +160,11 @@ async def seed_sample_data(session: AsyncSession, password: str) -> None:
             status="active",
         )
         session.add(owner)
+    else:
+        owner.full_name = "Nguyễn Minh Anh (Demo)"
+        owner.password_hash = hash_password(password)
+        owner.role = "startup"
+        owner.status = "active"
 
     investor = await _find_user(session, SAMPLE_INVESTOR_EMAIL)
     if investor is None:
@@ -171,6 +176,11 @@ async def seed_sample_data(session: AsyncSession, password: str) -> None:
             status="active",
         )
         session.add(investor)
+    else:
+        investor.full_name = "Trần Quang Huy (Demo)"
+        investor.password_hash = hash_password(password)
+        investor.role = "investor"
+        investor.status = "active"
 
     await session.flush()
     startup = await session.scalar(
@@ -190,7 +200,13 @@ async def seed_sample_data(session: AsyncSession, password: str) -> None:
         )
         session.add(startup)
         await session.flush()
-    elif not startup.discoverable:
+    else:
+        startup.industry = "FoodTech / Healthy Meal Delivery"
+        startup.stage = "Seed"
+        startup.primary_location = "Quận 1, Thành phố Hồ Chí Minh"
+        startup.facts = SAMPLE_FACTS
+        startup.status = "submitted"
+        startup.current_version = max(startup.current_version, 1)
         startup.discoverable = True
 
     version = await session.scalar(
@@ -215,6 +231,14 @@ async def seed_sample_data(session: AsyncSession, password: str) -> None:
                 created_by_id=owner.id,
             )
         )
+    else:
+        version.snapshot = {
+            "name": startup.name,
+            "industry": startup.industry,
+            "stage": startup.stage,
+            "primary_location": startup.primary_location,
+            "facts": startup.facts,
+        }
 
     for item in DISCOVERY_SAMPLES:
         sample = await session.scalar(select(Startup).where(Startup.owner_id == owner.id, Startup.name == item["name"]))
@@ -232,7 +256,13 @@ async def seed_sample_data(session: AsyncSession, password: str) -> None:
             )
             session.add(sample)
             await session.flush()
-        if not sample.discoverable:
+        else:
+            sample.industry = item["industry"]
+            sample.stage = item["stage"]
+            sample.primary_location = item["location"]
+            sample.facts = item["facts"]
+            sample.status = "submitted"
+            sample.current_version = max(sample.current_version, 1)
             sample.discoverable = True
         sample_version = await session.scalar(
             select(StartupVersion).where(
@@ -256,6 +286,14 @@ async def seed_sample_data(session: AsyncSession, password: str) -> None:
                     created_by_id=owner.id,
                 )
             )
+        else:
+            sample_version.snapshot = {
+                "name": sample.name,
+                "industry": sample.industry,
+                "stage": sample.stage,
+                "primary_location": sample.primary_location,
+                "facts": sample.facts,
+            }
 
     access = await session.scalar(
         select(StartupAccess).where(
@@ -272,5 +310,8 @@ async def seed_sample_data(session: AsyncSession, password: str) -> None:
                 status="active",
             )
         )
+    else:
+        access.status = "active"
+        access.granted_by_id = owner.id
 
     await session.commit()

@@ -19,6 +19,8 @@ class Document(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     storage_path: Mapped[str] = mapped_column(String(1000), nullable=False)
     status: Mapped[str] = mapped_column(String(30), default="processed", nullable=False)
     visibility: Mapped[str] = mapped_column(String(30), default="shared", nullable=False)
+    category: Mapped[str] = mapped_column(String(40), default="unclassified", nullable=False)
+    categorized_by: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
     uploaded_by_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("users.id"), index=True, nullable=True
     )

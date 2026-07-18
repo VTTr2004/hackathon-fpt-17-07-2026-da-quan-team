@@ -169,8 +169,10 @@ def evaluate_claim_deterministic(
             claim=claim,
             claim_type=claim_type,
             verdict=VerdictLabel.INSUFFICIENT,
-            reason="Không có nguồn dữ liệu giá thuê mặt bằng đáng tin (Places price level là mức giá dịch vụ, không phải tiền thuê; "
-            "các trang rao vặt chặn thu thập). Không thể kết luận về giá.",
+            reason=(
+                "Không có nguồn dữ liệu giá thuê mặt bằng đáng tin (Places price level là mức giá dịch vụ, "
+                "không phải tiền thuê; các trang rao vặt chặn thu thập). Không thể kết luận về giá."
+            ),
             evidence=[],
             confidence="high",  # high confidence that we CANNOT decide
         )
@@ -248,7 +250,10 @@ def _verdict_saturation(claim, metrics, coverage) -> ClaimVerdict:
             claim=claim,
             claim_type=ClaimType.SATURATION,
             verdict=VerdictLabel.INSUFFICIENT,
-            reason=f"Truy vấn Places bị giới hạn hoặc thiếu ({coverage.tier.value}); không đủ căn cứ kết luận về mức độ bão hòa.",
+            reason=(
+                f"Truy vấn Places bị giới hạn hoặc thiếu ({coverage.tier.value}); "
+                "không đủ căn cứ kết luận về mức độ bão hòa."
+            ),
             evidence=[f"Quan sát {coverage.density_1km} POI; {coverage.coverage_ratio:.0%} nhóm truy vấn thành công."],
             confidence="low",
         )
@@ -366,7 +371,10 @@ def _verdict_accessibility(claim, metrics, coverage) -> ClaimVerdict:
         claim=claim,
         claim_type=ClaimType.ACCESSIBILITY,
         verdict=VerdictLabel.INSUFFICIENT,
-            reason="Không ghi nhận điểm giao thông công cộng; Places không bảo đảm trả đầy đủ mọi điểm, chưa đủ để kết luận.",
+        reason=(
+            "Không ghi nhận điểm giao thông công cộng; Places không bảo đảm trả đầy đủ mọi điểm, "
+            "chưa đủ để kết luận."
+        ),
         confidence="low",
     )
 

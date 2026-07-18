@@ -40,12 +40,21 @@ Percent-encode reserved URL characters in the password. The application creates 
 | `GOONG_API_KEY` | Optional |
 | `GOOGLE_PLACES_API_KEY` | Optional |
 
-Blueprint bật `SEED_SAMPLE_DATA=true`. Mỗi lần backend khởi động, seed idempotent sẽ bảo đảm có hồ sơ mẫu
-`Lotus Fresh Kitchen` và quyền truy cập tương ứng; dữ liệu không bị nhân đôi khi redeploy.
+Blueprint bật `SEED_SAMPLE_DATA=true`. Mỗi lần backend khởi động, seed idempotent sẽ bảo đảm có 5 hồ sơ mẫu
+(`Lotus Fresh Kitchen`, `Góc Hồ Coffee`, `Mây Retail Lab`, `Bếp Nhanh 24`, `An Nhiên Market`) và quyền truy
+cập demo tương ứng; dữ liệu không bị nhân đôi khi redeploy. Nếu người dùng xoá một hồ sơ mẫu, lần deploy
+tiếp theo sẽ tạo lại hồ sơ còn thiếu.
 
 - Startup demo: `startup.demo@startuplens.vn`
 - Investor demo: `investor.demo@startuplens.vn`
 - Cả hai dùng mật khẩu cấu hình trong `SAMPLE_DATA_PASSWORD`.
+
+Nếu backend được deploy trên Railway, Fly.io hoặc nền tảng khác thay vì Render, hãy đặt:
+
+```env
+SEED_SAMPLE_DATA=true
+SAMPLE_DATA_PASSWORD=<mat-khau-demo-toi-thieu-8-ky-tu>
+```
 
 The backend health endpoint is `/api/v1/health`. Copy the resulting Render URL, for example:
 

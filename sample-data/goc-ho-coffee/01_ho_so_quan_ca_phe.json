@@ -1,36 +1,57 @@
 {
+  "schema_version": "startup-profile-v2",
   "business_id": "GOCHO-DEMO-001",
   "name": "Góc Hồ Coffee",
-  "legal_name": "Hộ kinh doanh Góc Hồ Coffee",
-  "owner_name": "Nguyễn Minh An",
-  "registration_code": "HKD-DEMO-2026-001",
-  "tax_code": "MST-MOPHONG-001",
-  "address": "Số 12 phố Lê Thái Tổ, phường Hoàn Kiếm, thành phố Hà Nội",
-  "latitude": 21.03023,
-  "longitude": 105.85092,
-  "opened_on": "2026-04-01",
-  "business_problem": "Khách đi bộ quanh Hồ Hoàn Kiếm cần một điểm dừng chân có cà phê Việt, chỗ ngồi ngắn hạn và phục vụ nhanh.",
+  "industry": "F&B",
+  "stage": "Seed",
+  "primary_location": "Hoàn Kiếm, Hà Nội",
+  "location": "Hoàn Kiếm, Hà Nội",
+  "founded_date": "2026-04-01",
+  "business_type": "Hộ kinh doanh",
+  "employee_count": 8,
+  "operating_scope": "Một điểm bán tại khu vực Hồ Hoàn Kiếm và giao hàng bán kính gần",
+  "problem": "Khách đi bộ quanh Hồ Hoàn Kiếm cần một điểm dừng chân có cà phê Việt, chỗ ngồi ngắn hạn và phục vụ nhanh.",
+  "problem_owner": "Khách du lịch, nhân viên văn phòng và người trẻ di chuyển quanh khu vực Hồ Hoàn Kiếm.",
+  "solution": "Quán cà phê quy mô nhỏ, phục vụ cà phê Việt và đồ uống hiện đại, có mang đi và giao hàng trong bán kính gần.",
+  "differentiation": "Vị trí gần Hồ Hoàn Kiếm, menu cà phê Việt dễ tiếp cận, thời gian phục vụ ngắn và ba hình thức nhận món.",
   "target_customers": [
     "Khách du lịch trong nước và quốc tế đi bộ quanh Hồ Hoàn Kiếm",
     "Nhân viên văn phòng khu vực Hoàn Kiếm",
     "Người trẻ cần chỗ gặp mặt hoặc làm việc ngắn"
   ],
-  "solution": "Quán cà phê quy mô nhỏ, phục vụ cà phê Việt và đồ uống hiện đại, có mang đi và giao hàng trong bán kính gần.",
-  "revenue_channels": [
+  "customer_purchase_occasions": "Dừng nghỉ khi tham quan, mua đồ uống trước giờ làm, gặp mặt ngắn và đặt giao trong giờ hành chính.",
+  "users_and_payers": "Người mua đồ uống cũng là người sử dụng và thanh toán; đơn giao hàng có thể do nhóm văn phòng chi trả.",
+  "core_products": [
+    "Cà phê Việt",
+    "Đồ uống espresso và cold brew",
+    "Trà, matcha và bánh ngọt"
+  ],
+  "pricing_model": "Giá niêm yết theo món từ 35.000 đến 65.000 VND; khuyến mại theo giao dịch từ 5% đến 10%.",
+  "revenue_model": [
+    "Bán đồ uống và bánh theo món"
+  ],
+  "sales_channels": [
     "Tại quán",
     "Mang đi",
     "Giao hàng"
   ],
-  "opening_hours": "07:00-22:00",
-  "area_m2": 85,
-  "seats": 42,
-  "monthly_rent": 70000000,
-  "deposit": 210000000,
-  "employees": 8,
-  "currency": "VND",
-  "data_period": {
-    "start": "2026-04-01",
-    "end": "2026-06-30"
-  },
+  "acquisition_channels": [
+    "Khách vãng lai quanh Hồ Hoàn Kiếm",
+    "Mạng xã hội",
+    "Ứng dụng giao hàng"
+  ],
+  "average_order_value": 45193,
+  "competitors": [
+    "Chuỗi cà phê lớn tại khu vực Hoàn Kiếm",
+    "Các quán cà phê nội địa quanh Hồ Hoàn Kiếm"
+  ],
+  "key_suppliers_partners": [
+    "Nhà rang Hương Việt",
+    "Sữa & Nguyên liệu An Bình",
+    "Bao bì Xanh Hà Nội",
+    "Bếp bánh Ban Mai"
+  ],
+  "traction": "Doanh thu thuần quý II/2026 đạt 671.303.450 VND từ 91 ngày bán hàng.",
+  "fundraising_need": "Bổ sung vốn lưu động và thử nghiệm chuẩn hóa mô hình trước khi cân nhắc điểm bán thứ hai.",
   "disclaimer": "DỮ LIỆU MÔ PHỎNG - KHÔNG CÓ GIÁ TRỊ PHÁP LÝ"
 }

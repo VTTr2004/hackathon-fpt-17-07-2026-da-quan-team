@@ -14,6 +14,7 @@ from app.models.startup_version import StartupVersion
 from app.models.user import User
 from app.schemas.document import DocumentRead, DocumentVisibilityUpdate
 from app.services.chat_service import ensure_startup_index, startup_profile
+from app.services.document_classifier import classify_documents
 from app.services.document_parser import extract_text, has_extractable_text
 from app.services.ocr_service import OCR_SUFFIXES, ocr_document
 
@@ -69,7 +70,14 @@ async def list_documents(
             return []
         document_ids = [UUID(item) for item in version.document_ids]
         query = query.where(Document.id.in_(document_ids), Document.visibility == "shared")
-    return list(await db.scalars(query.order_by(Document.created_at.desc())))
+    documents = list(await db.scalars(query.order_by(Document.created_at.desc())))
+    uncategorized = [item for item in documents if item.categorized_by == "pending"]
+    if uncategorized:
+        classifications = await classify_documents(uncategorized)
+        for item in uncategorized:
+            item.category, item.categorized_by = classifications[str(item.id)]
+        await db.commit()
+    return documents
 
 
 @router.post("/{startup_id}/documents", response_model=DocumentRead, status_code=status.HTTP_201_CREATED)
@@ -122,6 +130,8 @@ async def upload_document(
     )
     db.add(document)
     await db.flush()
+    classification = await classify_documents([document])
+    document.category, document.categorized_by = classification[str(document.id)]
     db.add(
         AuditLog(
             actor_id=user.id,
@@ -132,6 +142,8 @@ async def upload_document(
                 "filename": original_name,
                 "ocr_model": settings.gemini_ocr_model if ocr_used else None,
                 "ocr_error": ocr_error,
+                "category": document.category,
+                "categorized_by": document.categorized_by,
             },
         )
     )
@@ -194,3 +206,37 @@ async def update_document_visibility(
     await db.commit()
     await db.refresh(document)
     return document
+
+
+@router.delete("/{startup_id}/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_document(
+    startup_id: UUID,
+    document_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    await get_owned_startup(startup_id, user, db, require_draft=True)
+    document = await db.get(Document, document_id)
+    if document is None or document.startup_id != startup_id:
+        raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+    if await _document_is_version_locked(startup_id, document_id, db):
+        raise HTTPException(
+            status_code=409,
+            detail="Tài liệu đã được khóa trong phiên bản đã nộp nên không thể xóa.",
+        )
+
+    storage_path = Path(document.storage_path)
+    db.add(
+        AuditLog(
+            actor_id=user.id,
+            action="document.deleted",
+            resource_type="document",
+            resource_id=document.id,
+            details={"filename": document.filename},
+        )
+    )
+    await db.delete(document)
+    await db.commit()
+
+    # Delete the physical file only after the database transaction succeeds.
+    storage_path.unlink(missing_ok=True)

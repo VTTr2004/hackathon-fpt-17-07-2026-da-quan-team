@@ -14,6 +14,8 @@ class DocumentRead(BaseModel):
     status: str
     extractable: bool
     visibility: str
+    category: str
+    categorized_by: str
     created_at: datetime
 
 

@@ -8,7 +8,6 @@ import { isValidTab, tabsForRole } from "@/lib/deskTabs";
 import {
   cashFlowProfileSections,
   developmentPlanSections,
-  documentChecklist,
   formatProfileValue,
   profileSections,
   readProfileField,
@@ -20,6 +19,7 @@ import type {
   Analysis,
   AnalysisModule,
   Completeness,
+  DocumentCategory,
   DocumentItem,
   InvestorAccess,
   Startup,
@@ -37,6 +37,15 @@ const modules: Array<{ id: AnalysisModule; name: string; icon: string; tone: str
   { id: "business_model", name: "Mô hình kinh doanh", icon: "storefront", tone: "", description: "Khách hàng, doanh thu và khả năng mở rộng" },
   { id: "cash_flow", name: "Dòng tiền", icon: "monitoring", tone: "blue", description: "Burn rate, runway và stress scenario" },
   { id: "surrounding_area", name: "Khu vực xung quanh", icon: "map", tone: "amber", description: "POI, đối thủ và kiểm chứng địa điểm" },
+];
+
+const documentCategories: Array<{ id: DocumentCategory; label: string; icon: string }> = [
+  { id: "legal", label: "Pháp lý", icon: "gavel" },
+  { id: "sales_revenue", label: "Bán hàng và doanh thu", icon: "point_of_sale" },
+  { id: "purchases_expenses", label: "Mua hàng và chi phí", icon: "shopping_cart" },
+  { id: "accounting_cashflow", label: "Kế toán và dòng tiền", icon: "account_balance_wallet" },
+  { id: "location_operations", label: "Địa điểm và vận hành", icon: "location_on" },
+  { id: "unclassified", label: "Chưa phân loại", icon: "help" },
 ];
 
 function latestByModule(analyses: Analysis[]) {
@@ -355,6 +364,17 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
       const updated = await api.updateDocumentVisibility(id, documentId, visibility);
       setDocuments((current) => current.map((item) => item.id === documentId ? updated : item));
     } catch (err) { setError(err instanceof Error ? err.message : "Không thể cập nhật quyền tài liệu"); }
+  }
+
+  async function removeDocument(documentId: string, filename: string) {
+    if (!window.confirm(`Xóa tài liệu “${filename}”? Hành động này không thể hoàn tác.`)) return;
+    setBusy(`delete-document-${documentId}`);
+    try {
+      await api.deleteDocument(id, documentId);
+      setDocuments((current) => current.filter((item) => item.id !== documentId));
+      setCompleteness(await api.completeness(id));
+    } catch (err) { setError(err instanceof Error ? err.message : "Không thể xóa tài liệu"); }
+    finally { setBusy(null); }
   }
 
   async function revoke(investorId: string) {
@@ -698,24 +718,26 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
 
             {/* ---- Area ---- */}
             <div className="deskPanel comingSoonMaskHost" hidden={activeTab !== "area"}>
-              <SurroundingArea
-                startupId={id}
-                industry={startup.industry}
-                initialAddress={startup.primary_location ?? ""}
-                facts={facts}
-                initialAnalysis={analysisMap.surrounding_area}
-                compactHeader
-                onAnalysisComplete={(result) => setAnalyses((current) => [result, ...current])}
-                onStartupUpdated={isStartup ? (updated) => {
-                    setStartup(updated);
-                    window.dispatchEvent(new Event("startup-workspace-updated"));
-                    void api.completeness(id).then(setCompleteness);
-                  } : undefined}
-              />
-              <div className="comingSoonMask" role="status" aria-label="Comming Soon">
+              <div className="comingSoonMaskContent" aria-hidden="true" inert>
+                <SurroundingArea
+                  startupId={id}
+                  industry={startup.industry}
+                  initialAddress={startup.primary_location ?? ""}
+                  facts={facts}
+                  initialAnalysis={analysisMap.surrounding_area}
+                  compactHeader
+                  onAnalysisComplete={(result) => setAnalyses((current) => [result, ...current])}
+                  onStartupUpdated={isStartup ? (updated) => {
+                      setStartup(updated);
+                      window.dispatchEvent(new Event("startup-workspace-updated"));
+                      void api.completeness(id).then(setCompleteness);
+                    } : undefined}
+                />
+              </div>
+              <div className="comingSoonMask" role="status" aria-label="Coming soon">
                 <div className="comingSoonMaskCard">
                   <MIcon name="construction" />
-                  <strong>Comming Soon</strong>
+                  <strong>Coming soon</strong>
                   <span>Tính năng Khu vực đang được hoàn thiện.</span>
                 </div>
               </div>
@@ -726,8 +748,23 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
               <section className="hdCard" id="startup-documents">
                 <div className="hdSectionHead"><h2><MIcon name="inventory_2" />{isStartup ? "Tài liệu hồ sơ" : "Tài liệu được chia sẻ"}</h2><span className="hdCount">{documents.length} tài liệu</span></div>
                 {editable && <form className="uploadBox" onSubmit={upload}><input name="document" type="file" accept=".pdf,.docx,.pptx,.xlsx,.txt,.md,.csv,.json,.png,.jpg,.jpeg" required /><button className="hdBtn primary" disabled={busy === "upload"}><MIcon name="upload" />Tải lên</button></form>}
-                {isStartup && <div className="documentChecklist">{documentChecklist.map((group) => <details className="checklistGroup" key={group.title}><summary>{group.title}</summary><div className="checklistItems">{group.items.map((item) => <span key={item}>{item}</span>)}</div></details>)}</div>}
-                <div className="documentList">{documents.map((item) => <div className="documentRow" key={item.id}><span className="fileIcon">DOC</span><div><strong>{item.filename}</strong><span>{item.status} · {item.visibility}</span></div>{editable && <select value={item.visibility} onChange={(event) => void changeVisibility(item.id, event.target.value)}><option value="shared">Chia sẻ</option><option value="private">Riêng tư</option><option value="restricted">Hạn chế</option></select>}</div>)}
+                <div className="documentCategoryList">
+                  {documentCategories.map((category) => {
+                    const categoryDocuments = documents.filter((item) => item.category === category.id);
+                    if (category.id === "unclassified" && !categoryDocuments.length) return null;
+                    return (
+                      <details className="documentCategory" key={category.id}>
+                        <summary>
+                          <span className="documentCategoryTitle"><MIcon name={category.icon} />{category.label}</span>
+                          <span className="hdCount">{categoryDocuments.length} tài liệu</span>
+                        </summary>
+                        <div className="documentList">
+                          {categoryDocuments.map((item) => <div className="documentRow" key={item.id}><span className="fileIcon">DOC</span><div><strong>{item.filename}</strong><span>{item.status} · {item.visibility} · {item.categorized_by === "ai" ? "AI phân loại" : "Tự động phân loại"}</span></div>{editable && <div className="documentActions"><select aria-label={`Quyền truy cập ${item.filename}`} value={item.visibility} onChange={(event) => void changeVisibility(item.id, event.target.value)}><option value="shared">Chia sẻ</option><option value="private">Riêng tư</option><option value="restricted">Hạn chế</option></select><button type="button" className="documentDeleteButton" aria-label={`Xóa ${item.filename}`} title="Xóa tài liệu" disabled={busy === `delete-document-${item.id}`} onClick={() => void removeDocument(item.id, item.filename)}><MIcon name="delete" /></button></div>}</div>)}
+                          {!categoryDocuments.length && <div className="documentCategoryEmpty">Chưa có tài liệu trong nhóm này.</div>}
+                        </div>
+                      </details>
+                    );
+                  })}
                   {!documents.length && <div className="deskEmpty"><strong>Chưa có tài liệu</strong><span>{editable ? "Tải lên hợp đồng, sổ thu chi, bảng giá… để làm bằng chứng." : "Chưa có tài liệu nào được chia sẻ."}</span></div>}
                 </div>
                 {isStartup && editable && (

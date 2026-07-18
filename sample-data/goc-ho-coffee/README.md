@@ -1,33 +1,21 @@
-# Bộ dữ liệu mẫu - Góc Hồ Coffee
+# Góc Hồ Coffee — bộ dữ liệu mô phỏng
 
-Toàn bộ nội dung trong bộ dữ liệu này là mô phỏng, phục vụ kiểm thử tính năng đánh giá startup và chatbot hỏi đáp tài liệu. Không sử dụng làm chứng từ kế toán, thuế, pháp lý hoặc giao dịch thực tế.
+Bộ dữ liệu bằng chứng cho luồng startup và nhà đầu tư. Toàn bộ tên, mã, giao dịch và chứng từ đều là dữ liệu mô phỏng.
 
-## Bối cảnh
+## Cách dùng
 
-- Tên cơ sở: Góc Hồ Coffee
-- Địa chỉ mô phỏng: Số 12 phố Lê Thái Tổ, phường Hoàn Kiếm, thành phố Hà Nội
-- Kỳ dữ liệu: 01/04/2026 - 30/06/2026
-- Tiền tệ: VND
-- Mô hình: quán cà phê 85 m², 42 chỗ ngồi, 8 nhân sự
+1. Tải các tệp JSON, XLSX và PDF trong thư mục này lên tab **Bằng chứng**.
+2. Duyệt đề xuất để điền Hồ sơ, Dòng tiền và Kế hoạch phát triển.
+3. Dùng `ground_truth.json` để đối chiếu test; không tải `central_data.json` hoặc `ground_truth.json` như bằng chứng người dùng.
 
-## Sáu nhóm đầu vào
+## Kết quả đối soát kỳ 01/04/2026–30/06/2026
 
-1. Hồ sơ kinh doanh trực tiếp: `01_ho_so_quan_ca_phe.json`
-2. Hồ sơ pháp lý mô phỏng: 3 PDF trong thư mục `02_phap_ly`
-3. Dữ liệu bán hàng: workbook 910 dòng và 6 hóa đơn PDF mẫu
-4. Dữ liệu mua hàng, chi phí: workbook 77 dòng và 6 hóa đơn PDF mẫu
-5. Sổ thu - chi: workbook 260 giao dịch, có bảng đối soát
-6. Địa điểm và vận hành: JSON, workbook nhân sự/ca làm/điện nước, hợp đồng thuê và phiếu điện nước PDF
+- Doanh thu thuần: 671.303.450 VND
+- Tổng tiền vào: 821.303.450 VND
+- Tổng tiền ra: 761.931.040 VND
+- Tiền cuối kỳ: 439.372.410 VND
+- Doanh thu trung bình tháng: 223.767.817 VND
+- Chi phí cố định trung bình tháng: 133.980.000 VND
+- Chi phí biến đổi trung bình tháng: 119.997.013 VND
 
-## Số liệu kiểm tra nhanh
-
-- Tổng doanh thu thuần: 671.303.450 đ
-- Tổng mua hàng và chi phí: 761.931.040 đ
-- Tổng tiền vào: 821.303.450 đ (gồm 150.000.000 đ vốn góp chủ sở hữu)
-- Tổng tiền ra: 761.931.040 đ
-- Số dư đầu kỳ: 380.000.000 đ
-- Số dư cuối kỳ: 439.372.410 đ
-
-## Lưu ý
-
-`central_data.json` là nguồn dữ liệu chuẩn dùng để sinh các workbook và PDF. Các mã số đăng ký, mã số thuế, nhà cung cấp, nhân vật, hóa đơn và hợp đồng đều là hư cấu.
+Các chỉ số `monthly_expense` và `variable_cost_ratio` là dữ liệu được tính, không phải trường nhập trực tiếp.

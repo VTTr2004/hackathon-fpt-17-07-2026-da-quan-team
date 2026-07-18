@@ -5,13 +5,13 @@ from docx import Document as DocxDocument
 from app.modules.document_chatbot.ingestion import text_to_chunks
 from app.modules.profile_ingestion.extractor import select_relevant_blocks, validate_llm_result
 from app.modules.profile_ingestion.normalizers import normalize_profile_value
-from app.modules.profile_ingestion.service import _document_blocks
 from app.modules.profile_ingestion.schemas import (
     EvidenceBlock,
     LLMCandidate,
     LLMEvidenceReference,
     LLMExtractionResult,
 )
+from app.modules.profile_ingestion.service import _document_blocks
 from app.services.document_parser import extract_text, has_extractable_text
 from app.services.ocr_service import normalize_ocr_text
 
