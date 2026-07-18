@@ -38,9 +38,14 @@ REQUIRED_FIELDS: tuple[tuple[str, str], ...] = (
     ("problem", "Nhu cầu hoặc vấn đề khách hàng"),
     ("solution", "Giải pháp"),
     ("target_customers", "Khách hàng mục tiêu"),
+    ("core_products", "Sản phẩm/dịch vụ chính"),
     ("revenue_model", "Nguồn doanh thu"),
+    ("currency", "Đơn vị tiền tệ"),
+    ("cash_as_of", "Ngày chốt số dư"),
     ("current_cash", "Tiền mặt hiện có"),
-    ("financial_periods", "Dòng tiền theo kỳ"),
+    ("monthly_revenue", "Doanh thu trung bình tháng"),
+    ("fixed_monthly_costs", "Chi phí cố định"),
+    ("variable_costs", "Chi phí biến đổi"),
 )
 
 

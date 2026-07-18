@@ -192,6 +192,11 @@ async def test_sample_folder_end_to_end_reconciles_and_builds_support_metrics() 
 
     proposals = {proposal.field: proposal for proposal in result.proposals}
     assert proposals["current_cash"].value == Decimal("439372410")
+    assert proposals["cash_as_of"].value == "2026-06-30"
+    assert proposals["currency"].value == "VND"
+    assert proposals["monthly_revenue"].value.quantize(Decimal("0.01")) == Decimal("223767816.67")
+    assert proposals["fixed_monthly_costs"].value == Decimal("133980000")
+    assert proposals["variable_costs"].value.quantize(Decimal("0.01")) == Decimal("119997013.33")
     assert proposals["cash_flow_dataset"].status == "proposed"
     assert proposals["cash_flow_dataset"].sources
 

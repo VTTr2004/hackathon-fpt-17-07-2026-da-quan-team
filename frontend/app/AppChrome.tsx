@@ -377,7 +377,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
                 </select>
               </label>
               <label>
-                Địa điểm chính
+                Địa chỉ trụ sở chính
                 <input name="primary_location" required placeholder="Quận 1, TP.HCM" />
               </label>
               {createError && <div className="hdAlert" role="alert"><MIcon name="error" /><span>{createError}</span></div>}

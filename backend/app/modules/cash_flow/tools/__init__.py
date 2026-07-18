@@ -3,6 +3,7 @@ from app.modules.cash_flow.tools.calculators import (
     calculate_break_even,
     calculate_burn_metrics,
     calculate_cash_metrics,
+    calculate_derived_cash_inputs,
     calculate_working_capital,
     simulate_cash_scenario,
 )
@@ -13,6 +14,7 @@ __all__ = [
     "calculate_break_even",
     "calculate_burn_metrics",
     "calculate_cash_metrics",
+    "calculate_derived_cash_inputs",
     "calculate_working_capital",
     "execute_ingestion_tool",
     "ingestion_tool_catalog",

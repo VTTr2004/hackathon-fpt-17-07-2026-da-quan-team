@@ -5,6 +5,7 @@ All tools are deterministic and owned by Cash Flow.
 | Tool | Version | Purpose |
 |---|---:|---|
 | `cash_flow_normalizer` | 1.0.0 | Normalize period, direction, activity and source identity. |
+| `cash_derived_inputs_calculator` | 1.0.0 | Calculate monthly expense and variable-cost ratio from confirmed source fields. |
 | `normalize_cashbook` | 1.0.0 | Execute an AI/heuristic column mapping against a detailed cashbook. |
 | `extract_financial_facts` | 1.0.0 | Extract allowlisted label/value facts with cell provenance. |
 | `summarize_sales` | 1.0.0 | Aggregate net sales by period/channel/payment/category; AOV only with order ID. |

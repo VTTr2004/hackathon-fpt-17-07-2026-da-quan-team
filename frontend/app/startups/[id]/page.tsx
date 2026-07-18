@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { isValidTab, tabsForRole } from "@/lib/deskTabs";
 import {
   cashFlowProfileSections,
+  developmentPlanSections,
   documentChecklist,
   formatProfileValue,
   profileSections,
@@ -27,8 +28,9 @@ import type {
 } from "@/types";
 
 import CashFlowAnalysis from "./CashFlowAnalysis";
+import CashFlowDataWorkspace from "./CashFlowDataWorkspace";
 import ChatWidget from "./ChatWidget";
-import DocumentChat from "./DocumentChat";
+import ExtractionReview from "./ExtractionReview";
 import SurroundingArea from "./SurroundingArea";
 
 const modules: Array<{ id: AnalysisModule; name: string; icon: string; tone: string; description: string }> = [
@@ -70,23 +72,64 @@ function moduleMetrics(a: Analysis | undefined, hint: string) {
   ];
 }
 
+function numericFact(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(String(value).replace(/[\s,]/g, ""));
+  return Number.isFinite(number) && number >= 0 ? number : null;
+}
+
+function computedCashFlowValue(field: ProfileField, facts: Record<string, unknown>): string {
+  const revenue = numericFact(facts.monthly_revenue);
+  const fixed = numericFact(facts.fixed_monthly_costs);
+  const variable = numericFact(facts.variable_costs);
+  if (field.computed === "monthly_expense") {
+    return fixed !== null && variable !== null ? String(fixed + variable) : "";
+  }
+  if (field.computed === "variable_cost_ratio") {
+    return revenue !== null && revenue > 0 && variable !== null
+      ? String(Math.round((variable / revenue) * 1_000_000) / 1_000_000)
+      : "";
+  }
+  return "";
+}
+
+function recalculateCashFlowForm(form: HTMLFormElement) {
+  const read = (name: string) => numericFact((form.elements.namedItem(name) as HTMLInputElement | null)?.value);
+  const write = (name: string, value: number | null) => {
+    const input = form.elements.namedItem(name) as HTMLInputElement | null;
+    if (input) input.value = value === null ? "" : String(value);
+  };
+  const revenue = read("monthly_revenue");
+  const fixed = read("fixed_monthly_costs");
+  const variable = read("variable_costs");
+  write("monthly_expense", fixed !== null && variable !== null ? fixed + variable : null);
+  write(
+    "variable_cost_ratio",
+    revenue !== null && revenue > 0 && variable !== null
+      ? Math.round((variable / revenue) * 1_000_000) / 1_000_000
+      : null,
+  );
+}
+
 const tabLeads: Record<string, string> = {
   overview: "Tổng hợp nhanh trạng thái hồ sơ và các việc cần làm tiếp theo.",
   business: "Đánh giá mô hình kinh doanh, thị trường, khách hàng và rủi ro cần hỏi thêm.",
   profile: "Cập nhật dữ liệu nền của startup trước khi nộp phiên bản chính thức.",
+  development: "Xây dựng mục tiêu, milestone và năng lực thực thi cho kế hoạch phát triển.",
   cashflow: "Chuẩn hóa dữ liệu dòng tiền và xem runway, burn rate, kịch bản căng thẳng.",
   area: "Xác nhận vị trí, quét POI, đối thủ và các tuyên bố phụ thuộc khu vực.",
   evidence: "Quản lý tài liệu nguồn dùng cho phân tích và hỏi đáp có trích dẫn.",
-  assistant: "Hỏi đáp trên tài liệu của hồ sơ, câu trả lời chỉ dựa trên nguồn đã tải lên.",
   review: "Theo dõi phiên bản, quyền truy cập và các điểm cần rà soát trước khi chốt.",
 };
 
 function ProfileFieldInput({ facts, field, disabled }: { facts: Record<string, unknown>; field: ProfileField; disabled?: boolean }) {
-  const value = formatProfileValue(field, facts[field.key]);
-  if (disabled) return <div className="readOnlyFact"><span>{field.label}</span><strong>{value || "—"}</strong></div>;
+  const value = field.computed ? computedCashFlowValue(field, facts) : formatProfileValue(field, facts[field.key]);
+  const priority = field.importance === "required" ? "**" : field.importance === "major" ? "*" : "";
+  const label = <span className="fieldLabelText">{field.label}{priority && <span className={`fieldPriority ${field.importance}`} title={field.importance === "required" ? "Bắt buộc" : "Điểm cộng lớn"}> {priority}</span>}{field.computed && <span className="computedBadge" title="Giá trị được tính tự động">Tự tính</span>}</span>;
+  if (disabled) return <div className="readOnlyFact">{label}<strong>{value || "—"}</strong></div>;
   return (
-    <label className={field.type === "textarea" ? "wideField" : undefined}>
-      {field.label}
+    <label className={[field.type === "textarea" ? "wideField" : "", field.computed ? "computedField" : ""].filter(Boolean).join(" ") || undefined}>
+      {label}
       {field.type === "textarea" ? (
         <textarea name={field.key} rows={field.rows ?? 3} defaultValue={value} placeholder={field.placeholder} />
       ) : field.type === "select" ? (
@@ -95,8 +138,9 @@ function ProfileFieldInput({ facts, field, disabled }: { facts: Record<string, u
           {field.options?.map((option) => <option key={option}>{option}</option>)}
         </select>
       ) : (
-        <input name={field.key} defaultValue={value} type={field.type === "date" ? "date" : "text"} placeholder={field.placeholder} />
+        <input name={field.key} defaultValue={value} type={field.type === "date" ? "date" : "text"} placeholder={field.placeholder} readOnly={Boolean(field.computed)} aria-readonly={field.computed ? "true" : undefined} />
       )}
+      {field.helper && <small className="fieldHelper">{field.helper}</small>}
     </label>
   );
 }
@@ -174,6 +218,9 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
         }
         setTab(raw);
         document.querySelector(".deskContext")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (raw) {
+        setTab("overview");
+        window.history.replaceState(null, "", "#tab-overview");
       }
     }
     applyHash();
@@ -186,7 +233,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
   function goTab(next: string) {
     if (!coreProfileComplete && next !== "overview" && next !== "profile") {
       setTab("profile");
-      setError("Hãy nhập đủ tên, lĩnh vực, giai đoạn và địa điểm chính trước khi mở các tính năng khác.");
+      setError("Hãy nhập đủ tên, lĩnh vực, giai đoạn và địa chỉ trụ sở chính trước khi mở các tính năng khác.");
       if (typeof window !== "undefined") window.history.replaceState(null, "", "#tab-profile");
       return;
     }
@@ -203,6 +250,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     if (!startup || !isStartup) return;
     const form = new FormData(event.currentTarget);
     const facts: Record<string, unknown> = { ...startup.facts };
+    for (const key of ["variable_cost_per_order", "alternatives", "expansion_plan", "headquarters_address", "facility_address"]) delete facts[key];
     for (const section of profileSections) for (const field of section.fields) {
       const value = readProfileField(form, field);
       if (value !== undefined) facts[field.key] = value; else delete facts[field.key];
@@ -225,6 +273,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     if (!startup || !isStartup || !editable) return;
     const form = new FormData(event.currentTarget);
     const facts: Record<string, unknown> = { ...startup.facts };
+    for (const key of ["fixed_costs", "average_price", "opening_cash", "reported_ending_cash"]) delete facts[key];
     for (const section of cashFlowProfileSections) for (const field of section.fields) {
       const value = readProfileField(form, field);
       if (value !== undefined) facts[field.key] = value; else delete facts[field.key];
@@ -238,18 +287,43 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     finally { setBusy(null); }
   }
 
+  async function saveDevelopmentPlan(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!startup || !isStartup || !editable) return;
+    const form = new FormData(event.currentTarget);
+    const facts: Record<string, unknown> = { ...startup.facts };
+    for (const section of developmentPlanSections) for (const field of section.fields) {
+      const value = readProfileField(form, field);
+      if (value !== undefined) facts[field.key] = value; else delete facts[field.key];
+    }
+    setBusy("development-plan");
+    try {
+      const updated = await api.updateStartup(id, { facts });
+      setStartup(updated);
+      setCompleteness(await api.completeness(id));
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể lưu kế hoạch phát triển."); }
+    finally { setBusy(null); }
+  }
+
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const input = event.currentTarget.elements.namedItem("document") as HTMLInputElement;
+    const form = event.currentTarget;
+    const input = form.elements.namedItem("document") as HTMLInputElement;
     if (!input.files?.[0]) return;
+    const file = input.files[0];
     setBusy("upload");
     try {
-      const item = await api.uploadDocument(id, input.files[0]);
+      const item = await api.uploadDocument(id, file);
       setDocuments((current) => [item, ...current]);
       setCompleteness(await api.completeness(id));
-      event.currentTarget.reset();
+      form.reset();
     } catch (err) { setError(err instanceof Error ? err.message : "Tải tài liệu thất bại"); }
     finally { setBusy(null); }
+  }
+
+  async function applyEvidenceUpdate(updated: Startup) {
+    setStartup(updated);
+    setCompleteness(await api.completeness(id));
   }
 
   async function submitProfile() {
@@ -332,7 +406,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
         { label: "Độ đầy đủ", value: completenessPct != null ? `${completenessPct}%` : "—", icon: "fact_check", hint: `${completeness?.completed_fields ?? 0}/${completeness?.total_fields ?? 0} trường` },
         { label: "Tài liệu", value: String(documents.length), icon: "description", hint: "Đã tải lên" },
         { label: "Phiên bản", value: `V${startup.current_version}`, icon: "history", hint: startup.status === "draft" ? "Bản nháp" : "Đã khóa" },
-        { label: "Trạng thái", value: startup.status === "draft" ? "Nháp" : "Đã nộp", icon: "flag", hint: completeness?.can_submit ? "Đủ điều kiện nộp" : "Cần bổ sung" },
+        { label: "Trạng thái", value: startup.status === "draft" ? "Nháp" : "Đã nộp", icon: "flag", hint: startup.status !== "draft" ? "Phiên bản đã khóa" : completeness?.can_submit ? "Đủ điều kiện nộp" : "Cần bổ sung" },
       ]
     : [
         { label: "Điểm trung bình", value: investorScore != null ? String(investorScore) : "—", icon: "target", hint: "Trung bình các module" },
@@ -351,12 +425,24 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     switch (t) {
       case "business":
         return moduleMetrics(analysisMap.business_model, "Mô hình KD");
+      case "development": {
+        const fields = developmentPlanSections.flatMap((section) => section.fields);
+        const filled = fields.filter((field) => formatProfileValue(field, facts[field.key]).trim()).length;
+        const majorFields = fields.filter((field) => field.importance === "major");
+        const majorFilled = majorFields.filter((field) => formatProfileValue(field, facts[field.key]).trim()).length;
+        return [
+          { label: "Đã điền", value: `${filled}/${fields.length}`, icon: "edit_note", hint: "trường kế hoạch" },
+          { label: "Điểm cộng lớn", value: `${majorFilled}/${majorFields.length}`, icon: "star", hint: "trường có dấu *" },
+          { label: "Còn thiếu", value: String(fields.length - filled), icon: "help", hint: "có thể bổ sung" },
+          { label: "Trạng thái", value: filled === fields.length ? "Đầy đủ" : filled ? "Đang soạn" : "Chưa nhập", icon: "flag", hint: "bản nháp" },
+        ];
+      }
       case "cashflow":
         return moduleMetrics(analysisMap.cash_flow, "Dòng tiền");
       case "area": {
         if (!isStartup) return moduleMetrics(analysisMap.surrounding_area, "Khu vực");
         const areaClaims = facts.area_claims ?? facts.location_claims;
-        const exactLocation = facts.exact_location ?? facts.headquarters_address ?? startup?.primary_location;
+        const exactLocation = startup?.primary_location;
         return [
           { label: "Địa điểm", value: exactLocation ? "Có" : "Thiếu", icon: "location_on", hint: "địa chỉ phân tích" },
           { label: "Tuyên bố", value: String(countArr(areaClaims)), icon: "gavel", hint: "cần kiểm chứng" },
@@ -370,13 +456,6 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
           { label: "Chia sẻ", value: String(documents.filter((d) => d.visibility === "shared").length), icon: "share", hint: "investor xem" },
           { label: "Riêng tư", value: String(documents.filter((d) => d.visibility === "private").length), icon: "lock", hint: "chỉ startup" },
           { label: "Hạn chế", value: String(documents.filter((d) => d.visibility === "restricted").length), icon: "visibility_off", hint: "giới hạn" },
-        ];
-      case "assistant":
-        return [
-          { label: "Nguồn hỏi đáp", value: String(documents.length), icon: "inventory_2", hint: "tài liệu đã nạp" },
-          { label: "Chế độ", value: "RAG", icon: "travel_explore", hint: "có trích dẫn" },
-          { label: "Phạm vi", value: "Hồ sơ", icon: "lock", hint: "không hỏi ngoài nguồn" },
-          { label: "Sẵn sàng", value: documents.length ? "Có" : "Chưa", icon: "task_alt", hint: "cần tài liệu" },
         ];
       case "review":
         return [
@@ -510,6 +589,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
                 </section>
                 <section className="hdCard">
                   <div className="hdSectionHead"><h2><MIcon name="description" />Dữ liệu hồ sơ</h2><span className="hdCount">Chỉ đọc</span></div>
+                  <div className="fieldPriorityLegend"><span><b>**</b> Bắt buộc</span><span><b>*</b> Điểm cộng lớn</span><span>Không dấu: điểm cộng</span></div>
                   {profileSections.map((section) => (
                     <div className="factSection" key={section.id}>
                       <div className="factSectionHeader"><div><p className="eyebrow">{section.eyebrow}</p><h3>{section.title}</h3></div></div>
@@ -526,12 +606,13 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
                 <section className="hdCard">
                   <div className="hdSectionHead"><h2><MIcon name="description" />Dữ liệu hồ sơ</h2><span className="hdCount">{editable ? "Bản nháp có thể chỉnh sửa" : "Chỉ đọc"}</span></div>
                   <form className="stackForm" onSubmit={saveProfile} key={startup.updated_at}>
+                    <div className="fieldPriorityLegend"><span><b>**</b> Bắt buộc</span><span><b>*</b> Điểm cộng lớn</span><span>Không dấu: điểm cộng</span></div>
                     <div className="formRow three">
-                      <label>Tên<input name="name" required defaultValue={startup.name} disabled={!editable} /></label>
-                      <label>Lĩnh vực<input name="industry" defaultValue={startup.industry ?? ""} disabled={!editable} /></label>
-                      <label>Giai đoạn<select name="stage" defaultValue={startup.stage ?? ""} disabled={!editable}><option value="">Chọn</option>{stageOptions.map((stage) => <option key={stage}>{stage}</option>)}</select></label>
+                      <label><span className="fieldLabelText">Tên<span className="fieldPriority required"> **</span></span><input name="name" required defaultValue={startup.name} disabled={!editable} /></label>
+                      <label><span className="fieldLabelText">Lĩnh vực<span className="fieldPriority required"> **</span></span><input name="industry" defaultValue={startup.industry ?? ""} disabled={!editable} /></label>
+                      <label><span className="fieldLabelText">Giai đoạn<span className="fieldPriority required"> **</span></span><select name="stage" defaultValue={startup.stage ?? ""} disabled={!editable}><option value="">Chọn</option>{stageOptions.map((stage) => <option key={stage}>{stage}</option>)}</select></label>
                     </div>
-                    <label>Địa điểm chính<input name="location" defaultValue={startup.primary_location ?? ""} disabled={!editable} /></label>
+                    <label><span className="fieldLabelText">Địa chỉ trụ sở chính<span className="fieldPriority required"> **</span></span><input name="location" defaultValue={startup.primary_location ?? ""} disabled={!editable} /></label>
                     {profileSections.map((section) => (
                       <div className="factSection" key={section.id}>
                         <div className="factSectionHeader"><div><p className="eyebrow">{section.eyebrow}</p><h3>{section.title}</h3></div></div>
@@ -544,6 +625,30 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
               </div>
             )}
 
+            {/* ---- Development Plan ---- */}
+            <div className="deskPanel" hidden={activeTab !== "development"}>
+              <section className="hdCard">
+                <div className="hdSectionHead"><h2><MIcon name="route" />Kế hoạch phát triển</h2><span className="hdCount">{editable ? "Có thể chỉnh sửa" : "Chỉ đọc"}</span></div>
+                <div className="fieldPriorityLegend"><span><b>**</b> Bắt buộc</span><span><b>*</b> Điểm cộng lớn</span><span>Không dấu: điểm cộng</span></div>
+                {isStartup ? (
+                  <form className="stackForm" onSubmit={saveDevelopmentPlan} key={`development-${startup.updated_at}`}>
+                    {developmentPlanSections.map((section) => (
+                      <div className="factSection" key={section.id}>
+                        <div className="factSectionHeader"><div><p className="eyebrow">{section.eyebrow}</p><h3>{section.title}</h3></div><p>{section.description}</p></div>
+                        <div className="factGrid">{section.fields.map((field) => <ProfileFieldInput facts={facts} field={field} disabled={!editable} key={field.key} />)}</div>
+                      </div>
+                    ))}
+                    {editable && <button className="hdBtn primary" disabled={busy === "development-plan"}><MIcon name="save" />Lưu kế hoạch phát triển</button>}
+                  </form>
+                ) : developmentPlanSections.map((section) => (
+                  <div className="factSection" key={section.id}>
+                    <div className="factSectionHeader"><div><p className="eyebrow">{section.eyebrow}</p><h3>{section.title}</h3></div><p>{section.description}</p></div>
+                    <div className="factGrid">{section.fields.map((field) => <ProfileFieldInput facts={facts} field={field} disabled key={field.key} />)}</div>
+                  </div>
+                ))}
+              </section>
+            </div>
+
             {/* ---- Cash Flow ---- */}
             <div className="deskPanel" hidden={activeTab !== "cashflow"}>
               {isStartup ? (
@@ -553,7 +658,8 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
                       <h2><MIcon name="edit_note" />Dữ liệu dòng tiền thủ công</h2>
                       <span className="hdCount">{editable ? "Có thể chỉnh sửa" : "Chỉ đọc"}</span>
                     </div>
-                    <form className="stackForm" onSubmit={saveCashFlowProfile} key={`cash-${startup.updated_at}`}>
+                    <form className="stackForm" onSubmit={saveCashFlowProfile} onInput={(event) => recalculateCashFlowForm(event.currentTarget)} key={`cash-${startup.updated_at}`}>
+                      <div className="fieldPriorityLegend"><span><b>**</b> Bắt buộc</span><span><b>*</b> Điểm cộng lớn</span><span>Không dấu: điểm cộng</span></div>
                       {cashFlowProfileSections.map((section) => (
                         <div className="factSection" key={section.id}>
                           <div className="factSectionHeader"><div><p className="eyebrow">{section.eyebrow}</p><h3>{section.title}</h3></div><p>{section.description}</p></div>
@@ -578,6 +684,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
                   </section>
                   <section className="hdCard">
                     <div className="hdSectionHead"><h2><MIcon name="description" />Dữ liệu dòng tiền</h2><span className="hdCount">Chỉ đọc</span></div>
+                    <div className="fieldPriorityLegend"><span><b>**</b> Bắt buộc</span><span><b>*</b> Điểm cộng lớn</span><span>Không dấu: điểm cộng</span></div>
                     {cashFlowProfileSections.map((section) => (
                       <div className="factSection" key={section.id}>
                         <div className="factSectionHeader"><div><p className="eyebrow">{section.eyebrow}</p><h3>{section.title}</h3></div></div>
@@ -618,26 +725,25 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
             <div className="deskPanel" hidden={activeTab !== "evidence"}>
               <section className="hdCard" id="startup-documents">
                 <div className="hdSectionHead"><h2><MIcon name="inventory_2" />{isStartup ? "Tài liệu hồ sơ" : "Tài liệu được chia sẻ"}</h2><span className="hdCount">{documents.length} tài liệu</span></div>
-                {editable && <form className="uploadBox" onSubmit={upload}><input name="document" type="file" accept=".pdf,.docx,.pptx,.xlsx,.txt,.md,.csv,.png,.jpg,.jpeg" required /><button className="hdBtn primary" disabled={busy === "upload"}><MIcon name="upload" />Tải lên</button></form>}
+                {editable && <form className="uploadBox" onSubmit={upload}><input name="document" type="file" accept=".pdf,.docx,.pptx,.xlsx,.txt,.md,.csv,.json,.png,.jpg,.jpeg" required /><button className="hdBtn primary" disabled={busy === "upload"}><MIcon name="upload" />Tải lên</button></form>}
                 {isStartup && <div className="documentChecklist">{documentChecklist.map((group) => <details className="checklistGroup" key={group.title}><summary>{group.title}</summary><div className="checklistItems">{group.items.map((item) => <span key={item}>{item}</span>)}</div></details>)}</div>}
                 <div className="documentList">{documents.map((item) => <div className="documentRow" key={item.id}><span className="fileIcon">DOC</span><div><strong>{item.filename}</strong><span>{item.status} · {item.visibility}</span></div>{editable && <select value={item.visibility} onChange={(event) => void changeVisibility(item.id, event.target.value)}><option value="shared">Chia sẻ</option><option value="private">Riêng tư</option><option value="restricted">Hạn chế</option></select>}</div>)}
                   {!documents.length && <div className="deskEmpty"><strong>Chưa có tài liệu</strong><span>{editable ? "Tải lên hợp đồng, sổ thu chi, bảng giá… để làm bằng chứng." : "Chưa có tài liệu nào được chia sẻ."}</span></div>}
                 </div>
+                {isStartup && editable && (
+                  <div className="evidenceAutofillStack">
+                    <ExtractionReview startup={startup} documents={documents} onStartupUpdated={applyEvidenceUpdate} />
+                    <CashFlowDataWorkspace
+                      startup={startup}
+                      documents={documents}
+                      analysis={analysisMap.cash_flow}
+                      onAnalysisComplete={(analysis) => setAnalyses((current) => [analysis, ...current.filter((item) => item.id !== analysis.id)])}
+                      onStartupUpdated={applyEvidenceUpdate}
+                    />
+                  </div>
+                )}
               </section>
             </div>
-
-            {/* ---- Assistant (startup) ---- */}
-            {isStartup && (
-              <div className="deskPanel" hidden={activeTab !== "assistant"}>
-                <section className="hdCard chatPagePanel">
-                  <div className="hdSectionHead">
-                    <h2><MIcon name="assistant" />Trợ lý tài liệu</h2>
-                    <span className="hdCount">{documents.length} nguồn</span>
-                  </div>
-                  <DocumentChat startupId={id} />
-                </section>
-              </div>
-            )}
 
             {/* ---- Review ---- */}
             <div className="deskPanel" hidden={activeTab !== "review"}>
@@ -665,9 +771,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
         </div>
       </div>
 
-      {/* Document Copilot: floating bubble. Hidden on the assistant tab, which already
-          renders the chat inline — otherwise two DocumentChat instances would mount. */}
-      {activeTab !== "assistant" && <ChatWidget startupId={id} />}
+      <ChatWidget startupId={id} />
     </div>
   );
 }

@@ -15,6 +15,18 @@ def _non_negative_decimal(value: Any, field: str) -> Decimal:
     return number
 
 
+def calculate_derived_cash_inputs(
+    *, monthly_revenue: Any, fixed_monthly_costs: Any, variable_costs: Any
+) -> dict[str, Decimal | None]:
+    revenue = _non_negative_decimal(monthly_revenue, "monthly_revenue")
+    fixed = _non_negative_decimal(fixed_monthly_costs, "fixed_monthly_costs")
+    variable = _non_negative_decimal(variable_costs, "variable_costs")
+    return {
+        "monthly_expense": fixed + variable,
+        "variable_cost_ratio": variable / revenue if revenue > 0 else None,
+    }
+
+
 def calculate_break_even(*, fixed_monthly_costs: Any, variable_cost_ratio: Any) -> dict[str, Any]:
     fixed_costs = _non_negative_decimal(fixed_monthly_costs, "fixed_monthly_costs")
     ratio = _non_negative_decimal(variable_cost_ratio, "variable_cost_ratio")

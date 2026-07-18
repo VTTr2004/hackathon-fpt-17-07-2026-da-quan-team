@@ -3,6 +3,8 @@ export type ProfileFieldType = "text" | "textarea" | "number" | "list" | "select
 export type ProfileField = {
   key: string;
   label: string;
+  importance?: "required" | "major";
+  computed?: "monthly_expense" | "variable_cost_ratio";
   type?: ProfileFieldType;
   placeholder?: string;
   helper?: string;
@@ -127,13 +129,6 @@ export const quickCreateFields: ProfileSection[] = [
         helper: "Dùng cho unit economics cấp đơn hàng, không phải doanh thu tháng.",
       },
       {
-        key: "variable_cost_per_order",
-        label: "Chi phí biến đổi trung bình/đơn (VND)",
-        type: "number",
-        placeholder: "42000",
-        helper: "Nguyên liệu, bao bì, phí nền tảng và chi phí tăng theo từng đơn.",
-      },
-      {
         key: "traction",
         label: "Bằng chứng sức hút hiện tại",
         type: "textarea",
@@ -142,7 +137,7 @@ export const quickCreateFields: ProfileSection[] = [
       },
       {
         key: "competitors",
-        label: "Đối thủ hoặc mô hình tương tự",
+        label: "Đối thủ lớn trong ngành",
         type: "list",
         placeholder: "Tên thương hiệu hoặc loại cửa hàng cạnh tranh",
         helper: "Chỉ nhập đối thủ đã biết; mật độ và khoảng cách do Surrounding Area xử lý.",
@@ -241,7 +236,6 @@ export const quickCreateFields: ProfileSection[] = [
     fields: [
       { key: "current_cash", label: "Tiền mặt hiện có (VND)", type: "number", placeholder: "500000000" },
       { key: "minimum_cash_buffer", label: "Minimum cash buffer (VND)", type: "number", placeholder: "150000000" },
-      { key: "fixed_monthly_costs", label: "Fixed monthly costs (VND)", type: "number", placeholder: "80000000" },
       { key: "variable_cost_ratio", label: "Variable-cost ratio", type: "number", placeholder: "0.45" },
       { key: "accounts_receivable", label: "Accounts receivable (VND)", type: "number", placeholder: "0" },
       { key: "accounts_payable", label: "Accounts payable (VND)", type: "number", placeholder: "0" },
@@ -263,14 +257,6 @@ export const quickCreateFields: ProfileSection[] = [
     description: "Thông tin đầu vào để geocode và kiểm chứng các tuyên bố về khu vực.",
     fields: [
       {
-        key: "exact_location",
-        label: "Địa chỉ chính xác",
-        type: "textarea",
-        rows: 2,
-        placeholder: "Số nhà, đường, phường/xã, tỉnh/thành phố",
-        helper: "Tọa độ vẫn cần được chuyên viên xác nhận trên bản đồ trước khi phân tích.",
-      },
-      {
         key: "location_dependency",
         label: "Mức phụ thuộc lượng khách xung quanh",
         type: "select",
@@ -291,7 +277,7 @@ export const quickCreateFields: ProfileSection[] = [
       },
       {
         key: "known_nearby_competitors",
-        label: "Đối thủ gần đó đã biết",
+        label: "Đối thủ cạnh tranh tại khu vực",
         type: "list",
         placeholder: "Highlands Coffee, cửa hàng tiện lợi A",
       },
@@ -322,7 +308,6 @@ export const quickCreateFieldGroups: Record<string, ProfileFieldGroup[]> = {
         "sales_channels",
         "pricing_model",
         "average_order_value",
-        "variable_cost_per_order",
       ],
     },
     {
@@ -364,7 +349,7 @@ export const quickCreateFieldGroups: Record<string, ProfileFieldGroup[]> = {
       id: "break-even",
       title: "Hòa vốn và chi phí",
       description: "Dùng để tính doanh thu hòa vốn và mức đệm tiền mặt cần duy trì.",
-      fieldKeys: ["fixed_monthly_costs", "variable_cost_ratio"],
+      fieldKeys: ["variable_cost_ratio"],
     },
     {
       id: "working-capital",
@@ -378,7 +363,7 @@ export const quickCreateFieldGroups: Record<string, ProfileFieldGroup[]> = {
       id: "location-profile",
       title: "Địa điểm kinh doanh",
       description: "Địa chỉ và mức phụ thuộc vào khách hàng xung quanh.",
-      fieldKeys: ["exact_location", "location_dependency", "target_customer_radius_m"],
+      fieldKeys: ["location_dependency", "target_customer_radius_m"],
     },
     {
       id: "area-claims",
@@ -399,8 +384,6 @@ export const profileSections: ProfileSection[] = [
       { key: "founded_date", label: "Ngày bắt đầu hoạt động", type: "date" },
       { key: "business_type", label: "Loại hình doanh nghiệp", type: "select", options: businessTypeOptions },
       { key: "employee_count", label: "Số lượng nhân sự", type: "number" },
-      { key: "headquarters_address", label: "Địa chỉ trụ sở", type: "textarea", rows: 2 },
-      { key: "facility_address", label: "Địa chỉ cửa hàng/nhà máy/kho", type: "textarea", rows: 2 },
       { key: "operating_scope", label: "Phạm vi hoạt động", type: "select", options: operatingScopeOptions },
     ],
   },
@@ -410,39 +393,34 @@ export const profileSections: ProfileSection[] = [
     title: "Mô hình kinh doanh",
     description: "Dữ kiện cho module mô hình kinh doanh và phần giải thích của Gemini.",
     fields: [
-      { key: "problem", label: "Bài toán kinh doanh", type: "textarea", rows: 3 },
+      { key: "problem", label: "Bài toán kinh doanh", importance: "required", type: "textarea", rows: 3 },
       { key: "problem_owner", label: "Đối tượng gặp vấn đề", type: "textarea", rows: 2 },
-      { key: "solution", label: "Giải pháp startup cung cấp", type: "textarea", rows: 3 },
-      { key: "differentiation", label: "Giá trị khác biệt", type: "textarea", rows: 2 },
+      { key: "solution", label: "Giải pháp startup cung cấp", importance: "required", type: "textarea", rows: 3 },
+      { key: "differentiation", label: "Giá trị khác biệt", importance: "major", type: "textarea", rows: 2 },
       { key: "market_size", label: "Quy mô thị trường", type: "textarea", rows: 2 },
-      { key: "target_customers", label: "Khách hàng mục tiêu", type: "list" },
+      { key: "target_customers", label: "Khách hàng mục tiêu", importance: "required", type: "list" },
       { key: "customer_purchase_occasions", label: "Dịp và lý do mua hàng", type: "textarea", rows: 2 },
       { key: "users_and_payers", label: "Người sử dụng và người trả tiền", type: "textarea", rows: 2 },
-      { key: "core_products", label: "Sản phẩm/dịch vụ chính", type: "list" },
-      { key: "pricing_model", label: "Cách định giá", type: "textarea", rows: 2 },
-      { key: "revenue_model", label: "Nguồn doanh thu", type: "list" },
-      { key: "sales_channels", label: "Kênh bán hàng", type: "list" },
-      { key: "acquisition_channels", label: "Kênh tiếp cận khách hàng", type: "list" },
+      { key: "core_products", label: "Sản phẩm/dịch vụ chính", importance: "required", type: "list" },
+      { key: "pricing_model", label: "Cách định giá", importance: "major", type: "textarea", rows: 2 },
+      { key: "revenue_model", label: "Nguồn doanh thu", importance: "required", type: "list" },
+      { key: "sales_channels", label: "Kênh bán hàng", importance: "major", type: "list" },
+      { key: "acquisition_channels", label: "Kênh tiếp cận khách hàng", importance: "major", type: "list" },
       {
         key: "average_order_value",
         label: "Giá trị đơn trung bình (VND)",
         type: "number",
         helper: "Unit economics cấp đơn hàng, không phải doanh thu tháng.",
       },
-      {
-        key: "variable_cost_per_order",
-        label: "Chi phí biến đổi trung bình/đơn (VND)",
-        type: "number",
-        helper: "Nguyên liệu, bao bì, phí nền tảng và chi phí tăng theo từng đơn.",
-      },
-      { key: "competitors", label: "Đối thủ", type: "list" },
-      { key: "alternatives", label: "Phương án thay thế", type: "list" },
+      { key: "competitors", label: "Đối thủ lớn trong ngành", type: "list" },
       { key: "key_suppliers_partners", label: "Nhà cung cấp và đối tác chính", type: "list" },
-      { key: "traction", label: "Traction", type: "textarea", rows: 3 },
-      { key: "expansion_plan", label: "Kế hoạch mở rộng", type: "textarea", rows: 3 },
+      { key: "traction", label: "Traction", importance: "major", type: "textarea", rows: 3 },
       { key: "fundraising_need", label: "Nhu cầu gọi vốn và mục đích sử dụng", type: "textarea", rows: 3 },
     ],
   },
+];
+
+export const developmentPlanSections: ProfileSection[] = [
   {
     id: "development-plan",
     eyebrow: "DEVELOPMENT PLAN",
@@ -450,13 +428,13 @@ export const profileSections: ProfileSection[] = [
     description: "Mục tiêu, milestone và năng lực thực thi của kế hoạch phát triển.",
     fields: [
       { key: "planning_horizon_months", label: "Thời hạn kế hoạch (tháng)", type: "number", placeholder: "12" },
-      { key: "development_objectives", label: "Mục tiêu phát triển", type: "textarea", rows: 3 },
+      { key: "development_objectives", label: "Mục tiêu phát triển", importance: "major", type: "textarea", rows: 3 },
       { key: "product_plan", label: "Kế hoạch sản phẩm/danh mục", type: "textarea", rows: 3 },
       { key: "customer_growth_plan", label: "Kế hoạch phát triển khách hàng", type: "textarea", rows: 3 },
       { key: "channel_expansion_plan", label: "Kế hoạch mở rộng kênh bán", type: "textarea", rows: 3 },
       { key: "outlet_expansion_plan", label: "Kế hoạch mở rộng điểm bán", type: "textarea", rows: 3 },
       { key: "operating_capability_plan", label: "Năng lực vận hành cần chuẩn hóa", type: "textarea", rows: 3 },
-      { key: "development_milestones", label: "Milestone và tiêu chí hoàn thành", type: "textarea", rows: 3 },
+      { key: "development_milestones", label: "Milestone và tiêu chí hoàn thành", importance: "major", type: "textarea", rows: 3 },
       { key: "development_dependencies", label: "Phụ thuộc và rủi ro chính", type: "textarea", rows: 3 },
     ],
   },
@@ -469,34 +447,36 @@ export const cashFlowProfileSections: ProfileSection[] = [
     title: "Tài chính và dòng tiền",
     description: "Dữ liệu đầu vào cho runway, burn rate, biên lợi nhuận và dự báo 6-12 tháng.",
     fields: [
-      { key: "currency", label: "Đơn vị tiền tệ", type: "select", options: ["VND", "USD"] },
-      { key: "cash_as_of", label: "Ngày chốt số dư", type: "date" },
-      { key: "opening_cash", label: "Số dư tiền đầu kỳ", type: "number" },
-      { key: "reported_ending_cash", label: "Số dư tiền cuối kỳ theo sổ", type: "number" },
-      { key: "current_cash", label: "Tiền mặt hiện có", type: "number" },
-      { key: "minimum_cash_buffer", label: "Mức đệm tiền mặt tối thiểu", type: "number" },
-      { key: "fixed_monthly_costs", label: "Định phí hàng tháng", type: "number" },
+      { key: "currency", label: "Đơn vị tiền tệ", importance: "required", type: "select", options: ["VND", "USD"] },
+      { key: "cash_as_of", label: "Ngày chốt số dư", importance: "required", type: "date" },
+      { key: "current_cash", label: "Tiền mặt hiện có", importance: "required", type: "number" },
+      { key: "minimum_cash_buffer", label: "Mức đệm tiền mặt tối thiểu", importance: "major", type: "number" },
+      { key: "monthly_revenue", label: "Doanh thu trung bình tháng", importance: "required", type: "number" },
+      { key: "fixed_monthly_costs", label: "Chi phí cố định", importance: "required", type: "number" },
+      { key: "variable_costs", label: "Chi phí biến đổi", importance: "required", type: "number" },
+      {
+        key: "monthly_expense",
+        label: "Chi phí trung bình tháng",
+        computed: "monthly_expense",
+        type: "number",
+        helper: "Tự tính bằng Chi phí cố định + Chi phí biến đổi.",
+      },
       {
         key: "variable_cost_ratio",
         label: "Tỷ lệ biến phí",
+        computed: "variable_cost_ratio",
         type: "number",
-        placeholder: "0.45",
-        helper: "Nhập từ 0 đến 1, ví dụ 0.45 tương đương 45%.",
+        helper: "Tự tính bằng Chi phí biến đổi / Doanh thu trung bình tháng.",
       },
-      { key: "monthly_revenue", label: "Doanh thu trung bình tháng", type: "number" },
-      { key: "monthly_expense", label: "Chi phí trung bình tháng", type: "number" },
-      { key: "fixed_costs", label: "Chi phí cố định", type: "number" },
-      { key: "variable_costs", label: "Chi phí biến đổi", type: "number" },
       { key: "monthly_rent", label: "Tiền thuê hàng tháng", type: "number" },
       { key: "lease_deposit", label: "Tiền đặt cọc mặt bằng", type: "number" },
-      { key: "accounts_receivable", label: "Khoản phải thu", type: "number" },
-      { key: "accounts_payable", label: "Khoản phải trả", type: "number" },
+      { key: "accounts_receivable", label: "Khoản phải thu", importance: "major", type: "number" },
+      { key: "accounts_payable", label: "Khoản phải trả", importance: "major", type: "number" },
       { key: "inventory", label: "Tồn kho", type: "number" },
       { key: "working_capital_period_revenue", label: "Doanh thu trong kỳ vốn lưu động", type: "number" },
       { key: "working_capital_period_cogs", label: "Giá vốn trong kỳ", type: "number" },
       { key: "working_capital_period_days", label: "Số ngày của kỳ dữ liệu", type: "number" },
-      { key: "debt_obligations", label: "Khoản vay và nghĩa vụ trả nợ", type: "textarea", rows: 2 },
-      { key: "average_price", label: "Giá bán trung bình", type: "number" },
+      { key: "debt_obligations", label: "Khoản vay và nghĩa vụ trả nợ", importance: "major", type: "textarea", rows: 2 },
       { key: "unit_cost", label: "Chi phí tạo ra một sản phẩm/dịch vụ", type: "number" },
       { key: "cac", label: "CAC", type: "number" },
       { key: "churn_retention", label: "Churn hoặc retention", type: "textarea", rows: 2 },
@@ -527,11 +507,9 @@ export const locationProfileSections: ProfileSection[] = [
     title: "Địa điểm và vận hành",
     description: "Thông tin phục vụ surrounding area, vận hành, logistics và đánh giá phụ thuộc vị trí.",
     fields: [
-      { key: "exact_location", label: "Địa chỉ chính xác hoặc tọa độ", type: "textarea", rows: 2 },
       { key: "location_type", label: "Loại địa điểm", type: "select", options: locationTypeOptions },
       { key: "area_m2", label: "Diện tích sử dụng (m2)", type: "number" },
       { key: "tenure", label: "Thuê hay sở hữu", type: "select", options: tenureOptions },
-      { key: "rent_cost", label: "Chi phí thuê", type: "number" },
       { key: "operating_hours", label: "Thời gian hoạt động", type: "text" },
       {
         key: "location_dependency",
@@ -541,7 +519,7 @@ export const locationProfileSections: ProfileSection[] = [
       },
       { key: "target_customer_radius_m", label: "Bán kính khách hàng mục tiêu (m)", type: "number" },
       { key: "logistics_requirements", label: "Yêu cầu giao thông/logistics/nguồn cung", type: "textarea", rows: 3 },
-      { key: "known_nearby_competitors", label: "Địa điểm cạnh tranh đã biết", type: "list" },
+      { key: "known_nearby_competitors", label: "Đối thủ cạnh tranh tại khu vực", type: "list" },
     ],
   },
 ];

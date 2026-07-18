@@ -3,10 +3,12 @@ from typing import Any
 DOMAIN_FIELDS: dict[str, tuple[str, ...]] = {
     "customer_value": (
         "problem",
+        "problem_owner",
         "solution",
         "target_customers",
         "core_products",
         "customer_purchase_occasions",
+        "users_and_payers",
         "differentiation",
         "traction",
     ),
@@ -14,6 +16,7 @@ DOMAIN_FIELDS: dict[str, tuple[str, ...]] = {
         "core_products",
         "revenue_model",
         "sales_channels",
+        "acquisition_channels",
         "pricing_model",
         "key_suppliers_partners",
         "differentiation",
@@ -21,7 +24,6 @@ DOMAIN_FIELDS: dict[str, tuple[str, ...]] = {
     ),
     "economics_market": (
         "average_order_value",
-        "variable_cost_per_order",
         "market_size",
         "traction",
         "competitors",
@@ -36,11 +38,13 @@ DOMAIN_FIELDS: dict[str, tuple[str, ...]] = {
         "operating_capability_plan",
         "development_milestones",
         "development_dependencies",
+        "fundraising_need",
     ),
 }
 
 BUSINESS_FIELDS = frozenset(field for fields in DOMAIN_FIELDS.values() for field in fields)
 IDENTITY_FIELDS = frozenset({"name", "industry", "stage"})
+LEGACY_OPTIONAL_FIELDS = frozenset({"variable_cost_per_order"})
 
 
 def has_value(value: Any) -> bool:
@@ -54,7 +58,10 @@ def has_value(value: Any) -> bool:
 
 
 def select_business_facts(startup_facts: dict[str, Any]) -> dict[str, Any]:
-    allowed = BUSINESS_FIELDS | IDENTITY_FIELDS
+    # Keep the retired per-order cost only for historical profiles so the
+    # deterministic order-economics tool can still reproduce old reports.
+    # It is not part of completeness and is no longer requested by the UI.
+    allowed = BUSINESS_FIELDS | IDENTITY_FIELDS | LEGACY_OPTIONAL_FIELDS
     return {key: value for key, value in startup_facts.items() if key in allowed and has_value(value)}
 
 

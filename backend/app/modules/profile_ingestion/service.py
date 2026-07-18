@@ -6,7 +6,7 @@ from app.modules.document_chatbot.ingestion import file_to_chunks, text_to_chunk
 
 from .schemas import EvidenceBlock
 
-SUPPORTED_SUFFIXES = {".pdf", ".docx", ".pptx", ".txt", ".md", ".png", ".jpg", ".jpeg"}
+SUPPORTED_SUFFIXES = {".pdf", ".docx", ".pptx", ".txt", ".md", ".json", ".png", ".jpg", ".jpeg"}
 MAX_BLOCKS_PER_DOCUMENT = 200
 MAX_BLOCKS_PER_EXTRACTION = 1000
 
@@ -27,7 +27,12 @@ def _document_blocks(document: dict[str, Any]) -> list[EvidenceBlock]:
         chunks = text_to_chunks(
             str(document.get("text") or ""), document_id=document_id, filename=filename
         )
-    return [EvidenceBlock.model_validate(chunk) for chunk in chunks if str(chunk.get("text") or "").strip()]
+    normalized_chunks = [
+        {**chunk, "block_id": chunk.get("block_id") or chunk.get("chunk_id")}
+        for chunk in chunks
+        if str(chunk.get("text") or "").strip()
+    ]
+    return [EvidenceBlock.model_validate(chunk) for chunk in normalized_chunks]
 
 
 async def build_evidence_blocks(documents: list[dict[str, Any]]) -> tuple[list[EvidenceBlock], list[str]]:

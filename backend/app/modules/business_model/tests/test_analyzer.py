@@ -52,7 +52,7 @@ async def test_analyzer_empty_facts_is_insufficient() -> None:
     report = await BusinessModelAnalyzer().analyze({}, [], {"use_gemini": False})
     assert report.status is AnalysisStatus.INSUFFICIENT_DATA
     assert report.score == 0
-    assert len(report.missing_data) == 24
+    assert len(report.missing_data) == 27
 
 
 @pytest.mark.asyncio

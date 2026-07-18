@@ -1,6 +1,6 @@
 # Test cases
 
-- Boundary chỉ giữ 24 field Business Model và loại Cash Flow/Surrounding Area.
+- Boundary chỉ giữ 27 field đang hoạt động của Business Model/Development Plan, cộng field legacy tùy chọn để tái lập báo cáo cũ; Cash Flow/Surrounding Area vẫn bị loại.
 - Empty string/list là missing; numeric zero vẫn là giá trị có mặt.
 - Order economics với contribution dương, âm, AOV bằng 0 và input không hợp lệ.
 - Textarea market size không kích hoạt TAM/SAM/SOM.
