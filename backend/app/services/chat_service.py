@@ -108,10 +108,15 @@ async def answer_question(
         )
 
     client = get_rag_client()
-    # Bias retrieval with the previous user turn so short follow-ups ("còn tháng 6 thì sao?") still
-    # retrieve the right context, while the displayed question stays as typed.
+    # Only fold the previous user turn into the retrieval query for SHORT follow-ups
+    # ("còn tháng 6 thì sao?"). Self-contained questions retrieve on their own text, so an unrelated
+    # previous turn doesn't pollute retrieval. The displayed question always stays as typed.
     last_user = next((t.get("content", "") for t in reversed(history or []) if t.get("role") == "user"), "")
-    retrieval_query = f"{last_user} {question}".strip() if last_user else question
+    stripped = question.strip().lower()
+    is_followup = len(question.split()) <= 6 or stripped.startswith(
+        ("còn ", "vậy ", "thế ", "và ", "nó ", "cái đó", "tháng đó")
+    )
+    retrieval_query = f"{last_user} {question}".strip() if (last_user and is_followup) else question
 
     query_embedding: np.ndarray | None = None
     try:
