@@ -273,10 +273,9 @@ button {
 }
 
 .recordRow {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 140px;
+  display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   min-height: 72px;
   padding: 10px 0;
   border-top: 1px solid var(--line);
@@ -286,8 +285,33 @@ button {
   border-top: 0;
 }
 
+.recordRowLink {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 140px;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
 .recordRow:hover .recordMain strong {
   color: var(--green);
+}
+
+.recordChatButton {
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  color: var(--green-dark);
+  background: var(--surface);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.recordChatButton:hover {
+  background: var(--subtle);
+  border-color: var(--green);
 }
 
 .avatar {
