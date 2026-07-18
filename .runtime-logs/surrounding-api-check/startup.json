@@ -1,0 +1,19 @@
+﻿{
+    "name":  "API Check Surrounding Area",
+    "industry":  "cafe",
+    "stage":  "seed",
+    "primary_location":  "Vinhomes Ocean Park, Gia Lam, Ha Noi",
+    "facts":  {
+                  "area_claims":  [
+                                      "Khu v?c c? nhi?u d?n c?",
+                                      "C? nhi?u qu?n ?n v? ??i th? g?n ??y"
+                                  ],
+                  "location_type":  "cua hang",
+                  "exact_location":  "Vinhomes Ocean Park, Gia Lam, Ha Noi",
+                  "location_dependency":  "primary",
+                  "target_customer_radius_m":  1000
+              },
+    "id":  "7ecf4dbe-c970-4c71-8ed7-1e5279bc3417",
+    "created_at":  "2026-07-18T07:13:37.412903Z",
+    "updated_at":  "2026-07-18T07:13:37.412903Z"
+}

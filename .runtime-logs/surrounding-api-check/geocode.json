@@ -1,0 +1,17 @@
+﻿{
+    "query":  "Vinhomes Ocean Park, Gia Lam, Ha Noi",
+    "provider":  "goong",
+    "needs_confirmation":  true,
+    "candidates":  [
+                       {
+                           "lat":  20.993361853000067,
+                           "lon":  105.95433371300004,
+                           "display_name":  "Vinhomes Ocean Park, DÆ°Æ¡ng XÃ¡, Gia LÃ¢m, HÃ  Ná»i",
+                           "provider":  "goong",
+                           "confidence":  "high"
+                       }
+                   ],
+    "warnings":  [
+                     "Provider google_geocoding lá»i: Google Geocoding status REQUEST_DENIED"
+                 ]
+}
