@@ -17,7 +17,7 @@ Hải Đăng Khởi Nghiệp sinh ra để lấp đúng khoảng trống đó. N
 | **Ứng dụng (production)** | https://hackathon-fpt-17-07-2026-da-quan-te.vercel.app/ |
 | **Repository GitHub** | https://github.com/VTTr2004/hackathon-fpt-17-07-2026-da-quan-team |
 | Slide thuyết trình | https://canva.link/ztb22appi6ergwa |
-| Video demo | TODO: dán link YouTube/Google Drive video demo |
+| Video demo | https://drive.google.com/drive/folders/1lL3ueRfkbeBUrnqeF0T5Wgvqop9ncmpL?usp=sharing |
 
 ### Tài khoản demo (vai trò nhà đầu tư)
 
