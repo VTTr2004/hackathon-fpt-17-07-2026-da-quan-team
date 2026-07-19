@@ -31,6 +31,7 @@ import CashFlowAnalysis from "./CashFlowAnalysis";
 import CashFlowDataWorkspace from "./CashFlowDataWorkspace";
 import ChatWidget from "./ChatWidget";
 import ExtractionReview from "./ExtractionReview";
+import ProfileInterviewModal from "./ProfileInterviewModal";
 import SurroundingArea from "./SurroundingArea";
 
 const modules: Array<{ id: AnalysisModule; name: string; icon: string; tone: string; description: string }> = [
@@ -47,6 +48,9 @@ const documentCategories: Array<{ id: DocumentCategory; label: string; icon: str
   { id: "location_operations", label: "Địa điểm và vận hành", icon: "location_on" },
   { id: "unclassified", label: "Chưa phân loại", icon: "help" },
 ];
+
+const documentUploadAccept = ".pdf,.docx,.pptx,.xlsx,.txt,.md,.csv,.json,.png,.jpg,.jpeg";
+const documentUploadExtensions = new Set(documentUploadAccept.split(","));
 
 function latestByModule(analyses: Analysis[]) {
   return modules.reduce<Record<AnalysisModule, Analysis | undefined>>((result, module) => {
@@ -178,6 +182,10 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
   const [versions, setVersions] = useState<StartupVersion[]>([]);
   const [access, setAccess] = useState<InvestorAccess[]>([]);
   const [accessError, setAccessError] = useState("");
+  const [selectedUploadFiles, setSelectedUploadFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<{ completed: number; total: number } | null>(null);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [profileInterviewOpen, setProfileInterviewOpen] = useState(false);
   const [versionDiff, setVersionDiff] = useState<VersionDiff | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -359,20 +367,51 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     finally { setBusy(null); }
   }
 
+  function selectUploadFiles(fileList: FileList | null) {
+    const files = Array.from(fileList ?? []);
+    const accepted = files.filter((file) => {
+      const dot = file.name.lastIndexOf(".");
+      return dot >= 0 && documentUploadExtensions.has(file.name.slice(dot).toLowerCase());
+    });
+    const skipped = files.length - accepted.length;
+    setSelectedUploadFiles(accepted);
+    setError(skipped ? `Đã bỏ qua ${skipped} tệp không thuộc định dạng được hỗ trợ.` : "");
+  }
+
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    const input = form.elements.namedItem("document") as HTMLInputElement;
-    if (!input.files?.[0]) return;
-    const file = input.files[0];
+    if (!selectedUploadFiles.length) return;
+    const uploaded: DocumentItem[] = [];
+    const failed: Array<{ file: File; message: string }> = [];
     setBusy("upload");
+    setUploadProgress({ completed: 0, total: selectedUploadFiles.length });
+    for (const [index, file] of selectedUploadFiles.entries()) {
+      try {
+        uploaded.push(await api.uploadDocument(id, file));
+      } catch (reason) {
+        failed.push({
+          file,
+          message: reason instanceof Error ? reason.message : "Tải lên thất bại",
+        });
+      } finally {
+        setUploadProgress({ completed: index + 1, total: selectedUploadFiles.length });
+      }
+    }
     try {
-      const item = await api.uploadDocument(id, file);
-      setDocuments((current) => [item, ...current]);
-      setCompleteness(await api.completeness(id));
+      if (uploaded.length) {
+        setDocuments((current) => [...uploaded.reverse(), ...current]);
+        setCompleteness(await api.completeness(id));
+      }
       form.reset();
-    } catch (err) { setError(err instanceof Error ? err.message : "Tải tài liệu thất bại"); }
-    finally { setBusy(null); }
+      setSelectedUploadFiles(failed.map((item) => item.file));
+      setError(failed.length
+        ? `Đã tải ${uploaded.length}/${selectedUploadFiles.length} tệp. ${failed.length} tệp lỗi: ${failed.slice(0, 3).map((item) => `${item.file.name} (${item.message})`).join("; ")}`
+        : "");
+    } finally {
+      setBusy(null);
+      setUploadProgress(null);
+    }
   }
 
   async function applyEvidenceUpdate(updated: Startup) {
@@ -381,6 +420,12 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
   }
 
   async function submitProfile() {
+    if (!completeness?.can_submit) {
+      setSubmitAttempted(true);
+      setProfileInterviewOpen(true);
+      return;
+    }
+    setSubmitAttempted(false);
     setBusy("submit");
     try { await api.submitStartup(id); await load(); }
     catch (err) { setError(err instanceof Error ? err.message : "Không thể nộp hồ sơ"); }
@@ -639,9 +684,24 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
                   <div className="hdSectionHead">
                     <h2><MIcon name="fact_check" />Kiểm tra độ đầy đủ</h2>
                     {editable
-                      ? <button className="hdBtn primary" disabled={!completeness.can_submit || busy === "submit"} onClick={submitProfile}><MIcon name="lock" />Nộp và khóa phiên bản</button>
+                      ? <button className="hdBtn primary" disabled={busy === "submit"} type="button" onClick={submitProfile}><MIcon name="lock" />Nộp và khóa phiên bản</button>
                       : <button className="hdBtn primary" disabled={busy === "draft"} onClick={createDraft}><MIcon name="edit_document" />Tạo phiên bản cập nhật</button>}
                   </div>
+                  {submitAttempted && !completeness.can_submit && (
+                    <div className="hdAlert submitRequirementsAlert" role="alert">
+                      <MIcon name="info" />
+                      <span>
+                        <strong>Chưa thể nộp và khóa phiên bản.</strong>
+                        Hồ sơ còn {missingItems.length} mục cần xử lý. Hãy bổ sung các mục bên dưới rồi thử lại.
+                      </span>
+                      <div className="submitRequirementActions">
+                        {completeness.missing_fields.length > 0 && <button className="hdBtn compactButton" type="button" onClick={() => goTab("profile")}>Bổ sung hồ sơ</button>}
+                        {completeness.missing_fields.length > 0 && <button className="hdBtn compactButton" type="button" onClick={() => goTab("cashflow")}>Bổ sung dòng tiền</button>}
+                        {completeness.missing_documents.length > 0 && <button className="hdBtn compactButton" type="button" onClick={() => goTab("evidence")}>Tải tài liệu</button>}
+                        {completeness.format_errors.length > 0 && <button className="hdBtn compactButton" type="button" onClick={() => goTab("cashflow")}>Sửa dữ liệu dòng tiền</button>}
+                      </div>
+                    </div>
+                  )}
                   {missingItems.length > 0
                     ? <ul className="missingList">{missingItems.map((item) => <li key={item}>{item}</li>)}</ul>
                     : <p className="muted">Hồ sơ đã đủ các trường và tài liệu bắt buộc. Hệ thống không chấm điểm hoặc phân tích ở bước này.</p>}
@@ -801,7 +861,36 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
             <div className="deskPanel" hidden={activeTab !== "evidence"}>
               <section className="hdCard" id="startup-documents">
                 <div className="hdSectionHead"><h2><MIcon name="inventory_2" />{isStartup ? "Tài liệu hồ sơ" : "Tài liệu được chia sẻ"}</h2><span className="hdCount">{documents.length} tài liệu</span></div>
-                {editable && <form className="uploadBox" onSubmit={upload}><input name="document" type="file" accept=".pdf,.docx,.pptx,.xlsx,.txt,.md,.csv,.json,.png,.jpg,.jpeg" required /><button className="hdBtn primary" disabled={busy === "upload"}><MIcon name="upload" />Tải lên</button></form>}
+                {editable && (
+                  <form className="uploadBox" onSubmit={upload}>
+                    <div className="uploadPickerActions">
+                      <label className="hdBtn" htmlFor={`document-files-${id}`}><MIcon name="draft" />Chọn tệp</label>
+                      <input
+                        id={`document-files-${id}`}
+                        className="uploadNativeInput"
+                        type="file"
+                        accept={documentUploadAccept}
+                        multiple
+                        onChange={(event) => selectUploadFiles(event.target.files)}
+                      />
+                      <label className="hdBtn" htmlFor={`document-folder-${id}`}><MIcon name="folder_open" />Chọn thư mục</label>
+                      <input
+                        id={`document-folder-${id}`}
+                        className="uploadNativeInput"
+                        type="file"
+                        accept={documentUploadAccept}
+                        multiple
+                        onChange={(event) => selectUploadFiles(event.target.files)}
+                        {...({ webkitdirectory: "" } as React.InputHTMLAttributes<HTMLInputElement>)}
+                      />
+                    </div>
+                    <div className="uploadSelection" aria-live="polite">
+                      <strong>{selectedUploadFiles.length ? `${selectedUploadFiles.length} tệp đã chọn` : "Chưa chọn tệp hoặc thư mục"}</strong>
+                      <span>{uploadProgress ? `Đang tải ${uploadProgress.completed}/${uploadProgress.total} tệp…` : "PDF, Word, PowerPoint, Excel, văn bản, JSON và hình ảnh"}</span>
+                    </div>
+                    <button className="hdBtn primary" type="submit" disabled={busy === "upload" || !selectedUploadFiles.length}><MIcon name="upload" />{busy === "upload" ? "Đang tải…" : "Tải lên"}</button>
+                  </form>
+                )}
                 <div className="documentCategoryList">
                   {documentCategories.map((category) => {
                     const categoryDocuments = documents.filter((item) => item.category === category.id);
@@ -864,6 +953,18 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
       </div>
 
       <ChatWidget startupId={id} />
+      {profileInterviewOpen && completeness && (
+        <ProfileInterviewModal
+          startupId={id}
+          completeness={completeness}
+          onClose={() => setProfileInterviewOpen(false)}
+          onManual={(nextTab) => {
+            setProfileInterviewOpen(false);
+            goTab(nextTab);
+          }}
+          onApplied={applyEvidenceUpdate}
+        />
+      )}
     </div>
   );
 }

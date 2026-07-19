@@ -12,6 +12,9 @@ def test_required_api_paths_are_registered() -> None:
     assert "/api/v1/startups/{startup_id}/extractions" in paths
     assert "/api/v1/startups/{startup_id}/extractions/{extraction_id}" in paths
     assert "/api/v1/startups/{startup_id}/extractions/{extraction_id}/confirm" in paths
+    assert "/api/v1/startups/{startup_id}/profile-interviews" in paths
+    assert "/api/v1/startups/{startup_id}/profile-interviews/{interview_id}/answer" in paths
+    assert "/api/v1/startups/{startup_id}/profile-interviews/{interview_id}/confirm" in paths
     assert "/api/v1/startups/{startup_id}/submit" in paths
     assert "/api/v1/startups/{startup_id}/versions" in paths
     assert "/api/v1/startups/{startup_id}/access" in paths

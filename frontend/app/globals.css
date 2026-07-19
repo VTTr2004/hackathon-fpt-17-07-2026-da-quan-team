@@ -1301,6 +1301,7 @@ textarea:focus {
 
 .uploadBox {
   align-items: center;
+  flex-wrap: wrap;
   padding: 12px;
   border: 1px dashed var(--line-strong);
   border-radius: 8px;
@@ -1338,6 +1339,39 @@ textarea:focus {
   cursor: pointer;
   list-style: none;
   font-weight: 800;
+}
+
+.uploadNativeInput {
+  display: none;
+}
+
+.uploadPickerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.uploadPickerActions .hdBtn {
+  cursor: pointer;
+}
+
+.uploadSelection {
+  display: grid;
+  flex: 1 1 260px;
+  gap: 3px;
+  min-width: 0;
+}
+
+.uploadSelection strong,
+.uploadSelection span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uploadSelection span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .documentCategory > summary > .hdCount {
@@ -4085,6 +4119,235 @@ html {
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.submitRequirementsAlert {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.submitRequirementsAlert > span {
+  display: grid;
+  flex: 1 1 280px;
+  gap: 2px;
+}
+
+.submitRequirementActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.profileInterviewOverlay {
+  z-index: 160;
+}
+
+.profileInterviewModal {
+  width: min(860px, calc(100vw - 32px));
+  max-height: min(88vh, 900px);
+  overflow: auto;
+  text-align: left;
+}
+
+.profileInterviewHeader,
+.profileInterviewFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.profileInterviewHeader h2,
+.profileInterviewProposalGroup h3 {
+  margin: 0;
+}
+
+.profileInterviewChoice > p {
+  color: var(--muted);
+}
+
+.profileInterviewChoiceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.profileInterviewChoiceCard {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  min-height: 160px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.profileInterviewChoiceCard:hover,
+.profileInterviewChoiceCard.ai {
+  border-color: color-mix(in srgb, var(--primary) 60%, var(--line));
+  background: color-mix(in srgb, var(--surface) 92%, var(--primary));
+}
+
+.profileInterviewChoiceCard:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.profileInterviewChoiceCard .material-symbols-outlined {
+  color: var(--primary);
+  font-size: 30px;
+}
+
+.profileInterviewChoiceCard strong {
+  font-size: 18px;
+}
+
+.profileInterviewChoiceCard span:last-child {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.profileInterviewProgress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.profileInterviewProgress > div {
+  grid-column: 1 / -1;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--subtle);
+}
+
+.profileInterviewProgress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+}
+
+.profileInterviewTranscript {
+  display: grid;
+  gap: 10px;
+  max-height: 360px;
+  overflow: auto;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--subtle);
+}
+
+.profileInterviewTurn {
+  display: flex;
+}
+
+.profileInterviewTurn span {
+  max-width: 82%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.profileInterviewTurn.user {
+  justify-content: flex-end;
+}
+
+.profileInterviewTurn.user span {
+  background: var(--primary);
+  color: #fff;
+}
+
+.profileInterviewAnswer {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.profileInterviewAnswer textarea,
+.profileInterviewProposal textarea,
+.profileInterviewProposal input:not([type="checkbox"]) {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.profileInterviewAnswer .hdBtn {
+  justify-self: end;
+}
+
+.profileInterviewReview {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.profileInterviewProposalGroup {
+  display: grid;
+  gap: 10px;
+}
+
+.profileInterviewProposal {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.profileInterviewProposal > span {
+  display: grid;
+  gap: 7px;
+}
+
+.profileInterviewProposal strong {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.profileInterviewProposal em {
+  color: var(--primary);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.profileInterviewProposal small {
+  color: var(--muted);
+}
+
+.profileInterviewFooter {
+  position: sticky;
+  bottom: -24px;
+  padding: 14px 0;
+  background: var(--surface);
+}
+
+@media (max-width: 680px) {
+  .profileInterviewChoiceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileInterviewFooter {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }
 
 .appNavBadge {

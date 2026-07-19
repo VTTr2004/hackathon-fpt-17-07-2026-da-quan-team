@@ -5,6 +5,7 @@ from app.models.document import Document
 from app.models.extraction import ExtractionCandidate, ExtractionJob
 from app.models.investor_pipeline import InvestorPipelineItem
 from app.models.investor_preference import InvestorPreference
+from app.models.profile_interview import ProfileInterviewSession
 from app.models.startup import Startup
 from app.models.startup_access import StartupAccess
 from app.models.startup_match import StartupMatch
@@ -20,6 +21,7 @@ __all__ = [
     "ExtractionJob",
     "InvestorPipelineItem",
     "InvestorPreference",
+    "ProfileInterviewSession",
     "Startup",
     "StartupAccess",
     "StartupMatch",
