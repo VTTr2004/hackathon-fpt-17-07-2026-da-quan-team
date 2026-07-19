@@ -12,14 +12,21 @@ Hải Đăng Khởi Nghiệp sinh ra để lấp đúng khoảng trống đó. N
 
 ## Link nhanh
 
-| Hạng mục | URL |
+| Hạng mục | Link |
 |---|---|
-| Frontend production | TODO: dán URL Vercel production |
-| Backend production | TODO: dán URL Render production |
+| **Ứng dụng (production)** | https://hackathon-fpt-17-07-2026-da-quan-te.vercel.app/ |
+| **Repository GitHub** | https://github.com/VTTr2004/hackathon-fpt-17-07-2026-da-quan-team |
+| Slide thuyết trình | https://canva.link/ztb22appi6ergwa |
 | Video demo | TODO: dán link YouTube/Google Drive video demo |
-| Slide thuyết trình | TODO: dán link Google Slides/Canva/PDF |
 
-> Khi nộp bài, cập nhật bốn dòng production/video/slide ở bảng trên để giám khảo có thể mở trực tiếp.
+### Tài khoản demo (vai trò nhà đầu tư)
+
+| Trường | Giá trị |
+|---|---|
+| Email | `InvesterVAIC2026@gmail.com` |
+| Mật khẩu | `123456789` |
+
+> Đăng nhập bằng tài khoản trên để trải nghiệm vai trò **nhà đầu tư**: xem hồ sơ được chia sẻ, chạy các module phân tích, xem gợi ý ghép cặp và chat hỏi–đáp trên tài liệu. Dòng Video demo sẽ cập nhật khi nộp bài.
 
 ## Mục lục
 
