@@ -177,6 +177,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
   const [completeness, setCompleteness] = useState<Completeness | null>(null);
   const [versions, setVersions] = useState<StartupVersion[]>([]);
   const [access, setAccess] = useState<InvestorAccess[]>([]);
+  const [accessError, setAccessError] = useState("");
   const [versionDiff, setVersionDiff] = useState<VersionDiff | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -185,19 +186,40 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     startup?.name.trim() && startup.industry && startup.stage && startup.primary_location,
   );
 
+  const updateAccess = useCallback((items: InvestorAccess[]) => {
+    setAccess(items);
+    window.dispatchEvent(new CustomEvent("startup-access-updated", {
+      detail: {
+        startupId: id,
+        pendingCount: items.filter((item) => item.status === "pending").length,
+      },
+    }));
+  }, [id]);
+
+  const refreshAccess = useCallback(async (showError = false) => {
+    if (!user || !isStartup) return;
+    try {
+      updateAccess(await api.listAccess(id));
+      setAccessError("");
+    } catch (reason) {
+      if (showError) {
+        setAccessError(reason instanceof Error ? reason.message : "Không thể tải yêu cầu Data Room");
+      }
+    }
+  }, [id, isStartup, updateAccess, user]);
+
   const load = useCallback(async () => {
     if (!user) return;
     const common = [api.getStartup(id), api.listDocuments(id), api.listVersions(id)] as const;
     try {
       if (isStartup) {
-        const [profile, docs, history, check, grants, draftAnalyses] = await Promise.all([
+        const [profile, docs, history, check, draftAnalyses] = await Promise.all([
           ...common,
           api.completeness(id),
-          api.listAccess(id),
           api.listAnalyses(id),
         ]);
         setStartup(profile); setDocuments(docs); setVersions(history); setCompleteness(check);
-        setAccess(grants); setAnalyses(draftAnalyses);
+        setAnalyses(draftAnalyses);
         if (history.length >= 2) setVersionDiff(await api.compareVersions(id, history[1].version_number, history[0].version_number));
       } else {
         const [profile, docs, history, results] = await Promise.all([...common, api.listAnalyses(id)]);
@@ -214,6 +236,29 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     const task = window.setTimeout(() => void load(), 0);
     return () => window.clearTimeout(task);
   }, [load]);
+
+  useEffect(() => {
+    if (!user || !isStartup) return;
+    const initialRefresh = window.setTimeout(() => void refreshAccess(true), 0);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void refreshAccess();
+    };
+    const interval = window.setInterval(refreshWhenVisible, 30_000);
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearTimeout(initialRefresh);
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [isStartup, refreshAccess, user]);
+
+  useEffect(() => {
+    if (!isStartup || tab !== "review") return;
+    const task = window.setTimeout(() => void refreshAccess(true), 0);
+    return () => window.clearTimeout(task);
+  }, [isStartup, refreshAccess, tab]);
 
   // Đồng bộ tab với URL hash (#tab-...) để sidebar điều hướng được.
   useEffect(() => {
@@ -378,7 +423,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
   }
 
   async function revoke(investorId: string) {
-    try { await api.revokeAccess(id, investorId); setAccess(await api.listAccess(id)); }
+    try { await api.revokeAccess(id, investorId); await refreshAccess(true); }
     catch (err) { setError(err instanceof Error ? err.message : "Không thể thu hồi quyền"); }
   }
 
@@ -394,7 +439,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
     try {
       if (decision === "approve") await api.approveAccess(id, investorId);
       else await api.rejectAccess(id, investorId);
-      setAccess(await api.listAccess(id));
+      await refreshAccess(true);
     } catch (err) { setError(err instanceof Error ? err.message : "Không thể xử lý yêu cầu"); }
     finally { setBusy(null); }
   }
@@ -420,6 +465,7 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
   const scoreVal = isStartup ? completenessPct : investorScore;
   const analyzedCount = modules.filter((m) => analysisMap[m.id]).length;
   const tags = [startup.industry, startup.stage, startup.primary_location].filter(Boolean) as string[];
+  const pendingAccessCount = access.filter((item) => item.status === "pending").length;
 
   const metrics = isStartup
     ? [
@@ -520,6 +566,14 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
             <small>{isStartup ? "Độ đầy đủ dữ liệu, không phải điểm thành công" : "Trung bình độ đầy đủ của các module đã chạy"}</small>
           </div>
         </section>}
+
+        {isStartup && activeTab === "overview" && pendingAccessCount > 0 && (
+          <section className="hdAlert accessRequestAlert" role="status">
+            <MIcon name="folder_shared" />
+            <span>Bạn có <strong>{pendingAccessCount} yêu cầu mở Data Room</strong> đang chờ xử lý.</span>
+            <button className="hdBtn primary compactButton" type="button" onClick={() => goTab("review")}>Xem yêu cầu</button>
+          </section>
+        )}
 
         {/* Tiêu đề mục đang xem + chỉ số liên quan; điều hướng chính nằm ở sidebar. */}
         <section className="deskContext" id="desk-context">
@@ -786,7 +840,8 @@ export default function StartupDetailPage({ params }: { params: Promise<{ id: st
             <div className="deskPanel" hidden={activeTab !== "review"}>
               {isStartup && (
                 <section className="hdCard accessPanel">
-                  <div className="hdSectionHead"><h2><MIcon name="folder_shared" />Quyền truy cập Data Room</h2><span className="hdCount">{access.filter((item) => item.status === "pending").length} yêu cầu chờ duyệt</span></div>
+                  <div className="hdSectionHead"><h2><MIcon name="folder_shared" />Quyền truy cập Data Room</h2><span className="hdCount">{pendingAccessCount} yêu cầu chờ duyệt</span></div>
+                  {accessError && <div className="hdAlert" role="alert"><MIcon name="sync_problem" /><span>{accessError}</span><button className="hdBtn compactButton" type="button" onClick={() => void refreshAccess(true)}>Thử lại</button></div>}
                   <div className="discoverySetting">
                     <div><strong>Cho phép nhà đầu tư tìm thấy hồ sơ công khai</strong><small>Không cần phê duyệt để investor xem candidate card, shortlist hoặc so sánh. Tài liệu và dữ liệu chi tiết vẫn được khóa.</small></div>
                     <label className="toggle"><input type="checkbox" checked={startup.discoverable} disabled={startup.current_version < 1 || busy === "discovery"} onChange={(event) => void toggleDiscovery(event.target.checked)} /><span /></label>

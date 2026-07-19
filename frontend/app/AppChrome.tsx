@@ -16,7 +16,7 @@ function MIcon({ name, className }: { name: string; className?: string }) {
   return <span className={`material-symbols-outlined${className ? ` ${className}` : ""}`} aria-hidden="true">{name}</span>;
 }
 
-type NavItem = { kind: "route" | "hash"; href: string; label: string; icon: string; active?: boolean; disabled?: boolean };
+type NavItem = { kind: "route" | "hash"; href: string; label: string; icon: string; active?: boolean; disabled?: boolean; badge?: number };
 type WorkspaceItem = {
   id: string;
   name: string;
@@ -39,6 +39,17 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   const [createBusy, setCreateBusy] = useState(false);
   const [createError, setCreateError] = useState("");
   const [workspaceItems, setWorkspaceItems] = useState<WorkspaceItem[]>([]);
+  const [pendingAccessByStartup, setPendingAccessByStartup] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const updatePendingAccess = (event: Event) => {
+      const detail = (event as CustomEvent<{ startupId?: string; pendingCount?: number }>).detail;
+      if (!detail?.startupId || typeof detail.pendingCount !== "number") return;
+      setPendingAccessByStartup((current) => ({ ...current, [detail.startupId!]: detail.pendingCount! }));
+    };
+    window.addEventListener("startup-access-updated", updatePendingAccess);
+    return () => window.removeEventListener("startup-access-updated", updatePendingAccess);
+  }, []);
 
   // Đồng bộ trạng thái ban đầu từ DOM (đã được inline script đặt) + localStorage.
   // Giữ giá trị mặc định khớp SSR (light/expanded) rồi cập nhật sau khi mount để tránh lệch hydrate.
@@ -170,6 +181,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   const deskMatch = pathname.match(/^\/startups\/([^/]+)$/);
   const onDesk = Boolean(deskMatch && deskMatch[1] !== "new");
   const currentWorkspace = deskMatch ? workspaceItems.find((item) => item.id === deskMatch[1]) : undefined;
+  const pendingAccessCount = deskMatch ? pendingAccessByStartup[deskMatch[1]] ?? 0 : 0;
   const coreProfileIncomplete = Boolean(
     onDesk && currentWorkspace && (!currentWorkspace.name.trim() || !currentWorkspace.industry || !currentWorkspace.stage || !currentWorkspace.primary_location),
   );
@@ -186,6 +198,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         icon: t.icon,
         active: activeHash === `#tab-${t.id}`,
         disabled: coreProfileIncomplete && t.id !== "overview" && t.id !== "profile",
+        badge: !isInvestor && t.id === "review" ? pendingAccessCount : undefined,
       })),
     ];
   } else {
@@ -257,6 +270,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
               >
                 <span className="appNavIcon"><MIcon name={item.icon} /></span>
                 <span className="appNavLabel">{item.label}</span>
+                {Boolean(item.badge) && <span className="appNavBadge" aria-label={`${item.badge} yêu cầu chờ duyệt`}>{item.badge}</span>}
               </span>
             ) : (
               <a
@@ -269,6 +283,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
               >
                 <span className="appNavIcon"><MIcon name={item.icon} className={item.active ? "fill-icon" : undefined} /></span>
                 <span className="appNavLabel">{item.label}</span>
+                {Boolean(item.badge) && <span className="appNavBadge" aria-label={`${item.badge} yêu cầu chờ duyệt`}>{item.badge}</span>}
               </a>
             ),
           )}
