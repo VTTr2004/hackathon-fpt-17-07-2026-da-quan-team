@@ -16,6 +16,7 @@ from app.models.startup import Startup
 from app.models.startup_access import StartupAccess
 from app.models.startup_version import StartupVersion
 from app.models.user import User
+from app.modules.profile_interview.registry import INTERVIEW_FIELDS, REQUIRED_INTERVIEW_KEYS
 from app.schemas.investor import AccessRequestCreate
 from app.schemas.startup import (
     AccessGrantRequest,
@@ -31,22 +32,9 @@ from app.schemas.startup import (
 
 router = APIRouter()
 
-REQUIRED_FIELDS: tuple[tuple[str, str], ...] = (
-    ("name", "Tên startup"),
-    ("industry", "Lĩnh vực"),
-    ("stage", "Giai đoạn"),
-    ("location", "Địa điểm chính xác"),
-    ("problem", "Nhu cầu hoặc vấn đề khách hàng"),
-    ("solution", "Giải pháp"),
-    ("target_customers", "Khách hàng mục tiêu"),
-    ("core_products", "Sản phẩm/dịch vụ chính"),
-    ("revenue_model", "Nguồn doanh thu"),
-    ("currency", "Đơn vị tiền tệ"),
-    ("cash_as_of", "Ngày chốt số dư"),
-    ("current_cash", "Tiền mặt hiện có"),
-    ("monthly_revenue", "Doanh thu trung bình tháng"),
-    ("fixed_monthly_costs", "Chi phí cố định"),
-    ("variable_costs", "Chi phí biến đổi"),
+REQUIRED_FIELDS: tuple[tuple[str, str], ...] = tuple(
+    ("location" if key == "primary_location" else key, INTERVIEW_FIELDS[key].label)
+    for key in REQUIRED_INTERVIEW_KEYS
 )
 
 
@@ -97,11 +85,11 @@ async def _latest_version(startup_id: UUID, db: AsyncSession) -> StartupVersion 
 async def _completeness(startup: Startup, db: AsyncSession) -> CompletenessRead:
     facts = startup.facts or {}
     values = {
+        **facts,
         "name": startup.name,
         "industry": startup.industry,
         "stage": startup.stage,
         "location": startup.primary_location or facts.get("exact_location"),
-        **facts,
     }
     missing_fields = [label for key, label in REQUIRED_FIELDS if not _has_value(values.get(key))]
     document_count = await db.scalar(
@@ -461,6 +449,12 @@ async def request_access(
     startup = await db.get(Startup, startup_id)
     if startup is None or startup.status != "submitted" or not startup.discoverable or startup.current_version < 1:
         raise HTTPException(status_code=404, detail="Startup không khả dụng trong discovery")
+    completeness = await _completeness(startup, db)
+    if not completeness.complete:
+        raise HTTPException(
+            status_code=409,
+            detail="Startup chưa đủ điều kiện mở Data Room. Hồ sơ phải đầy đủ và có ít nhất một tài liệu chia sẻ.",
+        )
     access = await db.scalar(
         select(StartupAccess).where(StartupAccess.startup_id == startup_id, StartupAccess.investor_id == user.id)
     )

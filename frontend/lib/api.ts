@@ -14,6 +14,7 @@ import type {
   Candidate,
   PipelineItem,
   ProfileExtractionJob,
+  ProfileInterviewSession,
   StartupVersion,
   User,
   VersionDiff,
@@ -169,6 +170,21 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ decisions }),
     }),
+  createProfileInterview: (id: string) =>
+    request<ProfileInterviewSession>(`/startups/${id}/profile-interviews`, { method: "POST" }),
+  answerProfileInterview: (id: string, interviewId: string, answer: string) =>
+    request<ProfileInterviewSession>(`/startups/${id}/profile-interviews/${interviewId}/answer`, {
+      method: "POST",
+      body: JSON.stringify({ answer }),
+    }),
+  confirmProfileInterview: (
+    id: string,
+    interviewId: string,
+    decisions: Array<{ field_key: string; action: "accept" | "edit" | "reject"; value?: unknown }>,
+  ) => request<Startup>(`/startups/${id}/profile-interviews/${interviewId}/confirm`, {
+    method: "POST",
+    body: JSON.stringify({ decisions }),
+  }),
   listAnalyses: (id: string) => request<Analysis[]>(`/startups/${id}/analyses`),
   runAnalysis: (id: string, module: AnalysisModule, options: Record<string, unknown> = { use_gemini: true }) =>
     request<Analysis>(`/startups/${id}/analyses/${module}`, {

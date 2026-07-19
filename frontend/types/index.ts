@@ -420,3 +420,29 @@ export type ChatMessageItem = {
   created_at: string;
 };
 
+export type ProfileInterviewProposal = {
+  field_key: string;
+  label: string;
+  priority: "required" | "major" | "optional";
+  value_type: string;
+  proposed_value: unknown;
+  confidence: number;
+  source_quote: string;
+  reasoning: string;
+};
+
+export type ProfileInterviewSession = {
+  id: string;
+  startup_id: string;
+  status: "active" | "review" | "applied" | string;
+  required_field_keys: string[];
+  pending_required_keys: string[];
+  current_question: string | null;
+  transcript: Array<{ role: "user" | "assistant"; content: string }>;
+  proposals: ProfileInterviewProposal[];
+  based_on_startup_updated_at: string;
+  created_at: string;
+  completed_at: string | null;
+  applied_at: string | null;
+};
+
