@@ -1523,16 +1523,22 @@ textarea:focus {
 }
 
 .segmentedControl button,
+.segmentedControl a,
 .templateChips button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 34px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: white;
   color: var(--ink);
   font-weight: 700;
+  text-align: center;
 }
 
-.segmentedControl button.active {
+.segmentedControl button.active,
+.segmentedControl a.active {
   border-color: var(--green);
   color: white;
   background: var(--green);
@@ -3084,6 +3090,7 @@ html {
 .pageQuickNav a:hover,
 .questionChips button:hover,
 .segmentedControl button:hover,
+.segmentedControl a:hover,
 .templateChips button:hover {
   border-color: #9db8aa;
   color: var(--green-dark);
@@ -3119,6 +3126,7 @@ html {
 .primaryButton,
 .secondaryButton,
 .segmentedControl button,
+.segmentedControl a,
 .templateChips button,
 .candidateRow,
 .pageQuickNav a,
@@ -3414,6 +3422,8 @@ html {
   flex-direction: column;
   min-height: 0;
   height: 100%;
+  flex: 1;
+  width: 100%;
   gap: 0.75rem;
 }
 
@@ -3768,6 +3778,9 @@ html {
   right: 24px;
   bottom: 94px;
   width: min(560px, calc(100vw - 32px));
+  /* Height cố định để cửa sổ KHÔNG co/duỗi theo nội dung khi gửi tin đầu tiên.
+     Khai báo vh trước làm fallback cho trình duyệt không hỗ trợ dvh (nếu bỏ, height bị drop → cửa sổ tự co theo nội dung). */
+  height: min(760px, calc(100vh - 120px));
   height: min(760px, calc(100dvh - 120px));
   background: var(--surface);
   border: 1px solid var(--line);
@@ -4226,7 +4239,7 @@ html {
 
 .appSearch {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
+  grid-template-columns: 20px minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
   flex: 1 1 auto;
@@ -4236,12 +4249,14 @@ html {
   border-radius: var(--radius);
   background: var(--subtle);
   padding: 0 12px;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
 .appSearch svg {
   width: 18px;
   height: 18px;
   color: var(--muted);
+  transition: color 160ms ease;
 }
 
 .appSearch input {
@@ -4252,6 +4267,121 @@ html {
   padding: 0;
   background: transparent;
   color: var(--ink);
+}
+
+.appSearch input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+  font-weight: 600;
+}
+
+.appSearch:focus-within {
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--primary), 0 2px 0 rgba(178, 40, 46, 0.18);
+}
+
+.appSearch:focus-within svg,
+.appSearch:focus-within .material-symbols-outlined {
+  color: var(--primary);
+}
+
+.appSearchWrap {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.appSearchClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 999px;
+  line-height: 0;
+}
+
+.appSearchClear:hover {
+  color: var(--ink);
+  background: var(--line);
+}
+
+.appSearchClear .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.appSearchResults {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 70;
+  max-height: min(60vh, 380px);
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgba(20, 32, 26, 0.18);
+}
+
+.appSearchResult {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 9px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.appSearchResult:hover,
+.appSearchResult:focus-visible {
+  background: var(--subtle);
+  outline: none;
+}
+
+.appSearchResult .material-symbols-outlined {
+  font-size: 20px;
+  color: var(--primary);
+  flex: 0 0 auto;
+}
+
+.appSearchResultText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.appSearchResultText strong {
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appSearchResultText small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appSearchEmpty {
+  margin: 0;
+  padding: 12px 10px;
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .appTopActions {
@@ -4874,10 +5004,60 @@ html {
   font-size: 18px;
 }
 
+.authNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 13px;
+  border: 1px solid #bcd8c4;
+  border-radius: 10px;
+  background: #e7f4ec;
+  color: #13513a;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.authNotice .material-symbols-outlined {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  font-size: 18px;
+}
+
+:root[data-theme="dark"] .authNotice {
+  border-color: #2f5c45;
+  background: rgba(120, 200, 160, 0.12);
+  color: #a7e3c2;
+}
+
+.authSuccess {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 13px;
+  border: 1px solid #9cc89f;
+  border-radius: 10px;
+  background: #eaf7ea;
+  color: #1f5f2b;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.authSuccess .material-symbols-outlined {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  font-size: 18px;
+}
+
 :root[data-theme="dark"] .authError {
   border-color: #6d2a2a;
   background: rgba(251, 113, 133, 0.12);
   color: #fecdd3;
+}
+
+:root[data-theme="dark"] .authSuccess {
+  border-color: #3f7a4f;
+  background: rgba(74, 222, 128, 0.12);
+  color: #bbf7d0;
 }
 
 .authFields {
@@ -6065,6 +6245,7 @@ html {
 :root[data-theme="dark"] .chatBubble,
 :root[data-theme="dark"] .dcTurn-user .dcBubble,
 :root[data-theme="dark"] .segmentedControl button.active,
+:root[data-theme="dark"] .segmentedControl a.active,
 :root[data-theme="dark"] .stepIndex,
 :root[data-theme="dark"] .brandMark,
 :root[data-theme="dark"] .avatar,
@@ -6120,6 +6301,7 @@ html {
 :root[data-theme="dark"] .pageQuickNav a,
 :root[data-theme="dark"] .questionChips button,
 :root[data-theme="dark"] .segmentedControl button,
+:root[data-theme="dark"] .segmentedControl a,
 :root[data-theme="dark"] .templateChips button {
   border-color: var(--line);
   background: var(--surface);
@@ -6394,19 +6576,22 @@ html {
   background: #181216;
 }
 
-:root[data-theme="dark"] .authMode.segmentedControl button {
+:root[data-theme="dark"] .authMode.segmentedControl button,
+:root[data-theme="dark"] .authMode.segmentedControl a {
   border-color: transparent;
   background: transparent;
   color: #eadbd7;
 }
 
-:root[data-theme="dark"] .authMode.segmentedControl button:hover {
+:root[data-theme="dark"] .authMode.segmentedControl button:hover,
+:root[data-theme="dark"] .authMode.segmentedControl a:hover {
   border-color: #704b54;
   background: #2a1f23;
   color: #ffd6d2;
 }
 
-:root[data-theme="dark"] .authMode.segmentedControl button.active {
+:root[data-theme="dark"] .authMode.segmentedControl button.active,
+:root[data-theme="dark"] .authMode.segmentedControl a.active {
   border-color: #ffb4ad;
   background: #ffb4ad;
   color: #341012;

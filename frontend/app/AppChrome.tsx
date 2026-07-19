@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -40,6 +40,21 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   const [createError, setCreateError] = useState("");
   const [workspaceItems, setWorkspaceItems] = useState<WorkspaceItem[]>([]);
   const [pendingAccessByStartup, setPendingAccessByStartup] = useState<Record<string, number>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  // Tìm kiếm thật: lọc trực tiếp danh sách hồ sơ trong workspace theo tên/ngành/giai đoạn/địa điểm.
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return workspaceItems
+      .filter((s) =>
+        [s.name, s.industry, s.stage, s.primary_location]
+          .filter((v): v is string => Boolean(v))
+          .some((v) => v.toLowerCase().includes(q)),
+      )
+      .slice(0, 8);
+  }, [searchQuery, workspaceItems]);
 
   useEffect(() => {
     const updatePendingAccess = (event: Event) => {
@@ -111,6 +126,18 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
 
   const closeMobile = () => setMobileOpen(false);
 
+  function openSearchResult(id: string) {
+    setSearchQuery("");
+    setSearchFocused(false);
+    closeMobile();
+    router.push(`/startups/${id}`);
+  }
+
+  function onSearchSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (searchResults[0]) openSearchResult(searchResults[0].id);
+  }
+
   function toggleTheme() {
     const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
@@ -162,7 +189,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
     }
   }
 
-  if (loading || (!user && !publicPage)) {
+  if (!publicPage && (loading || !user)) {
     return (
       <main>
         <div className="pageShell">
@@ -325,10 +352,64 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
             <MIcon name="menu" />
           </button>
 
-          <label className="appSearch">
-            <MIcon name="search" />
-            <input placeholder="Tìm hồ sơ, tài liệu, câu hỏi..." aria-label="Tìm kiếm trong không gian làm việc" />
-          </label>
+          <div className="appSearchWrap">
+            <form className="appSearch" role="search" onSubmit={onSearchSubmit}>
+              <MIcon name="search" />
+              <input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    setSearchQuery("");
+                    event.currentTarget.blur();
+                  }
+                }}
+                placeholder="Tìm hồ sơ theo tên, ngành, giai đoạn, địa điểm..."
+                aria-label="Tìm kiếm trong không gian làm việc"
+                autoComplete="off"
+              />
+              {searchQuery ? (
+                <button
+                  type="button"
+                  className="appSearchClear"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Xóa tìm kiếm"
+                  tabIndex={-1}
+                >
+                  <MIcon name="close" />
+                </button>
+              ) : null}
+            </form>
+            {searchFocused && searchQuery.trim() ? (
+              <div className="appSearchResults" role="listbox" aria-label="Kết quả tìm kiếm">
+                {searchResults.length ? (
+                  searchResults.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      role="option"
+                      aria-selected="false"
+                      className="appSearchResult"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => openSearchResult(s.id)}
+                    >
+                      <MIcon name={isInvestor ? "storefront" : "description"} />
+                      <span className="appSearchResultText">
+                        <strong>{s.name}</strong>
+                        <small>
+                          {[s.industry, s.stage, s.primary_location].filter(Boolean).join(" · ") || "Chưa có thông tin nền"}
+                        </small>
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="appSearchEmpty">Không tìm thấy hồ sơ khớp “{searchQuery.trim()}”.</p>
+                )}
+              </div>
+            ) : null}
+          </div>
 
           <div className="appTopActions">
             <button

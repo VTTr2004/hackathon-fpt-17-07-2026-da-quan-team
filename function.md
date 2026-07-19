@@ -1,5 +1,20 @@
 # Tính năng
 
+> **Định vị sản phẩm — Hải Đăng Khởi Nghiệp:** biến hồ sơ phân mảnh của startup thành _hồ sơ nhu cầu có cấu trúc_, giúp NIC tìm đúng đối tác trong hệ sinh thái, giải thích vì sao phù hợp, soạn sẵn nội dung kết nối và đưa cuộc gặp vào lịch — mọi bước then chốt đều có con người phê duyệt.
+
+Toàn bộ các tính năng mô tả dưới đây phục vụ **hành trình sáu bước**, và tuân theo nguyên tắc chung: **có cấu trúc, có bằng chứng, có con người phê duyệt**.
+
+| Bước | Ý nghĩa | Nhóm tính năng phục vụ |
+|---|---|---|
+| ① Tải & số hóa hồ sơ | Gom tài liệu rời rạc về một chỗ | Tiếp nhận và số hóa hồ sơ (§1.1) |
+| ② Hồ sơ nhu cầu có cấu trúc | Chuẩn hóa, trích xuất kèm bằng chứng | Trích xuất field (§1.1), chấm điểm checklist (§1.2) |
+| ③ Ghép đúng đối tác | Xếp hạng đối tác trong hệ sinh thái | Investor–startup matching (fit score) |
+| ④ Giải thích lý do phù hợp | Nêu bằng chứng, khoảng trống, câu hỏi | Phân tích module (§1.2, §1.3), giải thích matching |
+| ⑤ Soạn nội dung kết nối | Viết sẵn lời giới thiệu cá nhân hóa | Lộ trình mở rộng, trên nền bằng chứng đã có |
+| ⑥ Lên lịch gặp (người duyệt) | Đề xuất khung giờ, con người phê duyệt | Lộ trình mở rộng, giữ human-in-the-loop |
+
+Xuyên suốt sáu bước, trợ lý hỏi–đáp RAG cho phép chất vấn trực tiếp trên tài liệu với câu trả lời **có trích dẫn nguồn**.
+
 ## Tính năng chi tiết
 
 ### 1. AI phân tích và đánh giá hồ sơ

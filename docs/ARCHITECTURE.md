@@ -2,6 +2,8 @@
 
 > **Tài liệu kỹ thuật:** [⌂ Tổng quan](../README.md) · [Kiến trúc](ARCHITECTURE.md) · [Module & AI](MODULES.md) · [API](API.md) · [Cài đặt & Kiểm thử](DEVELOPMENT.md) · [Dữ liệu mẫu](SAMPLE_DATA.md) · [Bảo mật](SECURITY.md) · [Triển khai](../DEPLOYMENT.md)
 
+**Hải Đăng Khởi Nghiệp** biến hồ sơ phân mảnh của startup thành _hồ sơ nhu cầu có cấu trúc_, giúp NIC tìm đúng đối tác trong hệ sinh thái, giải thích lý do phù hợp, soạn nội dung kết nối và đưa cuộc gặp vào lịch — mọi bước then chốt có con người phê duyệt. Kiến trúc dưới đây hiện thực hóa hành trình đó theo nguyên tắc **có cấu trúc, có bằng chứng, có con người phê duyệt**: frontend chỉ trình bày và thu thập; backend giữ dữ liệu, chạy công cụ deterministic, chọn snapshot bất biến và gọi LLM khi cần diễn giải.
+
 ## Tổng quan kiến trúc
 
 ```text

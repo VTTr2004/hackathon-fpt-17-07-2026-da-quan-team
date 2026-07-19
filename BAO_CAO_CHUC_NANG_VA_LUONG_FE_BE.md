@@ -1,6 +1,7 @@
 # Báo cáo review code: Chức năng hiện tại và luồng giao tiếp Frontend – Backend
 
-> Dự án: **Startup Lens**  
+> Dự án: **Hải Đăng Khởi Nghiệp**  
+> Định vị: biến hồ sơ phân mảnh của startup thành hồ sơ nhu cầu có cấu trúc, giúp NIC ghép đúng đối tác trong hệ sinh thái, giải thích lý do phù hợp, soạn nội dung kết nối và lên lịch gặp — mọi bước then chốt có con người phê duyệt.  
 > Thời điểm review: **18/07/2026**  
 > Phạm vi: code hiện có trong working tree, bao gồm cả thay đổi chưa commit  
 > Kiến trúc: **Next.js 16 + React 19 + TypeScript** ở frontend, **FastAPI + SQLAlchemy async + PostgreSQL** ở backend
@@ -9,7 +10,7 @@
 
 ## 1. Tóm tắt điều hành
 
-Startup Lens hiện đã có một luồng nghiệp vụ tương đối đầy đủ cho hai vai trò:
+Hải Đăng Khởi Nghiệp hiện đã có một luồng nghiệp vụ tương đối đầy đủ cho hai vai trò:
 
 - **Startup**: đăng ký/đăng nhập, tạo và sửa hồ sơ nháp, nhập dữ liệu theo ba module, tải tài liệu, kiểm tra độ đầy đủ, nộp/khóa phiên bản, tạo bản nháp tiếp theo, cấp/thu hồi quyền cho Nhà đầu tư và chat với tài liệu của mình.
 - **Nhà đầu tư**: xem các hồ sơ được cấp quyền, xem snapshot/tài liệu đã chia sẻ, so sánh phiên bản, chạy ba module phân tích, xem bản đồ khu vực và chat RAG với tài liệu của phiên bản mới nhất.

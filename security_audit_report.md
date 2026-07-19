@@ -1,6 +1,6 @@
-# Báo cáo Đánh giá Lỗ hổng Bảo mật & Logic nghiệp vụ — Startup Lens
+# Báo cáo Đánh giá Lỗ hổng Bảo mật & Logic nghiệp vụ — Hải Đăng Khởi Nghiệp
 
-Dưới đây là kết quả đánh giá an toàn thông tin và logic nghiệp vụ chi tiết cho dự án monorepo **Startup Lens** (FastAPI backend + Next.js frontend). Báo cáo tập trung vào các lỗi logic phân quyền, bypass tính bất biến của hồ sơ và an toàn ứng dụng LLM/RAG.
+Dưới đây là kết quả đánh giá an toàn thông tin và logic nghiệp vụ chi tiết cho dự án monorepo **Hải Đăng Khởi Nghiệp** (FastAPI backend + Next.js frontend). Báo cáo tập trung vào các lỗi logic phân quyền, bypass tính bất biến của hồ sơ và an toàn ứng dụng LLM/RAG.
 
 ---
 
