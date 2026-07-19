@@ -26,8 +26,7 @@ Hải Đăng Khởi Nghiệp sinh ra để lấp đúng khoảng trống đó. N
 | Email | `InvesterVAIC2026@gmail.com` |
 | Mật khẩu | `123456789` |
 
-> Đăng nhập bằng tài khoản trên để trải nghiệm vai trò **nhà đầu tư**: xem hồ sơ được chia sẻ, chạy các module phân tích, xem gợi ý ghép cặp và chat hỏi–đáp trên tài liệu. Dòng Video demo sẽ cập nhật khi nộp bài.
-
+> Đăng nhập bằng tài khoản trên để trải nghiệm vai trò **nhà đầu tư**: xem hồ sơ được chia sẻ, chạy các module phân tích, xem gợi ý ghép cặp và chat hỏi–đáp trên tài liệu. 
 ## Mục lục
 
 - [Bài toán: vì sao kết nối hệ sinh thái vẫn khó](#bài-toán-vì-sao-kết-nối-hệ-sinh-thái-vẫn-khó)
